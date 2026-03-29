@@ -40,8 +40,10 @@ export default async function handlerGastos(
   const partes = url.pathname.split('/').filter(Boolean)
 
   // partes[1] = 'fixos' ou 'variaveis'
-  const tipoGasto = partes[1]
-  const id = partes[2] ?? null
+  const pathname = url.pathname.replace(/\/$/, '')
+  const segmentos = pathname.split('/').filter(Boolean)
+  const tipoGasto = segmentos[2] ?? null
+  const id = segmentos.length >= 4 ? segmentos[segmentos.length - 1] : null
 
   // ==========================================
   // GASTOS FIXOS — /api/gastos/fixos

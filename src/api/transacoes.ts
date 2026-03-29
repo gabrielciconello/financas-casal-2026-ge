@@ -1,9 +1,17 @@
 import { IncomingMessage, ServerResponse } from 'http'
 import { verificarAutenticacao, RequisicaoAutenticada } from '../middleware/autenticacao'
 import { lerBody } from '../utils/lerBody'
-import { responderSucesso, responderErro, responderNaoEncontrado, responderMetodoNaoPermitido } from '../utils/responderHttp'
+import {
+  responderSucesso,
+  responderErro,
+  responderNaoEncontrado,
+  responderMetodoNaoPermitido,
+} from '../utils/responderHttp'
 import { validar } from '../validators'
-import { esquemaCriarTransacao, esquemaAtualizarTransacao } from '../validators/validadorTransacoes'
+import {
+  esquemaCriarTransacao,
+  esquemaAtualizarTransacao,
+} from '../validators/validadorTransacoes'
 import {
   buscarTransacoes,
   buscarTransacaoPorId,
@@ -16,17 +24,20 @@ export default async function handlerTransacoes(
   req: IncomingMessage,
   res: ServerResponse
 ): Promise<void> {
-  // Verifica autenticação em todas as rotas
   const autenticado = await verificarAutenticacao(req as RequisicaoAutenticada, res)
   if (!autenticado) return
 
   const requisicao = req as RequisicaoAutenticada
   const usuarioId = requisicao.usuario!.id
   const url = new URL(req.url ?? '/', `http://${req.headers.host}`)
-  const partes = url.pathname.split('/').filter(Boolean)
-  const id = partes[1] ?? null // /api/transacoes/:id
 
-  // GET /api/transacoes — lista com filtros e paginação
+  // Extrai o ID corretamente ignorando o segmento 'transacoes'
+  const pathname = url.pathname.replace(/\/$/, '')
+  const segmentos = pathname.split('/').filter(Boolean)
+  // segmentos[0] = 'api', segmentos[1] = 'transacoes', segmentos[2] = ':id'
+  const id = segmentos.length >= 3 ? segmentos[segmentos.length - 1] : null
+
+  // GET /api/transacoes
   if (req.method === 'GET' && !id) {
     const pagina = Number(url.searchParams.get('pagina')) || 1
     const limite = Number(url.searchParams.get('limite')) || 10
@@ -42,7 +53,7 @@ export default async function handlerTransacoes(
     return responderSucesso(res, resultado)
   }
 
-  // GET /api/transacoes/:id — busca uma transação
+  // GET /api/transacoes/:id
   if (req.method === 'GET' && id) {
     const resultado = await buscarTransacaoPorId(id)
 
@@ -51,7 +62,7 @@ export default async function handlerTransacoes(
     return responderSucesso(res, resultado.dados)
   }
 
-  // POST /api/transacoes — cria uma transação
+  // POST /api/transacoes
   if (req.method === 'POST' && !id) {
     const body = await lerBody(req)
     const validacao = validar(esquemaCriarTransacao, body)
@@ -66,7 +77,7 @@ export default async function handlerTransacoes(
     return responderSucesso(res, resultado.dados, 201)
   }
 
-  // PUT /api/transacoes/:id — atualiza uma transação
+  // PUT /api/transacoes/:id
   if (req.method === 'PUT' && id) {
     const body = await lerBody(req)
     const validacao = validar(esquemaAtualizarTransacao, body)
@@ -82,7 +93,7 @@ export default async function handlerTransacoes(
     return responderSucesso(res, resultado.dados)
   }
 
-  // DELETE /api/transacoes/:id — deleta uma transação
+  // DELETE /api/transacoes/:id
   if (req.method === 'DELETE' && id) {
     const resultado = await deletarTransacao(id, usuarioId)
 
@@ -90,6 +101,5 @@ export default async function handlerTransacoes(
     return responderSucesso(res, { mensagem: 'Transação deletada com sucesso' })
   }
 
-  // Método não permitido
   return responderMetodoNaoPermitido(res)
 }

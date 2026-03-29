@@ -35,8 +35,10 @@ export default async function handlerMetas(
   const url = new URL(req.url ?? '/', `http://${req.headers.host}`)
   const partes = url.pathname.split('/').filter(Boolean)
 
-  const id = partes[1] ?? null
-  const ehContribuicao = partes[2] === 'contribuicoes'
+  const pathname = url.pathname.replace(/\/$/, '')
+  const segmentos = pathname.split('/').filter(Boolean)
+  const id = segmentos.length >= 3 ? segmentos[2] : null
+  const ehContribuicao = segmentos[3] === 'contribuicoes'
 
   // ==========================================
   // METAS — /api/metas

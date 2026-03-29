@@ -22,7 +22,7 @@ export default async function handlerIA(
 
   const url = new URL(req.url ?? '/', `http://${req.headers.host}`)
   const partes = url.pathname.split('/').filter(Boolean)
-  const acao = partes[1] // chat, resumo, categorizar
+  const acao = partes[2] // chat, resumo, categorizar
 
   // POST /api/ia/chat — pergunta em linguagem natural
   if (req.method === 'POST' && acao === 'chat') {

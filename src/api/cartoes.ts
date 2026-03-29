@@ -39,14 +39,16 @@ export default async function handlerCartoes(
   const partes = url.pathname.split('/').filter(Boolean)
 
   // Rotas de compras: /api/compras-cartao ou /api/compras-cartao/:id
-  const ehCompra = partes[1] === 'compras-cartao'
-  const id = partes[2] ?? null
+  const pathname = url.pathname.replace(/\/$/, '')
+  const segmentos = pathname.split('/').filter(Boolean)
+  const ehCompra = segmentos[2] === 'compras-cartao'
+  const id = segmentos.length >= 4 ? segmentos[segmentos.length - 1] : null
 
   // ==========================================
   // ROTAS DE CARTÕES — /api/cartoes
   // ==========================================
   if (!ehCompra) {
-    const cartaoId = partes[1] ?? null
+    const cartaoId = partes[2] ?? null
 
     if (req.method === 'GET' && !cartaoId) {
       const pagina = Number(url.searchParams.get('pagina')) || 1

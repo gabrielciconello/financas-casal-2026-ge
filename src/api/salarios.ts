@@ -23,7 +23,9 @@ export default async function handlerSalarios(
   const usuarioId = requisicao.usuario!.id
   const url = new URL(req.url ?? '/', `http://${req.headers.host}`)
   const partes = url.pathname.split('/').filter(Boolean)
-  const id = partes[1] ?? null
+  const pathname = url.pathname.replace(/\/$/, '')
+  const segmentos = pathname.split('/').filter(Boolean)
+  const id = segmentos.length >= 3 ? segmentos[segmentos.length - 1] : null
 
   if (req.method === 'GET' && !id) {
     const pagina = Number(url.searchParams.get('pagina')) || 1
