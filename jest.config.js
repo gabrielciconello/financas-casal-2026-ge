@@ -7,9 +7,15 @@ const config = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
+  globals: {
+    'ts-jest': {
+      tsconfig: 'tsconfig.api.json',
+    },
+  },
   collectCoverageFrom: [
     'src/**/*.ts',
     '!src/**/*.d.ts',
+    '!src/**/*.tsx',
   ],
   coverageDirectory: 'coverage',
   verbose: true,

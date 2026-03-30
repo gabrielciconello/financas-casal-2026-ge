@@ -7,11 +7,21 @@ import {
 } from '../utils/responderHttp'
 import { buscarDadosDashboard } from '../services/servicoDashboard'
 import { mesAnoAtual } from '../utils'
+import { aplicarCors } from '../utils/cors'
 
 export default async function handlerDashboard(
   req: IncomingMessage,
   res: ServerResponse
 ): Promise<void> {
+  aplicarCors(res)
+
+  // Responde requisições OPTIONS (preflight do CORS)
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204)
+    res.end()
+    return
+  }
+
   const autenticado = await verificarAutenticacao(req as RequisicaoAutenticada, res)
   if (!autenticado) return
 
