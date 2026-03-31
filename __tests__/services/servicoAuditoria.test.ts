@@ -4,7 +4,7 @@ jest.mock('../../src/services/supabase', () => ({
   },
 }))
 
-import { supabaseAdmin } from '../../src/services/supabase'
+import { supabaseAdmin } from '../../src/services/supabase.node'
 import { registrarAuditoria } from '../../src/services/servicoAuditoria'
 
 describe('servicoAuditoria', () => {

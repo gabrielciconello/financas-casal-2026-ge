@@ -36,8 +36,14 @@ export async function buscarTransacoes(
     .order('data', { ascending: false })
     .range(offset, offset + limite - 1)
 
-  if (params.mes) consulta = consulta.eq('mes', params.mes)
-  if (params.ano) consulta = consulta.eq('ano', params.ano)
+  // Filtro por mês/ano usando a coluna data
+  if (params.mes && params.ano) {
+    const inicio = `${params.ano}-${String(params.mes).padStart(2, '0')}-01`
+    const ultimoDia = new Date(params.ano, params.mes, 0).getDate()
+    const fim = `${params.ano}-${String(params.mes).padStart(2, '0')}-${String(ultimoDia).padStart(2, '0')}`
+    consulta = consulta.gte('data', inicio).lte('data', fim)
+  }
+
   if (params.tipo) consulta = consulta.eq('tipo', params.tipo)
   if (params.categoria) consulta = consulta.eq('categoria', params.categoria)
   if (params.status) consulta = consulta.eq('status', params.status)
@@ -46,7 +52,6 @@ export async function buscarTransacoes(
   const { data, error, count } = await consulta
 
   if (error) return { dados: [], total: 0, pagina, limite, erro: error.message }
-
   return respostaPaginada(data ?? [], count ?? 0, pagina, limite)
 }
 
