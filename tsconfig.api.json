@@ -15,7 +15,13 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src/api/**/*", "src/services/**/*", "src/middleware/**/*",
-              "src/utils/**/*", "src/validators/**/*", "src/types/**/*"],
+  "include": [
+    "src/api/**/*",
+    "src/services/**/*",
+    "src/middleware/**/*",
+    "src/utils/**/*",
+    "src/validators/**/*",
+    "src/types/**/*"
+  ],
   "exclude": ["node_modules", "dist", "src/**/*.tsx"]
 }
