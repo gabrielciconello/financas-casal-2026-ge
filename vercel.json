@@ -3,7 +3,16 @@
   "builds": [
     {
       "src": "src/api/**/*.ts",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "src/middleware/**",
+          "src/services/**",
+          "src/utils/**",
+          "src/validators/**",
+          "src/types/**"
+        ]
+      }
     },
     {
       "src": "package.json",
