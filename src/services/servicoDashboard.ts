@@ -47,19 +47,29 @@ interface DadosDashboard {
   }
 }
 
+// Retorna o primeiro e último dia do mês no formato YYYY-MM-DD
+function intervaloMes(mes: number, ano: number): { inicio: string; fim: string } {
+  const inicio = `${ano}-${String(mes).padStart(2, '0')}-01`
+  const ultimoDia = new Date(ano, mes, 0).getDate()
+  const fim = `${ano}-${String(mes).padStart(2, '0')}-${String(ultimoDia).padStart(2, '0')}`
+  return { inicio, fim }
+}
+
 export async function buscarDadosDashboard(
   mes: number,
   ano: number
 ): Promise<RespostaApi<DadosDashboard>> {
   try {
+    const { inicio, fim } = intervaloMes(mes, ano)
+
     // ==========================================
-    // 1. RESUMO FINANCEIRO DO MÊS ATUAL
+    // 1. TRANSAÇÕES DO MÊS ATUAL
     // ==========================================
     const { data: transacoes, error: erroTransacoes } = await supabaseAdmin
       .from('transacoes')
-      .select('tipo, valor, status')
-      .eq('mes', mes)
-      .eq('ano', ano)
+      .select('tipo, valor, categoria')
+      .gte('data', inicio)
+      .lte('data', fim)
 
     if (erroTransacoes) return respostaErro(erroTransacoes.message)
 
@@ -90,23 +100,21 @@ export async function buscarDadosDashboard(
     // ==========================================
     // 3. GASTOS POR CATEGORIA
     // ==========================================
-    const { data: transacoesSaida } = await supabaseAdmin
-      .from('transacoes')
-      .select('categoria, valor')
-      .eq('tipo', 'saida')
-      .eq('mes', mes)
-      .eq('ano', ano)
-
     const totalPorCategoria: Record<string, number> = {}
-    transacoesSaida?.forEach((t) => {
-      totalPorCategoria[t.categoria] = (totalPorCategoria[t.categoria] ?? 0) + Number(t.valor)
-    })
+    transacoes
+      ?.filter((t) => t.tipo === 'saida')
+      .forEach((t) => {
+        totalPorCategoria[t.categoria] =
+          (totalPorCategoria[t.categoria] ?? 0) + Number(t.valor)
+      })
 
     const gastosPorCategoria: ResumoCategoria[] = Object.entries(totalPorCategoria)
       .map(([categoria, total]) => ({
         categoria,
         total,
-        percentual: totalSaidas > 0 ? Number(((total / totalSaidas) * 100).toFixed(1)) : 0,
+        percentual: totalSaidas > 0
+          ? Number(((total / totalSaidas) * 100).toFixed(1))
+          : 0,
       }))
       .sort((a, b) => b.total - a.total)
 
@@ -124,11 +132,13 @@ export async function buscarDadosDashboard(
         anoBusca -= 1
       }
 
+      const { inicio: inicioMes, fim: fimMes } = intervaloMes(mesBusca, anoBusca)
+
       const { data: transacoesMes } = await supabaseAdmin
         .from('transacoes')
         .select('tipo, valor')
-        .eq('mes', mesBusca)
-        .eq('ano', anoBusca)
+        .gte('data', inicioMes)
+        .lte('data', fimMes)
 
       const entradas = transacoesMes
         ?.filter((t) => t.tipo === 'entrada')
@@ -138,12 +148,7 @@ export async function buscarDadosDashboard(
         ?.filter((t) => t.tipo === 'saida')
         .reduce((acc, t) => acc + Number(t.valor), 0) ?? 0
 
-      historico.push({
-        mes: mesBusca,
-        ano: anoBusca,
-        total_entradas: entradas,
-        total_saidas: saidas,
-      })
+      historico.push({ mes: mesBusca, ano: anoBusca, total_entradas: entradas, total_saidas: saidas })
     }
 
     // ==========================================
@@ -180,11 +185,13 @@ export async function buscarDadosDashboard(
       anoAnterior -= 1
     }
 
+    const { inicio: inicioAnterior, fim: fimAnterior } = intervaloMes(mesAnterior, anoAnterior)
+
     const { data: transacoesAnterior } = await supabaseAdmin
       .from('transacoes')
       .select('tipo, valor')
-      .eq('mes', mesAnterior)
-      .eq('ano', anoAnterior)
+      .gte('data', inicioAnterior)
+      .lte('data', fimAnterior)
 
     const entradasAnterior = transacoesAnterior
       ?.filter((t) => t.tipo === 'entrada')
@@ -206,9 +213,6 @@ export async function buscarDadosDashboard(
       percentualGasto <= 70 ? 'boa' :
       percentualGasto <= 90 ? 'atencao' : 'critica'
 
-    // ==========================================
-    // RESULTADO FINAL
-    // ==========================================
     const dados: DadosDashboard = {
       resumo: {
         total_entradas: totalEntradas,

@@ -14,7 +14,7 @@ interface ResultadoApi<T> {
 }
 
 // Vite usa import.meta.env, Node usa process.env
-const BASE_URL = (import.meta as any).env?.VITE_API_URL ?? ''
+const BASE_URL = ''
 
 export function useApi<T = any>(): ResultadoApi<T> {
   const { token } = useAuth()
