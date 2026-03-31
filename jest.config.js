@@ -9,7 +9,7 @@ const config = {
   },
   globals: {
     'ts-jest': {
-      tsconfig: 'tsconfig.api.json',
+      tsconfig: 'tsconfig.json',
     },
   },
   collectCoverageFrom: [

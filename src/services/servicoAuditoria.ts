@@ -1,4 +1,4 @@
-import { supabaseAdmin } from './supabase'
+import { supabaseAdmin } from './supabase.node'
 import { AcaoAuditoria, ModuloAuditoria } from '../types'
 
 interface RegistrarAuditoriaParams {

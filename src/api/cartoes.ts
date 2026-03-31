@@ -25,6 +25,7 @@ import {
   atualizarCompraCartao,
   deletarCompraCartao,
 } from '../services/servicoCartoes'
+import { supabaseAdmin } from '../services/supabase.node'
 
 export default async function handlerCartoes(
   req: IncomingMessage,

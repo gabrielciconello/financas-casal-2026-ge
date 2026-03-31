@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { supabase } from '../services/supabase'
+import { supabase } from '../services/supabase.browser'
 import { Usuario } from '../types'
 
 // ============================================

@@ -11,6 +11,7 @@ import {
   atualizarSalario,
   deletarSalario,
 } from '../services/servicoSalarios'
+import { supabaseAdmin } from '../services/supabase.node'
 
 export default async function handlerSalarios(
   req: IncomingMessage,

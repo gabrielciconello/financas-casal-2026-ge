@@ -19,6 +19,7 @@ import {
   atualizarTransacao,
   deletarTransacao,
 } from '../services/servicoTransacoes'
+import { supabaseAdmin } from '../services/supabase.node'
 
 export default async function handlerTransacoes(
   req: IncomingMessage,

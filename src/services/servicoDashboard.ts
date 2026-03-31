@@ -1,4 +1,4 @@
-import { supabaseAdmin } from './supabase'
+import { supabaseAdmin } from './supabase.node'
 import { respostaSucesso, respostaErro } from '../utils'
 import { RespostaApi } from '../types'
 

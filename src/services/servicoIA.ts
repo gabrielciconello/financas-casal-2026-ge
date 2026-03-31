@@ -1,5 +1,5 @@
 import { modelo } from './gemini'
-import { supabaseAdmin } from './supabase'
+import { supabaseAdmin } from './supabase.node'
 import { RespostaApi } from '../types'
 import { respostaSucesso, respostaErro, mesAnoAtual } from '../utils'
 

@@ -1,5 +1,5 @@
 import { IncomingMessage, ServerResponse } from 'http'
-import { supabase } from '../services/supabase'
+import { supabase } from '../services/supabase.node'
 import { Usuario } from '../types'
 
 // Extende o IncomingMessage para carregar o usuário autenticado

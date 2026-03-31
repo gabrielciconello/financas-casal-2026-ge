@@ -22,6 +22,8 @@ import {
   buscarContribuicoes,
   criarContribuicao,
 } from '../services/servicoMetas'
+import { supabaseAdmin } from '../services/supabase.node'
+
 
 export default async function handlerMetas(
   req: IncomingMessage,

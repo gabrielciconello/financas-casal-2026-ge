@@ -8,6 +8,7 @@ import {
 import { buscarDadosDashboard } from '../services/servicoDashboard'
 import { mesAnoAtual } from '../utils'
 import { aplicarCors } from '../utils/cors'
+import { supabaseAdmin } from '../services/supabase.node'
 
 export default async function handlerDashboard(
   req: IncomingMessage,

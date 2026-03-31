@@ -12,6 +12,8 @@ import {
   gerarResumoMensal,
   categorizarTransacao,
 } from '../services/servicoIA'
+import { supabaseAdmin } from '../services/supabase.node'
+
 
 export default async function handlerIA(
   req: IncomingMessage,

@@ -26,6 +26,8 @@ import {
   atualizarGastoVariavel,
   deletarGastoVariavel,
 } from '../services/servicoGastos'
+import { supabaseAdmin } from '../services/supabase.node'
+
 
 export default async function handlerGastos(
   req: IncomingMessage,

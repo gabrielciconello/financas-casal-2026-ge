@@ -17,6 +17,16 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": [
+    "src/pages/**/*",
+    "src/components/**/*",
+    "src/hooks/**/*",
+    "src/styles/**/*",
+    "src/services/supabase.browser.ts",
+    "src/types/**/*",
+    "src/utils/index.ts",
+    "src/App.tsx",
+    "src/index.tsx",
+    "src/vite-env.d.ts"
+  ]
 }
