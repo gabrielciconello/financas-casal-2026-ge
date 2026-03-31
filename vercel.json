@@ -5,7 +5,6 @@
       "src": "src/api/**/*.ts",
       "use": "@vercel/node",
       "config": {
-        "tsconfig": "tsconfig.api.json",
         "includeFiles": [
           "src/middleware/**",
           "src/services/**",
