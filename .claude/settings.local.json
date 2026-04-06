@@ -13,7 +13,9 @@
       "Bash(npx vite:*)",
       "Bash(find /c/Users/gabri/Desktop/financas-casal -path */server* -name *.ts -o -path */api* -name *.ts -o -path */routes* -name *.ts)",
       "Bash(netstat -tulpn)",
-      "Bash(netsh interface:*)"
+      "Bash(netsh interface:*)",
+      "Bash(ls /c/Users/gabri/Desktop/financas-casal/.env*)",
+      "Bash(vercel logs:*)"
     ]
   }
 }
