@@ -119,14 +119,48 @@ export async function buscarDadosDashboard(
       .eq('ano', ano)
 
     // ==========================================
-    // 4. COMPRAS CARTÃO DO MÊS (filtrar por usuário)
+    // 4. COMPRAS CARTÃO ATIVAS DO MÊS (parcelas que ainda não foram concluídas)
+    // Uma compra do mês X aparece se o mês/ano alvo está dentro do range de parcelas
+    // parcelaAtual indica qual parcela caiu no mês da data_compra + (mesAlvo - mesCompra)
+    // Buscamos todas as compras do usuário e filtramos quais têm parcela ativa no mês alvo
     // ==========================================
-    const { data: comprasCartao } = await supabaseAdmin
+    const { data: todasComprasCartao } = await supabaseAdmin
       .from('compras_cartao')
       .select('id, descricao, categoria, valor_parcela, valor_total, data_compra, parcela_atual, parcelas, status')
       .eq('usuario_id', usuarioId)
-      .gte('data_compra', inicio)
-      .lte('data_compra', fim)
+
+    // Filtrar compras cuja parcela correspondente ao mês/ano consultado está ativa
+    const comprasMesAlvo = (todasComprasCartao ?? []).filter((c: any) => {
+      // Data da compra define o mês inicial
+      const dataCompra = new Date(c.data_compra + 'T00:00:00')
+      const mesCompra = dataCompra.getMonth() + 1
+      const anoCompra = dataCompra.getFullYear()
+
+      // Total de parcelas da compra
+      const totalParcelas = Number(c.parcelas || 1)
+      // Parcela que já havia passado quando o registro foi criado
+      const parcelaBase = Number(c.parcela_atual || 1)
+
+      // Diferença de meses entre a compra e o mês alvo
+      let diffMes = (ano - anoCompra) * 12 + (mes - mesCompra)
+
+      // Se diffMes < 0, o mês alvo é anterior à compra -> não aparece
+      if (diffMes < 0) return false
+
+      // A parcela que cai no mês alvo é: parcelaInicial + diffMes
+      const parcelaAlvo = parcelaBase + diffMes
+
+      // Se a parcela alvo está dentro do range total -> aparece
+      return parcelaAlvo >= 1 && parcelaAlvo <= totalParcelas
+    }).map((c: any) => {
+      const dataCompra = new Date(c.data_compra + 'T00:00:00')
+      const mesCompra = dataCompra.getMonth() + 1
+      const anoCompra = dataCompra.getFullYear()
+      let diffMes = (ano - anoCompra) * 12 + (mes - mesCompra)
+      const parcelaBase = Number(c.parcela_atual || 1)
+      const parcelaAlvo = parcelaBase + diffMes
+      return { ...c, parcela_alvo_no_mes: parcelaAlvo }
+    })
 
     // ==========================================
     // CALCULAR TOTAIS
@@ -141,7 +175,7 @@ export async function buscarDadosDashboard(
     const totalGastosVariaveis = gastosVariaveis
       ?.reduce((acc: number, g: any) => acc + Number(g.valor_real ?? 0), 0) ?? 0
 
-    const totalComprasCartao = comprasCartao
+    const totalComprasCartao = comprasMesAlvo
       ?.reduce((acc: number, c: any) => acc + Number(c.valor_parcela ?? 0), 0) ?? 0
 
     const totalSaidasTransacoes = transacoes
@@ -221,14 +255,14 @@ export async function buscarDadosDashboard(
     }
 
     // Compras cartão como saída (parcelas)
-    for (const c of comprasCartao ?? []) {
+    for (const c of comprasMesAlvo ?? []) {
       itensDetalhados.push({
         id: c.id,
         tipo: 'saida',
-        descricao: `${c.descricao} (${c.parcela_atual}/${c.parcelas})`,
+        descricao: `${c.descricao} (${c.parcela_alvo_no_mes}/${c.parcelas})`,
         valor: Number(c.valor_parcela ?? 0),
         data: c.data_compra,
-        fonte: 'compra_cartao',
+        fonte: 'compra_cartao' as const,
         categoria: c.categoria,
         status: c.status ?? 'pendente',
       })
@@ -265,7 +299,7 @@ export async function buscarDadosDashboard(
     }
 
     // Compras cartão
-    for (const c of comprasCartao ?? []) {
+    for (const c of comprasMesAlvo ?? []) {
       const val = Number(c.valor_parcela ?? 0)
       if (val > 0) {
         totalPorCategoria[c.categoria] = (totalPorCategoria[c.categoria] ?? 0) + val

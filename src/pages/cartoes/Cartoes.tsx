@@ -31,6 +31,7 @@ export default function Cartoes() {
   const { carregando: carregandoCompras, requisitar: buscarComprasReq } = useApi()
 
   const [todasCompras, setTodasCompras] = useState<CompraCartao[]>([])
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const buscarCartoes = useCallback(async () => {
     const resultado = await requisitar('/api/cartoes?pagina=1&limite=50')
@@ -45,6 +46,7 @@ export default function Cartoes() {
   }, [buscarComprasReq])
 
   useEffect(() => { buscarCartoes() }, [buscarCartoes])
+  useEffect(() => { buscarTodasCompras() }, [buscarTodasCompras])
 
   useEffect(() => {
     async function fetch() {
@@ -61,7 +63,7 @@ export default function Cartoes() {
       }
     }
     fetch()
-  }, [cartaoSelecionado, pagina, buscarComprasReq])
+  }, [cartaoSelecionado, pagina, buscarComprasReq, refreshKey])
 
   async function handleSalvarCartao(dados: CriarCartaoDTO) {
     if (cartaoEditando) {
@@ -82,6 +84,8 @@ export default function Cartoes() {
     setCompraEditando(null)
     setPagina(1)
     buscarCartoes()
+    buscarTodasCompras()
+    setRefreshKey(k => k + 1)
   }
 
   async function handleDeletarCartao(id: string) {
@@ -96,6 +100,8 @@ export default function Cartoes() {
     await requisitar(`/api/cartoes/compras-cartao/${id}`, { method: 'DELETE' })
     setPagina(1)
     buscarCartoes()
+    buscarTodasCompras()
+    setRefreshKey(k => k + 1)
   }
 
   async function handleAtualizarCompra(id: string, dados: CriarCompraCartaoDTO) {
@@ -104,6 +110,8 @@ export default function Cartoes() {
     setCompraEditando(null)
     setPagina(1)
     buscarCartoes()
+    buscarTodasCompras()
+    setRefreshKey(k => k + 1)
   }
 
   const calcularUso = (cartao: Cartao) => {
