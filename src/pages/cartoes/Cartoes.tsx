@@ -364,21 +364,15 @@ function FormularioCompra({ cartaoId, compraEditando, onNovo, onAtualizar, onCan
     return { cartao_id: cartaoId, descricao: '', categoria: 'Alimentação', valor_total: 0, parcelas: 1, parcela_inicial: 1, data_compra: new Date().toISOString().split('T')[0] }
   })
 
-  const handleParcelas = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value === '' ? '' : Number(e.target.value)
-    const parcelas = val === '' ? 1 : Math.max(1, Math.min(48, val))
-    setForm((prev: CriarCompraCartaoDTO) => ({
-      ...prev,
-      parcelas,
-      parcela_inicial: Math.min(prev.parcela_inicial ?? 1, parcelas),
-    }))
-  }
+  const [parcelasInput, setParcelasInput] = useState('')
+  const [parcelaInicialInput, setParcelaInicialInput] = useState('')
 
-  const handleParcelaInicial = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value === '' ? '' : Number(e.target.value)
-    const v = val === '' ? 1 : Math.max(1, Math.min(form.parcelas ?? 1, val))
-    setForm((prev: CriarCompraCartaoDTO) => ({ ...prev, parcela_inicial: v }))
-  }
+  useEffect(() => {
+    if (compraEditando) {
+      setParcelasInput(String(compraEditando.parcelas ?? ''))
+      setParcelaInicialInput(String(compraEditando.parcela_atual ?? ''))
+    }
+  }, [compraEditando])
 
   return (
     <form onSubmit={(e) => { e.preventDefault(); if (compraEditando && onAtualizar) { onAtualizar(compraEditando.id, form) } else { onNovo(form) } }} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }} autoComplete="off">
@@ -399,14 +393,14 @@ function FormularioCompra({ cartaoId, compraEditando, onNovo, onAtualizar, onCan
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
         <div>
           <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>Parcelas</label>
-          <input className="input" type="text" inputMode="numeric" autoComplete="off" value={form.parcelas ?? 1} onChange={handleParcelas} onFocus={(e) => e.target.select()} placeholder="1" required />
+          <input className="input" type="text" inputMode="numeric" value={parcelasInput} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); setParcelasInput(v); setForm((p) => ({ ...p, parcelas: v === '' ? 1 : Number(v) })) }} placeholder="1" required />
           {form.valor_total > 0 && form.parcelas && form.parcelas > 1 && (
             <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)', marginTop: '0.25rem' }}>{form.parcelas}x de {formatarMoeda(form.valor_total / form.parcelas)}</div>
           )}
         </div>
         <div>
           <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>Parcela Inicial</label>
-          <input className="input" type="text" inputMode="numeric" autoComplete="off" value={form.parcela_inicial ?? 1} onChange={handleParcelaInicial} onFocus={(e) => e.target.select()} placeholder="1" />
+          <input className="input" type="text" inputMode="numeric" value={parcelaInicialInput} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); setParcelaInicialInput(v); setForm((p) => ({ ...p, parcela_inicial: v === '' ? 1 : Number(v) })) }} placeholder="1" />
           <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)', marginTop: '0.25rem' }}>{form.parcela_inicial && form.parcela_inicial > 1 ? `Já na parcela ${form.parcela_inicial} de ${form.parcelas}` : 'Compra nova (parcela 1)'}</div>
         </div>
         <div>
