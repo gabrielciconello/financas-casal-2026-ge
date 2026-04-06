@@ -11,7 +11,6 @@ const Cartoes = lazy(() => import('./pages/cartoes/Cartoes'))
 const GastosFixos = lazy(() => import('./pages/gastos/GastosFixos'))
 const GastosVariaveis = lazy(() => import('./pages/gastos/GastosVariaveis'))
 const Metas = lazy(() => import('./pages/metas/Metas'))
-const AssistenteIA = lazy(() => import('./pages/ia/AssistenteIA'))
 
 // Rota protegida — redireciona para login se não autenticado
 function RotaProtegida({ children }: { children: React.ReactNode }) {
@@ -62,7 +61,6 @@ export default function App() {
           <Route path="gastos/fixos" element={<GastosFixos />} />
           <Route path="gastos/variaveis" element={<GastosVariaveis />} />
           <Route path="metas" element={<Metas />} />
-          <Route path="ia" element={<AssistenteIA />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

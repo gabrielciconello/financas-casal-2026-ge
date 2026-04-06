@@ -3,7 +3,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth, useTema } from '../../hooks/useContexto'
 import {
   LayoutDashboard, ArrowLeftRight, Wallet, CreditCard,
-  Receipt, Target, Bot, LogOut, Sun, Moon, Menu, X,
+  Receipt, Target, LogOut, Sun, Moon, Menu, X,
   TrendingUp, ShoppingBag,
 } from 'lucide-react'
 
@@ -15,7 +15,6 @@ const itensMenu = [
   { caminho: '/gastos/fixos', icone: Receipt, rotulo: 'Gastos Fixos' },
   { caminho: '/gastos/variaveis', icone: ShoppingBag, rotulo: 'Gastos Variáveis' },
   { caminho: '/metas', icone: Target, rotulo: 'Metas' },
-  { caminho: '/ia', icone: Bot, rotulo: 'Assistente IA' },
 ]
 
 function SidebarConteudo({ fechar, mostrarFechar }: { fechar: () => void, mostrarFechar: boolean }) {
