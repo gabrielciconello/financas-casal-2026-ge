@@ -1,4 +1,4 @@
-import { supabaseAdmin } from './supabase.node'
+import { supabaseAdmin } from './supabase.node.js'
 import { AcaoAuditoria, ModuloAuditoria } from '../types.js'
 
 interface RegistrarAuditoriaParams {

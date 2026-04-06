@@ -1,4 +1,4 @@
-import { supabaseAdmin } from './supabase.node'
+import { supabaseAdmin } from './supabase.node.js'
 import { respostaSucesso, respostaErro } from '../utils.js'
 import { RespostaApi } from '../types.js'
 

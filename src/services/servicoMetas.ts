@@ -1,4 +1,4 @@
-import { supabaseAdmin } from './supabase.node'
+import { supabaseAdmin } from './supabase.node.js'
 import { registrarAuditoria } from './servicoAuditoria.js'
 import {
   Meta,
