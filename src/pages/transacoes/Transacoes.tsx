@@ -110,7 +110,7 @@ export default function Transacoes() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', minWidth: '600px' }}>
 
       {/* Cabeçalho */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
@@ -220,7 +220,7 @@ export default function Transacoes() {
       </div>
 
       {/* Lista */}
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="card" style={{ padding: 0, overflow: 'hidden', overflowX: 'auto' }}>
         {carregando ? (
           <Carregando texto="Buscando transações..." />
         ) : erro ? (
@@ -242,6 +242,7 @@ export default function Transacoes() {
               color: 'var(--cor-texto-suave)',
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
+              minWidth: '600px',
             }}>
               <span>Descrição</span>
               <span>Categoria</span>

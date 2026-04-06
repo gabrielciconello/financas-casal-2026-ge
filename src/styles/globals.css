@@ -80,6 +80,7 @@
 html {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
@@ -88,6 +89,7 @@ body {
   color: var(--cor-texto);
   min-height: 100vh;
   transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
 }
 
 /* ============================================
@@ -104,7 +106,7 @@ body {
   background: var(--cor-fundo-card);
   border: 1px solid var(--cor-borda);
   border-radius: var(--raio-lg);
-  padding: 1.5rem;
+  padding: 1.25rem;
   box-shadow: var(--sombra-sm);
   transition: var(--transicao);
 }
@@ -113,11 +115,15 @@ body {
   box-shadow: var(--sombra-md);
 }
 
+/* ============================================
+   BOTÕES
+   ============================================ */
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
   border-radius: var(--raio-sm);
   font-family: var(--fonte-corpo);
   font-size: 0.875rem;
@@ -125,6 +131,8 @@ body {
   cursor: pointer;
   border: none;
   transition: var(--transicao);
+  white-space: nowrap;
+  line-height: 1.4;
 }
 
 .btn-primario {
@@ -136,6 +144,12 @@ body {
   background: var(--cor-primaria-hover);
   transform: translateY(-1px);
   box-shadow: var(--sombra-md);
+}
+
+.btn-primario:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .btn-secundario {
@@ -153,9 +167,12 @@ body {
   color: #fff;
 }
 
+/* ============================================
+   INPUTS
+   ============================================ */
 .input {
   width: 100%;
-  padding: 0.625rem 0.875rem;
+  padding: 0.5rem 0.75rem;
   background: var(--cor-fundo);
   border: 1px solid var(--cor-borda);
   border-radius: var(--raio-sm);
@@ -164,6 +181,7 @@ body {
   color: var(--cor-texto);
   transition: var(--transicao);
   outline: none;
+  line-height: 1.5;
 }
 
 .input:focus {
@@ -171,13 +189,27 @@ body {
   box-shadow: 0 0 0 3px var(--cor-primaria-suave);
 }
 
+select.input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b6b65' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2rem;
+  cursor: pointer;
+}
+
+/* ============================================
+   BADGES
+   ============================================ */
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.25rem 0.625rem;
+  padding: 0.2rem 0.5rem;
   border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 .badge-sucesso { background: var(--cor-sucesso-suave); color: var(--cor-sucesso); }
@@ -186,17 +218,34 @@ body {
 .badge-info    { background: var(--cor-primaria-suave); color: var(--cor-primaria); }
 
 /* ============================================
+   TABELAS RESPONSIVAS
+   ============================================ */
+.tabela-responsiva {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ============================================
    SCROLLBAR CUSTOMIZADA
    ============================================ */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--cor-fundo); }
-::-webkit-scrollbar-thumb { background: var(--cor-borda); border-radius: 3px; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--cor-borda); border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--cor-texto-fraco); }
 
 /* ============================================
-   RESPONSIVO — MOBILE FIRST
+   MOBILE FIRST — RESPONSIVO
    ============================================ */
-@media (max-width: 768px) {
-  .container { padding: 0 0.75rem; }
+
+/* Telas pequenas (até 480px) */
+@media (max-width: 480px) {
   .card { padding: 1rem; }
+  .btn { padding: 0.5rem 0.75rem; font-size: 0.8125rem; }
+  .input { font-size: 0.875rem; }
+}
+
+/* Tablets (até 768px) */
+@media (max-width: 768px) {
+  .card { padding: 1rem; border-radius: var(--raio-md); }
 }

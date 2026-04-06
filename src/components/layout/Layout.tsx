@@ -2,20 +2,9 @@ import React, { useState } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth, useTema } from '../../hooks/useContexto'
 import {
-  LayoutDashboard,
-  ArrowLeftRight,
-  Wallet,
-  CreditCard,
-  Receipt,
-  Target,
-  Bot,
-  LogOut,
-  Sun,
-  Moon,
-  Menu,
-  X,
-  TrendingUp,
-  ShoppingBag,
+  LayoutDashboard, ArrowLeftRight, Wallet, CreditCard,
+  Receipt, Target, Bot, LogOut, Sun, Moon, Menu, X,
+  TrendingUp, ShoppingBag,
 } from 'lucide-react'
 
 const itensMenu = [
@@ -47,61 +36,58 @@ export default function Layout() {
     padding: '0.625rem 0.875rem',
     borderRadius: 'var(--raio-sm)',
     textDecoration: 'none',
-    fontSize: '0.875rem',
+    fontSize: '0.9rem',
     fontWeight: isActive ? 600 : 400,
     color: isActive ? 'var(--cor-primaria)' : 'var(--cor-texto-suave)',
     background: isActive ? 'var(--cor-primaria-suave)' : 'transparent',
     transition: 'var(--transicao)',
   })
 
-  const sidebar = (
-    <aside style={{
-      width: '240px',
-      height: '100vh',
-      background: 'var(--cor-fundo-card)',
-      borderRight: '1px solid var(--cor-borda)',
+  const conteudoSidebar = (
+    <div style={{
       display: 'flex',
       flexDirection: 'column',
-      padding: '1.25rem 0.875rem',
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      zIndex: 100,
-      transition: 'transform 0.3s ease',
+      height: '100%',
+      padding: '1rem 0.75rem',
     }}>
-
-      {/* Logo */}
+      {/* Logo + fechar no mobile */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        gap: '0.625rem',
-        padding: '0 0.5rem',
-        marginBottom: '1.75rem',
+        justifyContent: 'space-between',
+        marginBottom: '1.5rem',
+        padding: '0 0.25rem',
       }}>
-        <div style={{
-          width: '34px',
-          height: '34px',
-          background: 'var(--cor-primaria)',
-          borderRadius: 'var(--raio-sm)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-        }}>
-          <TrendingUp size={18} color="#fff" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{
+            width: '32px', height: '32px',
+            background: 'var(--cor-primaria)',
+            borderRadius: 'var(--raio-sm)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <TrendingUp size={16} color="#fff" />
+          </div>
+          <span style={{
+            fontFamily: 'var(--fonte-display)',
+            fontWeight: 700,
+            fontSize: '0.9375rem',
+            color: 'var(--cor-texto)',
+          }}>
+            Finanças Casal
+          </span>
         </div>
-        <span style={{
-          fontFamily: 'var(--fonte-display)',
-          fontWeight: 700,
-          fontSize: '1rem',
-          color: 'var(--cor-texto)',
-        }}>
-          Finanças Casal
-        </span>
+        <button
+          onClick={() => setMenuAberto(false)}
+          className="btn btn-secundario"
+          style={{ padding: '0.375rem', display: menuAberto ? 'flex' : 'none' }}
+        >
+          <X size={18} />
+        </button>
       </div>
 
       {/* Navegação */}
-      <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+      <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
         {itensMenu.map(({ caminho, icone: Icone, rotulo }) => (
           <NavLink
             key={caminho}
@@ -115,100 +101,112 @@ export default function Layout() {
         ))}
       </nav>
 
-      {/* Rodapé da sidebar */}
+      {/* Rodapé */}
       <div style={{
         borderTop: '1px solid var(--cor-borda)',
-        paddingTop: '1rem',
+        paddingTop: '0.875rem',
         display: 'flex',
         flexDirection: 'column',
-        gap: '0.5rem',
+        gap: '0.375rem',
       }}>
-
-        {/* Usuário */}
         <div style={{
-          padding: '0.5rem',
+          padding: '0.25rem 0.5rem',
           fontSize: '0.75rem',
-          color: 'var(--cor-texto-suave)',
+          color: 'var(--cor-texto-fraco)',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
         }}>
           {usuario?.email}
         </div>
-
-        {/* Alternar tema */}
-        <button
-          onClick={alternarTema}
-          className="btn btn-secundario"
-          style={{ width: '100%', justifyContent: 'flex-start' }}
-        >
-          {tema === 'claro' ? <Moon size={16} /> : <Sun size={16} />}
+        <button onClick={alternarTema} className="btn btn-secundario"
+          style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem' }}>
+          {tema === 'claro' ? <Moon size={15} /> : <Sun size={15} />}
           {tema === 'claro' ? 'Tema Escuro' : 'Tema Claro'}
         </button>
-
-        {/* Sair */}
-        <button
-          onClick={handleSair}
-          className="btn"
-          style={{
-            width: '100%',
-            justifyContent: 'flex-start',
-            color: 'var(--cor-perigo)',
-            background: 'transparent',
-          }}
-        >
-          <LogOut size={16} />
+        <button onClick={handleSair} className="btn"
+          style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', color: 'var(--cor-perigo)', background: 'transparent' }}>
+          <LogOut size={15} />
           Sair
         </button>
       </div>
-    </aside>
+    </div>
   )
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
 
-      {/* Sidebar desktop */}
-      <div className="sidebar-desktop" style={{ display: 'none' }}>
-        {sidebar}
-      </div>
+      {/* SIDEBAR DESKTOP */}
+      <aside style={{
+        width: '220px',
+        height: '100vh',
+        background: 'var(--cor-fundo-card)',
+        borderRight: '1px solid var(--cor-borda)',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        zIndex: 100,
+        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+      }} className="sidebar-desktop">
+        {conteudoSidebar}
+      </aside>
 
-      {/* Sidebar mobile — overlay */}
+      {/* SIDEBAR MOBILE — Drawer */}
       {menuAberto && (
         <>
           <div
             onClick={() => setMenuAberto(false)}
             style={{
-              position: 'fixed',
-              inset: 0,
+              position: 'fixed', inset: 0,
               background: 'rgba(0,0,0,0.5)',
-              zIndex: 99,
+              zIndex: 199,
+              backdropFilter: 'blur(2px)',
             }}
           />
-          {sidebar}
+          <aside style={{
+            position: 'fixed',
+            top: 0, left: 0,
+            width: '260px',
+            height: '100vh',
+            background: 'var(--cor-fundo-card)',
+            borderRight: '1px solid var(--cor-borda)',
+            zIndex: 200,
+            overflowY: 'auto',
+            boxShadow: 'var(--sombra-lg)',
+          }}>
+            {conteudoSidebar}
+          </aside>
         </>
       )}
 
-      {/* Conteúdo principal */}
+      {/* CONTEÚDO PRINCIPAL */}
       <main style={{
         flex: 1,
-        marginLeft: '240px',
         minHeight: '100vh',
         background: 'var(--cor-fundo)',
-      }}>
+        display: 'flex',
+        flexDirection: 'column',
+      }} className="main-content">
 
-        {/* Header mobile */}
-        <header style={{
+        {/* HEADER MOBILE */}
+        <header className="header-mobile" style={{
           display: 'none',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '1rem',
+          padding: '0.875rem 1rem',
           background: 'var(--cor-fundo-card)',
           borderBottom: '1px solid var(--cor-borda)',
           position: 'sticky',
           top: 0,
           zIndex: 50,
-        }} className="header-mobile">
+          gap: '0.75rem',
+        }}>
           <button
             onClick={() => setMenuAberto(true)}
             className="btn btn-secundario"
-            style={{ padding: '0.5rem' }}
+            style={{ padding: '0.5rem', flexShrink: 0 }}
           >
             <Menu size={20} />
           </button>
@@ -216,35 +214,39 @@ export default function Layout() {
             fontFamily: 'var(--fonte-display)',
             fontWeight: 700,
             fontSize: '1rem',
+            color: 'var(--cor-texto)',
+            flex: 1,
+            textAlign: 'center',
           }}>
             Finanças Casal
           </span>
           <button
             onClick={alternarTema}
             className="btn btn-secundario"
-            style={{ padding: '0.5rem' }}
+            style={{ padding: '0.5rem', flexShrink: 0 }}
           >
             {tema === 'claro' ? <Moon size={18} /> : <Sun size={18} />}
           </button>
         </header>
 
-        {/* Página atual */}
-        <div style={{ padding: '1.5rem' }}>
+        {/* CONTEÚDO DA PÁGINA */}
+        <div style={{ padding: '1.25rem 1rem', flex: 1 }} className="pagina-conteudo">
           <Outlet />
         </div>
-
       </main>
 
-      {/* CSS responsivo */}
+      {/* CSS RESPONSIVO */}
       <style>{`
+        @media (min-width: 769px) {
+          .sidebar-desktop { display: flex !important; }
+          .header-mobile { display: none !important; }
+          .main-content { margin-left: 220px; }
+        }
         @media (max-width: 768px) {
           .sidebar-desktop { display: none !important; }
           .header-mobile { display: flex !important; }
-          main { margin-left: 0 !important; }
-        }
-        @media (min-width: 769px) {
-          .sidebar-desktop { display: block !important; }
-          .header-mobile { display: none !important; }
+          .main-content { margin-left: 0 !important; }
+          .pagina-conteudo { padding: 1rem 0.875rem !important; }
         }
       `}</style>
     </div>
