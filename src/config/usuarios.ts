@@ -2,7 +2,8 @@
 // Adicione aqui os emails e nomes dos usuarios
 
 export const NOMES_USUARIOS: Record<string, string> = {
-  // Exemplo: 'usuario1@email.com': 'Nome do Usuario 1',
+ 'gabrielghnc@gmail.com': 'Gabriel',
+ 'emelycristiny07@gmail.com': 'Emely',
   // Exemplo: 'usuario2@email.com': 'Nome do Usuario 2',
 }
 

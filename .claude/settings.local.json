@@ -15,7 +15,12 @@
       "Bash(netstat -tulpn)",
       "Bash(netsh interface:*)",
       "Bash(ls /c/Users/gabri/Desktop/financas-casal/.env*)",
-      "Bash(vercel logs:*)"
+      "Bash(vercel logs:*)",
+      "Bash(grep -n \"from ''./supabase.node''\" *.ts)",
+      "Bash(grep -n \"from ''./supabase.node.js''\" *.ts)",
+      "Bash(grep -rn \"from ''''\\\\.\\\\/\" --include=\"*.ts\" .)",
+      "Bash(grep -n \"from ''../utils.js''\" *.ts)",
+      "Bash(grep -n \"from ''../types.js''\" *.ts)"
     ]
   }
 }
