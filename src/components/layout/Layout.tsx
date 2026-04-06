@@ -18,237 +18,113 @@ const itensMenu = [
   { caminho: '/ia', icone: Bot, rotulo: 'Assistente IA' },
 ]
 
-export default function Layout() {
+function SidebarConteudo({ fechar, mostrarFechar }: { fechar: () => void, mostrarFechar: boolean }) {
   const { usuario, sair } = useAuth()
   const { tema, alternarTema } = useTema()
   const navegar = useNavigate()
-  const [menuAberto, setMenuAberto] = useState(false)
 
   async function handleSair() {
     await sair()
     navegar('/login')
   }
 
-  const estiloNavLink = ({ isActive }: { isActive: boolean }) => ({
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.625rem',
-    padding: '0.625rem 0.875rem',
-    borderRadius: 'var(--raio-sm)',
-    textDecoration: 'none',
-    fontSize: '0.9rem',
-    fontWeight: isActive ? 600 : 400,
-    color: isActive ? 'var(--cor-primaria)' : 'var(--cor-texto-suave)',
-    background: isActive ? 'var(--cor-primaria-suave)' : 'transparent',
-    transition: 'var(--transicao)',
-  })
-
-  const conteudoSidebar = (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100%',
-      padding: '1rem 0.75rem',
-    }}>
-      {/* Logo + fechar no mobile */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: '1.5rem',
-        padding: '0 0.25rem',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <div style={{
-            width: '32px', height: '32px',
-            background: 'var(--cor-primaria)',
-            borderRadius: 'var(--raio-sm)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0,
-          }}>
-            <TrendingUp size={16} color="#fff" />
+  return (
+    <div className="flex flex-col h-full p-3" style={{ color: 'var(--cor-texto)' }}>
+      {/* Logo */}
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, #2563eb, #7c3aed)' }}>
+            <TrendingUp size={16} className="text-white" />
           </div>
-          <span style={{
-            fontFamily: 'var(--fonte-display)',
-            fontWeight: 700,
-            fontSize: '0.9375rem',
-            color: 'var(--cor-texto)',
-          }}>
+          <span className="font-display font-bold text-base truncate" style={{ color: 'var(--cor-texto)' }}>
             Finanças Casal
           </span>
         </div>
-        <button
-          onClick={() => setMenuAberto(false)}
-          className="btn btn-secundario"
-          style={{ padding: '0.375rem', display: menuAberto ? 'flex' : 'none' }}
-        >
-          <X size={18} />
-        </button>
+        {mostrarFechar && (
+          <button onClick={fechar} className="btn btn-secundario p-1.5">
+            <X size={18} />
+          </button>
+        )}
       </div>
 
-      {/* Navegação */}
-      <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+      {/* Nav */}
+      <nav className="flex-1 flex flex-col gap-0.5">
         {itensMenu.map(({ caminho, icone: Icone, rotulo }) => (
           <NavLink
             key={caminho}
             to={caminho}
-            style={estiloNavLink}
-            onClick={() => setMenuAberto(false)}
+            onClick={fechar}
+            className={({ isActive }) =>
+              `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all no-underline ${
+                isActive
+                  ? 'nav-link-ativo font-semibold'
+                  : 'texto-nav hover:bg-opacity-50'
+              }`
+            }
           >
-            <Icone size={17} />
-            {rotulo}
+            <Icone size={16} className="flex-shrink-0" />
+            <span className="truncate">{rotulo}</span>
           </NavLink>
         ))}
       </nav>
 
       {/* Rodapé */}
-      <div style={{
-        borderTop: '1px solid var(--cor-borda)',
-        paddingTop: '0.875rem',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.375rem',
-      }}>
-        <div style={{
-          padding: '0.25rem 0.5rem',
-          fontSize: '0.75rem',
-          color: 'var(--cor-texto-fraco)',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-        }}>
-          {usuario?.email}
-        </div>
-        <button onClick={alternarTema} className="btn btn-secundario"
-          style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem' }}>
+      <div className="pt-3 flex flex-col gap-1.5 mt-3" style={{ borderTop: '1px solid var(--cor-borda)' }}>
+        <p className="texto-nav px-2 truncate text-xs">{usuario?.email}</p>
+        <button onClick={alternarTema} className="btn btn-secundario w-full justify-start gap-2 text-sm">
           {tema === 'claro' ? <Moon size={15} /> : <Sun size={15} />}
           {tema === 'claro' ? 'Tema Escuro' : 'Tema Claro'}
         </button>
-        <button onClick={handleSair} className="btn"
-          style={{ width: '100%', justifyContent: 'flex-start', gap: '0.5rem', color: 'var(--cor-perigo)', background: 'transparent' }}>
+        <button onClick={handleSair} className="btn w-full justify-start gap-2 text-sm" style={{ color: 'var(--cor-perigo)', background: 'transparent' }}>
           <LogOut size={15} />
           Sair
         </button>
       </div>
     </div>
   )
+}
+
+export default function Layout() {
+  const [menuAberto, setMenuAberto] = useState(false)
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
+    <div className="flex min-h-screen bg-pagina" style={{ backgroundColor: 'var(--cor-fundo-pagina)' }}>
 
       {/* SIDEBAR DESKTOP */}
-      <aside style={{
-        width: '220px',
-        height: '100vh',
-        background: 'var(--cor-fundo-card)',
-        borderRight: '1px solid var(--cor-borda)',
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        zIndex: 100,
-        overflowY: 'auto',
-        display: 'flex',
-        flexDirection: 'column',
-      }} className="sidebar-desktop">
-        {conteudoSidebar}
+      <aside className="hidden md:flex fixed top-0 left-0 h-screen w-56 flex-col bg-lateral border-r z-50" style={{ background: 'var(--cor-fundo-card)', borderRight: '1px solid var(--cor-borda)' }}>
+        <SidebarConteudo fechar={() => {}} mostrarFechar={false} />
       </aside>
 
       {/* SIDEBAR MOBILE — Drawer */}
       {menuAberto && (
         <>
           <div
+            className="fixed inset-0 bg-black/50 z-40 md:hidden"
             onClick={() => setMenuAberto(false)}
-            style={{
-              position: 'fixed', inset: 0,
-              background: 'rgba(0,0,0,0.5)',
-              zIndex: 199,
-              backdropFilter: 'blur(2px)',
-            }}
           />
-          <aside style={{
-            position: 'fixed',
-            top: 0, left: 0,
-            width: '260px',
-            height: '100vh',
-            background: 'var(--cor-fundo-card)',
-            borderRight: '1px solid var(--cor-borda)',
-            zIndex: 200,
-            overflowY: 'auto',
-            boxShadow: 'var(--sombra-lg)',
-          }}>
-            {conteudoSidebar}
+          <aside className="fixed top-0 left-0 h-screen w-64 bg-lateral border-r z-50 md:hidden shadow-xl" style={{ background: 'var(--cor-fundo-card)', borderRight: '1px solid var(--cor-borda)' }}>
+            <SidebarConteudo fechar={() => setMenuAberto(false)} mostrarFechar={true} />
           </aside>
         </>
       )}
 
       {/* CONTEÚDO PRINCIPAL */}
-      <main style={{
-        flex: 1,
-        minHeight: '100vh',
-        background: 'var(--cor-fundo)',
-        display: 'flex',
-        flexDirection: 'column',
-      }} className="main-content">
+      <div className="flex-1 flex flex-col md:ml-56 min-h-screen">
 
         {/* HEADER MOBILE */}
-        <header className="header-mobile" style={{
-          display: 'none',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0.875rem 1rem',
-          background: 'var(--cor-fundo-card)',
-          borderBottom: '1px solid var(--cor-borda)',
-          position: 'sticky',
-          top: 0,
-          zIndex: 50,
-          gap: '0.75rem',
-        }}>
-          <button
-            onClick={() => setMenuAberto(true)}
-            className="btn btn-secundario"
-            style={{ padding: '0.5rem', flexShrink: 0 }}
-          >
+        <header className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3" style={{ background: 'var(--cor-fundo-card)', borderBottom: '1px solid var(--cor-borda)' }}>
+          <button onClick={() => setMenuAberto(true)} className="btn btn-secundario p-2">
             <Menu size={20} />
           </button>
-          <span style={{
-            fontFamily: 'var(--fonte-display)',
-            fontWeight: 700,
-            fontSize: '1rem',
-            color: 'var(--cor-texto)',
-            flex: 1,
-            textAlign: 'center',
-          }}>
-            Finanças Casal
-          </span>
-          <button
-            onClick={alternarTema}
-            className="btn btn-secundario"
-            style={{ padding: '0.5rem', flexShrink: 0 }}
-          >
-            {tema === 'claro' ? <Moon size={18} /> : <Sun size={18} />}
-          </button>
+          <span className="font-display font-bold text-base" style={{ color: 'var(--cor-texto)' }}>Finanças Casal</span>
+          <div className="w-9" /> {/* spacer */}
         </header>
 
         {/* CONTEÚDO DA PÁGINA */}
-        <div style={{ padding: '1.25rem 1rem', flex: 1 }} className="pagina-conteudo">
+        <main className="flex-1 p-4 md:p-6">
           <Outlet />
-        </div>
-      </main>
-
-      {/* CSS RESPONSIVO */}
-      <style>{`
-        @media (min-width: 769px) {
-          .sidebar-desktop { display: flex !important; }
-          .header-mobile { display: none !important; }
-          .main-content { margin-left: 220px; }
-        }
-        @media (max-width: 768px) {
-          .sidebar-desktop { display: none !important; }
-          .header-mobile { display: flex !important; }
-          .main-content { margin-left: 0 !important; }
-          .pagina-conteudo { padding: 1rem 0.875rem !important; }
-        }
-      `}</style>
+        </main>
+      </div>
     </div>
   )
 }

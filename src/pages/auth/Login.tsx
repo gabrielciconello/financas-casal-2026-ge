@@ -16,194 +16,80 @@ export default function Login() {
     e.preventDefault()
     setErro(null)
     setCarregando(true)
-
     const erro = await entrar(email, senha)
-
-    if (erro) {
-      setErro('E-mail ou senha incorretos')
-      setCarregando(false)
-      return
-    }
-
+    if (erro) { setErro('E-mail ou senha incorretos'); setCarregando(false); return }
     navegar('/dashboard')
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'var(--cor-fundo)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '1rem',
-    }}>
-
-      {/* Card de login */}
-      <div style={{
-        width: '100%',
-        maxWidth: '400px',
-        background: 'var(--cor-fundo-card)',
-        border: '1px solid var(--cor-borda)',
-        borderRadius: 'var(--raio-xl)',
-        padding: '2.5rem',
-        boxShadow: 'var(--sombra-lg)',
-      }}>
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #f0f9ff 50%, #faf5ff 100%)' }}>
+      <div className="w-full max-w-sm rounded-2xl border p-8" style={{ background: 'var(--cor-fundo-card)', borderColor: 'var(--cor-borda)', boxShadow: 'var(--sombra-card-hover)' }}>
 
         {/* Logo */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.75rem',
-          marginBottom: '2rem',
-        }}>
-          <div style={{
-            width: '42px',
-            height: '42px',
-            background: 'var(--cor-primaria)',
-            borderRadius: 'var(--raio-sm)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-            <TrendingUp size={22} color="#fff" />
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #2563eb, #7c3aed)' }}>
+            <TrendingUp size={20} className="text-white" />
           </div>
           <div>
-            <div style={{
-              fontFamily: 'var(--fonte-display)',
-              fontSize: '1.25rem',
-              fontWeight: 700,
-              color: 'var(--cor-texto)',
-              lineHeight: 1,
-            }}>
+            <div className="font-display font-bold text-lg leading-none" style={{ color: 'var(--cor-texto)' }}>
               Finanças Casal
             </div>
-            <div style={{
-              fontSize: '0.75rem',
-              color: 'var(--cor-texto-suave)',
-              marginTop: '2px',
-            }}>
-              Gestão financeira compartilhada
-            </div>
+            <div className="text-xs mt-1" style={{ color: 'var(--cor-texto-suave)' }}>Gestão financeira compartilhada</div>
           </div>
         </div>
 
-        {/* Título */}
-        <h1 style={{
-          fontFamily: 'var(--fonte-display)',
-          fontSize: '1.5rem',
-          fontWeight: 700,
-          color: 'var(--cor-texto)',
-          marginBottom: '0.5rem',
-        }}>
+        <h1 className="font-display font-bold text-2xl mb-1" style={{ color: 'var(--cor-texto)' }}>
           Bem-vindo de volta
         </h1>
-        <p style={{
-          fontSize: '0.875rem',
-          color: 'var(--cor-texto-suave)',
-          marginBottom: '1.75rem',
-        }}>
-          Entre com sua conta para continuar
-        </p>
+        <p className="text-sm mb-6" style={{ color: 'var(--cor-texto-suave)' }}>Entre com sua conta para continuar</p>
 
-        {/* Formulário */}
-        <form onSubmit={handleSubmit}>
-
-          {/* E-mail */}
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{
-              display: 'block',
-              fontSize: '0.8125rem',
-              fontWeight: 500,
-              color: 'var(--cor-texto)',
-              marginBottom: '0.375rem',
-            }}>
-              E-mail
-            </label>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--cor-texto-secundario)' }}>E-mail</label>
             <input
               className="input"
               type="email"
               placeholder="seu@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
+              required autoComplete="email"
             />
           </div>
 
-          {/* Senha */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{
-              display: 'block',
-              fontSize: '0.8125rem',
-              fontWeight: 500,
-              color: 'var(--cor-texto)',
-              marginBottom: '0.375rem',
-            }}>
-              Senha
-            </label>
-            <div style={{ position: 'relative' }}>
+          <div>
+            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--cor-texto-secundario)' }}>Senha</label>
+            <div className="relative">
               <input
-                className="input"
+                className="input pr-10"
                 type={mostrarSenha ? 'text' : 'password'}
                 placeholder="••••••••"
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
-                required
-                autoComplete="current-password"
-                style={{ paddingRight: '2.75rem' }}
+                required autoComplete="current-password"
               />
               <button
                 type="button"
                 onClick={() => setMostrarSenha(!mostrarSenha)}
-                style={{
-                  position: 'absolute',
-                  right: '0.75rem',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: 'var(--cor-texto-suave)',
-                  display: 'flex',
-                  padding: 0,
-                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2"
               >
-                {mostrarSenha ? <EyeOff size={16} /> : <Eye size={16} />}
+                {mostrarSenha ? <EyeOff size={16} style={{ color: 'var(--cor-texto-suave)' }} /> : <Eye size={16} style={{ color: 'var(--cor-texto-suave)' }} />}
               </button>
             </div>
           </div>
 
-          {/* Erro */}
           {erro && (
-            <div style={{
-              background: 'var(--cor-perigo-suave)',
-              border: '1px solid var(--cor-perigo)',
-              borderRadius: 'var(--raio-sm)',
-              padding: '0.625rem 0.875rem',
-              marginBottom: '1rem',
-              fontSize: '0.8125rem',
-              color: 'var(--cor-perigo)',
-            }}>
+            <div className="rounded-lg px-3 py-2.5 text-sm" style={{ background: 'var(--cor-perigo-suave)', borderColor: 'var(--cor-perigo-borda)', border: '1px solid', color: 'var(--cor-perigo)' }}>
               {erro}
             </div>
           )}
 
-          {/* Botão */}
           <button
             type="submit"
-            className="btn btn-primario"
+            className="btn btn-primario w-full py-2.5 text-base mt-2"
             disabled={carregando}
-            style={{
-              width: '100%',
-              justifyContent: 'center',
-              padding: '0.75rem',
-              fontSize: '0.9375rem',
-              opacity: carregando ? 0.7 : 1,
-            }}
           >
             {carregando ? 'Entrando...' : 'Entrar'}
           </button>
-
         </form>
       </div>
     </div>

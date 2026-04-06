@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(cat C:/Users/gabri/Desktop/financas-casal/dist/assets/*.css)",
+      "Bash(npm install:*)",
+      "Bash(netstat -ano)",
+      "Bash(findstr \":3000 \")",
+      "Bash(ls /c/Users/gabri/Desktop/financas-casal/src/pages/*/*.tsx)",
+      "Bash(ls C:/Users/gabri/Desktop/financas-casal/src/pages/*/*.tsx)",
+      "Bash(npx tsc:*)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(npx vite:*)",
+      "Bash(find /c/Users/gabri/Desktop/financas-casal -path */server* -name *.ts -o -path */api* -name *.ts -o -path */routes* -name *.ts)",
+      "Bash(netstat -tulpn)",
+      "Bash(netsh interface:*)"
+    ]
+  }
+}

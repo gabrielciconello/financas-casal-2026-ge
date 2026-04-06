@@ -1,30 +1,15 @@
 import React from 'react'
 import { AlertCircle } from 'lucide-react'
 
-interface Props {
-  mensagem: string
-  onTentar?: () => void
-}
-
-export default function MensagemErro({ mensagem, onTentar }: Props) {
+export default function MensagemErro({ mensagem, onTentar }: { mensagem: string, onTentar?: () => void }) {
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '3rem',
-      gap: '1rem',
-      textAlign: 'center',
-    }}>
-      <AlertCircle size={40} color="var(--cor-perigo)" />
-      <p style={{ fontSize: '0.875rem', color: 'var(--cor-texto-suave)' }}>
-        {mensagem}
-      </p>
+    <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+      <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: 'var(--cor-perigo-suave)' }}>
+        <AlertCircle size={24} style={{ color: 'var(--cor-perigo)' }} />
+      </div>
+      <p className="text-sm font-medium" style={{ color: 'var(--cor-texto-suave)' }}>{mensagem}</p>
       {onTentar && (
-        <button className="btn btn-secundario" onClick={onTentar}>
-          Tentar novamente
-        </button>
+        <button className="btn btn-secundario" onClick={onTentar}>Tentar novamente</button>
       )}
     </div>
   )

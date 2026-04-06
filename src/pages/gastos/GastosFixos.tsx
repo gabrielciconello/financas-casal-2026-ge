@@ -130,7 +130,7 @@ export default function GastosFixos() {
               {gastos.filter((g) => g.status === 'pago').length} de {gastos.length} pagas
             </span>
           </div>
-          <div style={{ height: '8px', background: 'var(--cor-fundo)', borderRadius: '999px', overflow: 'hidden' }}>
+          <div style={{ height: '8px', background: 'var(--cor-fundo-hover)', borderRadius: '999px', overflow: 'hidden' }}>
             <div style={{
               height: '100%',
               width: `${(gastos.filter((g) => g.status === 'pago').length / gastos.length) * 100}%`,

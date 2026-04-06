@@ -25,6 +25,11 @@ interface FiltrosState {
   busca: string
 }
 
+const colunaHeaderStyle: React.CSSProperties = {
+  fontSize: '0.75rem', fontWeight: 600, color: 'var(--cor-texto-suave)',
+  textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0.75rem 1.25rem',
+}
+
 export default function Transacoes() {
   const { mes, ano } = mesAnoAtual()
   const [pagina, setPagina] = useState(1)
@@ -110,10 +115,10 @@ export default function Transacoes() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', minWidth: '600px' }}>
+    <div className="flex flex-col gap-6 w-full">
 
       {/* Cabeçalho */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 style={{ fontFamily: 'var(--fonte-display)', fontSize: '1.625rem', fontWeight: 700, color: 'var(--cor-texto)' }}>
             Transações
@@ -122,7 +127,7 @@ export default function Transacoes() {
             Entradas e saídas do casal
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
+        <div className="flex gap-3 flex-wrap">
           <button className="btn btn-secundario" onClick={exportarCSV}>
             <Download size={16} /> Exportar CSV
           </button>
@@ -133,9 +138,9 @@ export default function Transacoes() {
       </div>
 
       {/* Filtros */}
-      <div className="card" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end' }}>
-        <div style={{ flex: '1', minWidth: '180px' }}>
-          <label style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--cor-texto-suave)', display: 'block', marginBottom: '0.375rem' }}>
+      <div className="card flex flex-wrap items-end gap-3">
+        <div className="flex-1 min-w-[140px]">
+          <label className="block text-xs font-medium mb-1" style={{ color: 'var(--cor-texto-suave)' }}>
             Mês
           </label>
           <select
@@ -151,8 +156,8 @@ export default function Transacoes() {
           </select>
         </div>
 
-        <div style={{ flex: '1', minWidth: '120px' }}>
-          <label style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--cor-texto-suave)', display: 'block', marginBottom: '0.375rem' }}>
+        <div className="flex-1 min-w-[100px]">
+          <label className="block text-xs font-medium mb-1" style={{ color: 'var(--cor-texto-suave)' }}>
             Ano
           </label>
           <select
@@ -166,8 +171,8 @@ export default function Transacoes() {
           </select>
         </div>
 
-        <div style={{ flex: '1', minWidth: '140px' }}>
-          <label style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--cor-texto-suave)', display: 'block', marginBottom: '0.375rem' }}>
+        <div className="flex-1 min-w-[120px]">
+          <label className="block text-xs font-medium mb-1" style={{ color: 'var(--cor-texto-suave)' }}>
             Tipo
           </label>
           <select
@@ -181,8 +186,8 @@ export default function Transacoes() {
           </select>
         </div>
 
-        <div style={{ flex: '1', minWidth: '160px' }}>
-          <label style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--cor-texto-suave)', display: 'block', marginBottom: '0.375rem' }}>
+        <div className="flex-1 min-w-[130px]">
+          <label className="block text-xs font-medium mb-1" style={{ color: 'var(--cor-texto-suave)' }}>
             Categoria
           </label>
           <select
@@ -195,8 +200,8 @@ export default function Transacoes() {
           </select>
         </div>
 
-        <div style={{ flex: '1', minWidth: '140px' }}>
-          <label style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--cor-texto-suave)', display: 'block', marginBottom: '0.375rem' }}>
+        <div className="flex-1 min-w-[120px]">
+          <label className="block text-xs font-medium mb-1" style={{ color: 'var(--cor-texto-suave)' }}>
             Status
           </label>
           <select
@@ -213,14 +218,13 @@ export default function Transacoes() {
         <button
           className="btn btn-secundario"
           onClick={() => { setPagina(1); buscar() }}
-          style={{ alignSelf: 'flex-end' }}
         >
           <Filter size={16} /> Filtrar
         </button>
       </div>
 
       {/* Lista */}
-      <div className="card" style={{ padding: 0, overflow: 'hidden', overflowX: 'auto' }}>
+      <div className="card p-0 overflow-hidden">
         {carregando ? (
           <Carregando texto="Buscando transações..." />
         ) : erro ? (
@@ -231,97 +235,81 @@ export default function Transacoes() {
           </div>
         ) : (
           <>
-            {/* Header da tabela */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 120px 100px 120px 80px 100px',
-              padding: '0.75rem 1.25rem',
-              borderBottom: '1px solid var(--cor-borda)',
-              fontSize: '0.75rem',
-              fontWeight: 600,
-              color: 'var(--cor-texto-suave)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              minWidth: '600px',
-            }}>
-              <span>Descrição</span>
-              <span>Categoria</span>
-              <span>Data</span>
-              <span style={{ textAlign: 'right' }}>Valor</span>
-              <span style={{ textAlign: 'center' }}>Status</span>
-              <span style={{ textAlign: 'center' }}>Ações</span>
+            {/* Desktop table */}
+            <div className="hidden md:block">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 90px 110px 80px 90px', borderBottom: '1px solid var(--cor-borda)', ...colunaHeaderStyle }}>
+                <span>Descrição</span>
+                <span>Categoria</span>
+                <span>Data</span>
+                <span className="text-right">Valor</span>
+                <span className="text-center">Status</span>
+                <span className="text-center">Ações</span>
+              </div>
+
+              {transacoes.map((t) => (
+                <div key={t.id}
+                  style={{
+                    display: 'grid', gridTemplateColumns: '1fr 100px 90px 110px 80px 90px',
+                    padding: '0.875rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', alignItems: 'center',
+                  }}
+                  className="transition-colors hover:bg-opacity-50"
+                >
+                  <div>
+                    <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--cor-texto)' }}>{t.descricao}</div>
+                    {t.metodo_pagamento && <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)' }}>{t.metodo_pagamento}</div>}
+                  </div>
+                  <span className="badge badge-info">{t.categoria}</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)' }}>
+                    {new Date(t.data + 'T00:00:00').toLocaleDateString('pt-BR')}
+                  </span>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 700, textAlign: 'right' }} className={t.tipo === 'entrada' ? '!text-green-600' : '!text-red-600'}>
+                    {t.tipo === 'entrada' ? '+' : '-'}{formatarMoeda(t.valor)}
+                  </span>
+                  <div className="flex justify-center">
+                    <span className={`badge ${t.status === 'efetivado' ? 'badge-sucesso' : 'badge-aviso'}`}>
+                      {t.status}
+                    </span>
+                  </div>
+                  <div className="flex gap-1 justify-center">
+                    <button className="btn btn-secundario px-2 py-1 text-xs" onClick={() => handleEditar(t)}>Editar</button>
+                    <button className="btn px-2 py-1 text-xs" style={{ color: 'var(--cor-perigo)', background: 'transparent' }} onClick={() => handleDeletar(t.id)}>Excluir</button>
+                  </div>
+                </div>
+              ))}
             </div>
 
-            {/* Linhas */}
-            {transacoes.map((t) => (
-              <div key={t.id} style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 120px 100px 120px 80px 100px',
-                padding: '0.875rem 1.25rem',
-                borderBottom: '1px solid var(--cor-borda)',
-                alignItems: 'center',
-                transition: 'var(--transicao)',
-              }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--cor-fundo-hover)')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-              >
-                <div>
-                  <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--cor-texto)' }}>
-                    {t.descricao}
-                  </div>
-                  {t.metodo_pagamento && (
-                    <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)', marginTop: '2px' }}>
-                      {t.metodo_pagamento}
+            {/* Mobile cards */}
+            <div className="md:hidden flex flex-col">
+              {transacoes.map((t) => (
+                <div key={t.id}
+                  style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--cor-borda)' }}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--cor-texto)' }}>{t.descricao}</div>
+                      {t.metodo_pagamento && <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)' }}>{t.metodo_pagamento}</div>}
                     </div>
-                  )}
+                    <span style={{ fontSize: '1rem', fontWeight: 700 }} className={t.tipo === 'entrada' ? '!text-green-600' : '!text-red-600'}>
+                      {t.tipo === 'entrada' ? '+' : '-'}{formatarMoeda(t.valor)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs mb-2" style={{ color: 'var(--cor-texto-suave)' }}>
+                    <span className="badge badge-info">{t.categoria}</span>
+                    <span>{new Date(t.data + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
+                    <span className={`badge ${t.status === 'efetivado' ? 'badge-sucesso' : 'badge-aviso'}`}>
+                      {t.status}
+                    </span>
+                  </div>
+                  <div className="flex gap-2 justify-end mt-2">
+                    <button className="btn btn-secundario px-2 py-1 text-xs" onClick={() => handleEditar(t)}>Editar</button>
+                    <button className="btn px-2 py-1 text-xs" style={{ color: 'var(--cor-perigo)', background: 'transparent' }} onClick={() => handleDeletar(t.id)}>Excluir</button>
+                  </div>
                 </div>
-                <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>
-                  {t.categoria}
-                </span>
-                <span style={{ fontSize: '0.8125rem', color: 'var(--cor-texto-suave)' }}>
-                  {new Date(t.data + 'T00:00:00').toLocaleDateString('pt-BR')}
-                </span>
-                <span style={{
-                  fontSize: '0.9375rem',
-                  fontWeight: 600,
-                  textAlign: 'right',
-                  color: t.tipo === 'entrada' ? 'var(--cor-sucesso)' : 'var(--cor-perigo)',
-                }}>
-                  {t.tipo === 'entrada' ? '+' : '-'}{formatarMoeda(t.valor)}
-                </span>
-                <div style={{ textAlign: 'center' }}>
-                  <span className={`badge ${t.status === 'efetivado' ? 'badge-sucesso' : 'badge-aviso'}`}
-                    style={{ fontSize: '0.7rem' }}>
-                    {t.status}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                  <button
-                    className="btn btn-secundario"
-                    onClick={() => handleEditar(t)}
-                    style={{ padding: '0.25rem 0.625rem', fontSize: '0.75rem' }}
-                  >
-                    Editar
-                  </button>
-                  <button
-                    className="btn"
-                    onClick={() => handleDeletar(t.id)}
-                    style={{ padding: '0.25rem 0.625rem', fontSize: '0.75rem', color: 'var(--cor-perigo)', background: 'transparent' }}
-                  >
-                    Excluir
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
 
-            {/* Paginação */}
-            <div style={{ padding: '0 1.25rem' }}>
-              <Paginacao
-                paginaAtual={pagina}
-                total={total}
-                limite={10}
-                onMudar={setPagina}
-              />
+            <div className="px-4">
+              <Paginacao paginaAtual={pagina} total={total} limite={10} onMudar={setPagina} />
             </div>
           </>
         )}

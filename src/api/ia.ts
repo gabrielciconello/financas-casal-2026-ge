@@ -1,6 +1,7 @@
 import { IncomingMessage, ServerResponse } from 'http'
 import { verificarAutenticacao, RequisicaoAutenticada } from '../middleware/autenticacao'
 import { lerBody } from '../utils/lerBody'
+import { aplicarCors } from '../utils/cors'
 import {
   responderSucesso,
   responderErro,
@@ -19,6 +20,9 @@ export default async function handlerIA(
   req: IncomingMessage,
   res: ServerResponse
 ): Promise<void> {
+  aplicarCors(res)
+  if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return }
+
   const autenticado = await verificarAutenticacao(req as RequisicaoAutenticada, res)
   if (!autenticado) return
 
