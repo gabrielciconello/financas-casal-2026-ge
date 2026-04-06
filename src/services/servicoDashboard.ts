@@ -113,7 +113,7 @@ export async function buscarDadosDashboard(
     // ==========================================
     const { data: gastosVariaveis } = await supabaseAdmin
       .from('gastos_variaveis')
-      .select('id, valor_real, categoria')
+      .select('id, descricao, valor_real, categoria')
       .eq('usuario_id', usuarioId)
       .eq('mes', mes)
       .eq('ano', ano)
@@ -210,7 +210,7 @@ export async function buscarDadosDashboard(
         itensDetalhados.push({
           id: gv.id,
           tipo: 'saida',
-          descricao: `Gasto Variável - ${gv.categoria}`,
+          descricao: gv.descricao || `Gasto Variável - ${gv.categoria}`,
           valor: val,
           data: `${ano}-${String(mes).padStart(2, '0')}-15`,
           fonte: 'gasto_variavel',

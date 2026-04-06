@@ -303,7 +303,7 @@ function FormularioCartao({ cartao, onSalvar, onCancelar, carregando }: FormCart
   })
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSalvar(form) }} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+    <form onSubmit={(e) => { e.preventDefault(); onSalvar(form) }} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }} autoComplete="off"
       <div>
         <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>Nome do Cartão</label>
         <input className="input" value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} placeholder="Ex: Nubank, Inter..." required />
@@ -365,7 +365,7 @@ function FormularioCompra({ cartaoId, compraEditando, onNovo, onAtualizar, onCan
   })
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); if (compraEditando && onAtualizar) { onAtualizar(compraEditando.id, form) } else { onNovo(form) } }} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+    <form onSubmit={(e) => { e.preventDefault(); if (compraEditando && onAtualizar) { onAtualizar(compraEditando.id, form) } else { onNovo(form) } }} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }} autoComplete="off"
       <div>
         <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>Descrição</label>
         <input className="input" value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} placeholder="Ex: Notebook, Supermercado..." required />
@@ -390,7 +390,7 @@ function FormularioCompra({ cartaoId, compraEditando, onNovo, onAtualizar, onCan
         </div>
         <div>
           <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>Parcela Inicial</label>
-          <input className="input" type="text" inputMode="numeric" value={form.parcela_inicial} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); const val = v === '' ? 1 : Math.max(1, Math.min(form.parcelas ?? 1, Number(v))); setForm({ ...form, parcela_inicial: val }) }} placeholder="1" />
+          <input className="input" type="text" inputMode="numeric" autoComplete="off" value={form.parcela_inicial} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); const val = v === '' ? 1 : Math.max(1, Math.min(form.parcelas ?? 1, Number(v))); setForm({ ...form, parcela_inicial: val }) }} placeholder="1" />
           <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)', marginTop: '0.25rem' }}>{form.parcela_inicial && form.parcela_inicial > 1 ? `Já na parcela ${form.parcela_inicial} de ${form.parcelas}` : 'Compra nova (parcela 1)'}</div>
         </div>
         <div>
