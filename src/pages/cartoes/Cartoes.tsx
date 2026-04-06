@@ -364,6 +364,22 @@ function FormularioCompra({ cartaoId, compraEditando, onNovo, onAtualizar, onCan
     return { cartao_id: cartaoId, descricao: '', categoria: 'Alimentação', valor_total: 0, parcelas: 1, parcela_inicial: 1, data_compra: new Date().toISOString().split('T')[0] }
   })
 
+  const handleParcelas = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = e.target.value.replace(/[^0-9]/g, '')
+    const parcelas = v === '' ? 1 : Math.max(1, Math.min(48, Number(v)))
+    setForm((prev: CriarCompraCartaoDTO) => ({
+      ...prev,
+      parcelas,
+      parcela_inicial: Math.min(prev.parcela_inicial ?? 1, parcelas),
+    }))
+  }
+
+  const handleParcelaInicial = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = e.target.value.replace(/[^0-9]/g, '')
+    const val = v === '' ? 1 : Math.max(1, Math.min(form.parcelas ?? 1, Number(v)))
+    setForm((prev: CriarCompraCartaoDTO) => ({ ...prev, parcela_inicial: val }))
+  }
+
   return (
     <form onSubmit={(e) => { e.preventDefault(); if (compraEditando && onAtualizar) { onAtualizar(compraEditando.id, form) } else { onNovo(form) } }} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }} autoComplete="off">
       <div>
@@ -383,14 +399,14 @@ function FormularioCompra({ cartaoId, compraEditando, onNovo, onAtualizar, onCan
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
         <div>
           <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>Parcelas</label>
-          <input className="input" type="text" inputMode="numeric" value={form.parcelas === 1 ? '1' : form.parcelas} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); const parcelas = v === '' ? 1 : Math.max(1, Math.min(48, Number(v))); setForm({ ...form, parcelas, parcela_inicial: Math.min(form.parcela_inicial ?? 1, parcelas) }) }} placeholder="1" required />
+          <input className="input" type="text" inputMode="numeric" autoComplete="off" value={form.parcelas || 1} onChange={handleParcelas} placeholder="1" required />
           {form.valor_total > 0 && form.parcelas && form.parcelas > 1 && (
             <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)', marginTop: '0.25rem' }}>{form.parcelas}x de {formatarMoeda(form.valor_total / form.parcelas)}</div>
           )}
         </div>
         <div>
           <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>Parcela Inicial</label>
-          <input className="input" type="text" inputMode="numeric" autoComplete="off" value={form.parcela_inicial} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); const val = v === '' ? 1 : Math.max(1, Math.min(form.parcelas ?? 1, Number(v))); setForm({ ...form, parcela_inicial: val }) }} placeholder="1" />
+          <input className="input" type="text" inputMode="numeric" autoComplete="off" value={form.parcela_inicial || 1} onChange={handleParcelaInicial} placeholder="1" />
           <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)', marginTop: '0.25rem' }}>{form.parcela_inicial && form.parcela_inicial > 1 ? `Já na parcela ${form.parcela_inicial} de ${form.parcelas}` : 'Compra nova (parcela 1)'}</div>
         </div>
         <div>
