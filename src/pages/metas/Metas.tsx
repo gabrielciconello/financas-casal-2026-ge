@@ -291,10 +291,11 @@ function FormularioMeta({ meta, onSalvar, onCancelar, carregando }: FormMetaProp
             Valor Alvo (R$)
           </label>
           <input className="input" type="text" inputMode="decimal"
-            value={form.valor_alvo === 0 ? '' : form.valor_alvo}
+            value={form.valor_alvo}
             onChange={(e) => {
               const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.')
-              setForm({ ...form, valor_alvo: v === '' ? 0 : Math.max(0, Number(v) || 0) })
+              const num = v === '' ? 0 : Number(v)
+              if (!isNaN(num)) setForm({ ...form, valor_alvo: Math.max(0, num) })
             }}
             placeholder="0,00"
             required />
@@ -304,7 +305,7 @@ function FormularioMeta({ meta, onSalvar, onCancelar, carregando }: FormMetaProp
             Aporte Mensal (R$)
           </label>
           <input className="input" type="text" inputMode="decimal"
-            value={form.aporte_mensal != null && form.aporte_mensal > 0 ? form.aporte_mensal : ''}
+            value={form.aporte_mensal != null ? form.aporte_mensal : ''}
             onChange={(e) => {
               const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.')
               if (v === '') { setForm({ ...form, aporte_mensal: undefined }) }
@@ -377,10 +378,11 @@ function FormularioContribuicao({ meta, onSalvar, onCancelar, carregando }: Form
           Valor da Contribuição (R$)
         </label>
         <input className="input" type="text" inputMode="decimal"
-          value={form.valor === 0 ? '' : form.valor}
+          value={form.valor}
           onChange={(e) => {
             const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.')
-            setForm({ ...form, valor: v === '' ? 0 : Math.max(0, Number(v) || 0) })
+            const num = v === '' ? 0 : Number(v)
+            if (!isNaN(num)) setForm({ ...form, valor: Math.max(0, num) })
           }}
           placeholder="0,00"
           required />

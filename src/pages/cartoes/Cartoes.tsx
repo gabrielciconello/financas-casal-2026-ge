@@ -33,6 +33,10 @@ export default function Cartoes() {
     if (resultado) setCartoes(resultado.dados ?? [])
   }, [requisitar])
 
+  useEffect(() => {
+    buscarCartoes()
+  }, [buscarCartoes])
+
   const { carregando: carregandoCompras, requisitar: buscarComprasReq } = useApi()
 
   useEffect(() => {
@@ -50,7 +54,7 @@ export default function Cartoes() {
       }
     }
     fetch()
-  }, [cartaoSelecionado, pagina])
+  }, [cartaoSelecionado, pagina, buscarComprasReq])
 
   async function handleSalvarCartao(dados: CriarCartaoDTO) {
     if (cartaoEditando) {
@@ -422,10 +426,11 @@ function FormularioCartao({ cartao, onSalvar, onCancelar, carregando }: FormCart
             Limite (R$)
           </label>
           <input className="input" type="text" inputMode="decimal"
-            value={form.limite === 0 ? '' : form.limite}
+            value={form.limite}
             onChange={(e) => {
               const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.')
-              setForm({ ...form, limite: v === '' ? 0 : Math.max(0, Number(v) || 0) })
+              const num = v === '' ? 0 : Number(v)
+              if (!isNaN(num)) setForm({ ...form, limite: Math.max(0, num) })
             }}
             placeholder="0,00"
             required />
@@ -438,7 +443,7 @@ function FormularioCartao({ cartao, onSalvar, onCancelar, carregando }: FormCart
             Dia de Fechamento
           </label>
           <input className="input" type="text" inputMode="numeric"
-            value={form.dia_fechamento === 1 ? '' : form.dia_fechamento}
+            value={form.dia_fechamento}
             onChange={(e) => {
               const v = e.target.value.replace(/[^0-9]/g, '')
               const val = v === '' ? 1 : Math.max(1, Math.min(31, Number(v)))
@@ -452,7 +457,7 @@ function FormularioCartao({ cartao, onSalvar, onCancelar, carregando }: FormCart
             Dia de Vencimento
           </label>
           <input className="input" type="text" inputMode="numeric"
-            value={form.dia_vencimento === 10 ? '' : form.dia_vencimento}
+            value={form.dia_vencimento}
             onChange={(e) => {
               const v = e.target.value.replace(/[^0-9]/g, '')
               const val = v === '' ? 10 : Math.max(1, Math.min(31, Number(v)))
@@ -522,10 +527,11 @@ function FormularioCompra({ cartaoId, onSalvar, onCancelar, carregando }: FormCo
             Valor Total (R$)
           </label>
           <input className="input" type="text" inputMode="decimal"
-            value={form.valor_total === 0 ? '' : form.valor_total}
+            value={form.valor_total}
             onChange={(e) => {
               const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.')
-              setForm({ ...form, valor_total: v === '' ? 0 : Math.max(0, Number(v) || 0) })
+              const num = v === '' ? 0 : Number(v)
+              if (!isNaN(num)) setForm({ ...form, valor_total: Math.max(0, num) })
             }}
             placeholder="0,00"
             required />

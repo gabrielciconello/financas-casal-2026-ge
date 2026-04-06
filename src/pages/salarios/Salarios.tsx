@@ -342,10 +342,11 @@ function FormularioSalario({ salario, mesAtual, anoAtual, onSalvar, onCancelar, 
             className="input"
             type="text"
             inputMode="decimal"
-            value={form.valor_esperado === 0 ? '' : form.valor_esperado}
+            value={form.valor_esperado}
             onChange={(e) => {
               const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.')
-              setForm({ ...form, valor_esperado: v === '' ? 0 : Math.max(0, Number(v) || 0) })
+              const num = v === '' ? 0 : Number(v)
+              if (!isNaN(num)) setForm({ ...form, valor_esperado: Math.max(0, num) })
             }}
             placeholder="0,00"
             required
@@ -359,7 +360,7 @@ function FormularioSalario({ salario, mesAtual, anoAtual, onSalvar, onCancelar, 
             className="input"
             type="text"
             inputMode="decimal"
-            value={form.valor_recebido != null && form.valor_recebido > 0 ? form.valor_recebido : ''}
+            value={form.valor_recebido != null ? form.valor_recebido : ''}
             onChange={(e) => {
               const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.')
               if (v === '') {

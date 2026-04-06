@@ -304,7 +304,7 @@ function FormularioGastoVariavel({ gasto, mesAtual, anoAtual, onSalvar, onCancel
             Valor Estimado (R$)
           </label>
           <input className="input" type="text" inputMode="decimal"
-            value={form.valor_estimado != null && form.valor_estimado > 0 ? form.valor_estimado : ''}
+            value={form.valor_estimado != null ? form.valor_estimado : ''}
             onChange={(e) => {
               const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.')
               if (v === '') {
@@ -324,7 +324,7 @@ function FormularioGastoVariavel({ gasto, mesAtual, anoAtual, onSalvar, onCancel
             Valor Real (R$)
           </label>
           <input className="input" type="text" inputMode="decimal"
-            value={form.valor_real != null && form.valor_real > 0 ? form.valor_real : ''}
+            value={form.valor_real != null ? form.valor_real : ''}
             onChange={(e) => {
               const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.')
               if (v === '') {

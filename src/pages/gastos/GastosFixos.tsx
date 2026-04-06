@@ -321,10 +321,11 @@ function FormularioGastoFixo({ gasto, mesAtual, anoAtual, onSalvar, onCancelar, 
             Valor (R$)
           </label>
           <input className="input" type="text" inputMode="decimal"
-            value={form.valor === 0 ? '' : form.valor}
+            value={form.valor}
             onChange={(e) => {
               const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.')
-              setForm({ ...form, valor: v === '' ? 0 : Math.max(0, Number(v) || 0) })
+              const num = v === '' ? 0 : Number(v)
+              if (!isNaN(num)) setForm({ ...form, valor: Math.max(0, num) })
             }}
             placeholder="0,00" required />
         </div>
