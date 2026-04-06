@@ -166,6 +166,7 @@ export async function criarCompraCartao(
 ): Promise<RespostaApi<CompraCartao>> {
   const usuarioNome = obterNomeUsuario(usuarioEmail)
   const parcelas = dados.parcelas ?? 1
+  const parcelaInicial = dados.parcela_inicial ?? 1
   const valorParcela = Number((dados.valor_total / parcelas).toFixed(2))
 
   const { data, error } = await supabaseAdmin
@@ -175,7 +176,7 @@ export async function criarCompraCartao(
       usuario_id: usuarioId,
       usuario_nome: usuarioNome,
       parcelas,
-      parcela_atual: 1,
+      parcela_atual: parcelaInicial,
       valor_parcela: valorParcela,
     })
     .select()

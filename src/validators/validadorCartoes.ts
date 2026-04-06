@@ -51,6 +51,12 @@ export const esquemaCriarCompraCartao = z.object({
     .min(1, 'Número de parcelas deve ser no mínimo 1')
     .default(1),
 
+  parcela_inicial: z.coerce
+    .number()
+    .int('Parcela inicial deve ser um número inteiro')
+    .min(1, 'Parcela inicial deve ser no mínimo 1')
+    .optional(),
+
   data_compra: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Data deve estar no formato YYYY-MM-DD')

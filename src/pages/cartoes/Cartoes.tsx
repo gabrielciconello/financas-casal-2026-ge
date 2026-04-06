@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Plus, CreditCard, ShoppingBag } from 'lucide-react'
+import { Plus, CreditCard } from 'lucide-react'
 import { useApi } from '../../hooks/useApi'
 import { Cartao, CompraCartao, CriarCartaoDTO, CriarCompraCartaoDTO } from '../../types'
 import { formatarMoeda } from '../../utils'
@@ -26,7 +26,6 @@ export default function Cartoes() {
   const [cartaoEditando, setCartaoEditando] = useState<Cartao | null>(null)
 
   const { carregando, erro, requisitar } = useApi()
-  const apiCompras = useApi()
   const apiForm = useApi()
 
   const buscarCartoes = useCallback(async () => {
@@ -34,22 +33,24 @@ export default function Cartoes() {
     if (resultado) setCartoes(resultado.dados ?? [])
   }, [requisitar])
 
-  const buscarCompras = useCallback(async () => {
-    if (!cartaoSelecionado) return
-    const params = new URLSearchParams({
-      pagina: String(pagina),
-      limite: '10',
-      cartaoId: cartaoSelecionado.id,
-    })
-    const resultado = await apiCompras.requisitar(`/api/cartoes/compras-cartao?${params}`)
-    if (resultado) {
-      setCompras(resultado.dados ?? [])
-      setTotal(resultado.total ?? 0)
-    }
-  }, [cartaoSelecionado, pagina, apiCompras])
+  const { carregando: carregandoCompras, requisitar: buscarComprasReq } = useApi()
 
-  useEffect(() => { buscarCartoes() }, [buscarCartoes])
-  useEffect(() => { buscarCompras() }, [buscarCompras])
+  useEffect(() => {
+    async function fetch() {
+      if (!cartaoSelecionado) return
+      const params = new URLSearchParams({
+        pagina: String(pagina),
+        limite: '10',
+        cartaoId: cartaoSelecionado.id,
+      })
+      const resultado = await buscarComprasReq(`/api/cartoes/compras-cartao?${params}`)
+      if (resultado) {
+        setCompras(resultado.dados ?? [])
+        setTotal(resultado.total ?? 0)
+      }
+    }
+    fetch()
+  }, [cartaoSelecionado, pagina])
 
   async function handleSalvarCartao(dados: CriarCartaoDTO) {
     if (cartaoEditando) {
@@ -71,7 +72,7 @@ export default function Cartoes() {
       method: 'POST', body: dados,
     })
     setModalCompra(false)
-    buscarCompras()
+    setPagina(1)
   }
 
   async function handleDeletarCartao(id: string) {
@@ -83,14 +84,19 @@ export default function Cartoes() {
 
   async function handleDeletarCompra(id: string) {
     if (!confirm('Deseja deletar esta compra?')) return
-    await apiCompras.requisitar(`/api/cartoes/compras-cartao/${id}`, { method: 'DELETE' })
-    buscarCompras()
+    await requisitar(`/api/cartoes/compras-cartao/${id}`, { method: 'DELETE' })
+    setPagina(1)
   }
 
   // Calcula uso do limite
   const calcularUso = (cartao: Cartao) => {
     const comprasCartao = compras.filter((c) => c.cartao_id === cartao.id)
-    const usado = comprasCartao.reduce((acc, c) => acc + Number(c.valor_parcela), 0)
+    // Soma o valor total de compras ativas (ajustado para parcelas restantes)
+    let usado = 0
+    for (const c of comprasCartao) {
+      const parcelasRestantes = c.parcelas - c.parcela_atual + 1
+      usado += parcelasRestantes * Number(c.valor_parcela)
+    }
     const percentual = (usado / cartao.limite) * 100
     return { usado, percentual: Math.min(percentual, 100) }
   }
@@ -263,7 +269,7 @@ export default function Cartoes() {
           </div>
 
           <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-            {apiCompras.carregando ? (
+            {carregandoCompras ? (
               <Carregando texto="Buscando compras..." />
             ) : compras.length === 0 ? (
               <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--cor-texto-suave)', fontSize: '0.875rem' }}>
@@ -474,6 +480,7 @@ function FormularioCompra({ cartaoId, onSalvar, onCancelar, carregando }: FormCo
     categoria: 'Alimentação',
     valor_total: 0,
     parcelas: 1,
+    parcela_inicial: 1,
     data_compra: new Date().toISOString().split('T')[0],
   })
 
@@ -515,19 +522,35 @@ function FormularioCompra({ cartaoId, onSalvar, onCancelar, carregando }: FormCo
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
         <div>
           <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>
             Parcelas
           </label>
           <input className="input" type="number" min="1" max="48"
             value={form.parcelas}
-            onChange={(e) => setForm({ ...form, parcelas: Number(e.target.value) })} />
+            onChange={(e) => {
+              const parcelas = Number(e.target.value)
+              setForm({ ...form, parcelas, parcela_inicial: Math.min(form.parcela_inicial ?? 1, parcelas) })
+            }} />
           {form.valor_total > 0 && form.parcelas && form.parcelas > 1 && (
             <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)', marginTop: '0.25rem' }}>
               {form.parcelas}x de {formatarMoeda(form.valor_total / form.parcelas)}
             </div>
           )}
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>
+            Parcela Inicial
+          </label>
+          <input className="input" type="number" min="1" max={form.parcelas}
+            value={form.parcela_inicial ?? 1}
+            onChange={(e) => setForm({ ...form, parcela_inicial: Math.min(Number(e.target.value), form.parcelas ?? 1) })} />
+          <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)', marginTop: '0.25rem' }}>
+            {form.parcela_inicial && form.parcela_inicial > 1
+              ? `Já na parcela ${form.parcela_inicial} de ${form.parcelas}`
+              : 'Compra nova (parcela 1)'}
+          </div>
         </div>
         <div>
           <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>

@@ -164,6 +164,7 @@ export interface CriarCompraCartaoDTO {
   categoria: string
   valor_total: number
   parcelas?: number
+  parcela_inicial?: number
   data_compra?: string
 }
 
