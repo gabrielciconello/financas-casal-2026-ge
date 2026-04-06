@@ -1,19 +1,19 @@
 import { IncomingMessage, ServerResponse } from 'http'
-import { verificarAutenticacao, RequisicaoAutenticada } from '../middleware/autenticacao'
-import { lerBody } from '../utils/lerBody'
+import { verificarAutenticacao, RequisicaoAutenticada } from '../middleware/autenticacao.js'
+import { lerBody } from '../utils/lerBody.js'
 import {
   responderSucesso,
   responderErro,
   responderNaoEncontrado,
   responderMetodoNaoPermitido,
-} from '../utils/responderHttp'
-import { validar } from '../validators'
+} from '../utils/responderHttp.js'
+import { validar } from '../validators/index.js'
 import {
   esquemaCriarGastoFixo,
   esquemaAtualizarGastoFixo,
   esquemaCriarGastoVariavel,
   esquemaAtualizarGastoVariavel,
-} from '../validators/validadorGastos'
+} from '../validators/validadorGastos.js'
 import {
   buscarGastosFixos,
   buscarGastoFixoPorId,
@@ -25,8 +25,8 @@ import {
   criarGastoVariavel,
   atualizarGastoVariavel,
   deletarGastoVariavel,
-} from '../services/servicoGastos'
-import { supabaseAdmin } from '../services/supabase.node'
+} from '../services/servicoGastos.js'
+import { supabaseAdmin } from '../services/supabase.node.js'
 
 
 export default async function handlerGastos(

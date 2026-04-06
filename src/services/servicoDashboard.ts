@@ -1,6 +1,6 @@
 import { supabaseAdmin } from './supabase.node'
-import { respostaSucesso, respostaErro } from '../utils'
-import { RespostaApi } from '../types'
+import { respostaSucesso, respostaErro } from '../utils.js'
+import { RespostaApi } from '../types.js'
 
 interface ResumoFinanceiro {
   total_entradas: number

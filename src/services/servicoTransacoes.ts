@@ -1,5 +1,5 @@
 import { supabaseAdmin } from './supabase.node'
-import { registrarAuditoria } from './servicoAuditoria'
+import { registrarAuditoria } from './servicoAuditoria.js'
 import {
   Transacao,
   CriarTransacaoDTO,
@@ -7,13 +7,13 @@ import {
   RespostaApi,
   RespostaPaginada,
   ParametrosPaginacao,
-} from '../types'
+} from '../types.js'
 import {
   respostaSucesso,
   respostaErro,
   respostaPaginada,
   calcularOffset,
-} from '../utils'
+} from '../utils.js'
 
 // Buscar todas as transações com paginação e filtros
 export async function buscarTransacoes(

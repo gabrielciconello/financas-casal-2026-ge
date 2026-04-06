@@ -1,14 +1,14 @@
 import { IncomingMessage, ServerResponse } from 'http'
-import { verificarAutenticacao, RequisicaoAutenticada } from '../middleware/autenticacao'
+import { verificarAutenticacao, RequisicaoAutenticada } from '../middleware/autenticacao.js'
 import {
   responderSucesso,
   responderErro,
   responderMetodoNaoPermitido,
-} from '../utils/responderHttp'
-import { buscarDadosDashboard } from '../services/servicoDashboard'
-import { mesAnoAtual } from '../utils'
-import { aplicarCors } from '../utils/cors'
-import { supabaseAdmin } from '../services/supabase.node'
+} from '../utils/responderHttp.js'
+import { buscarDadosDashboard } from '../services/servicoDashboard.js'
+import { mesAnoAtual } from '../utils/index.js'
+import { aplicarCors } from '../utils/cors.js'
+import { supabaseAdmin } from '../services/supabase.node.js'
 
 export default async function handlerDashboard(
   req: IncomingMessage,

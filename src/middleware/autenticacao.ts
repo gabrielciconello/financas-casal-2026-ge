@@ -1,6 +1,6 @@
 import { IncomingMessage, ServerResponse } from 'http'
-import { supabase } from '../services/supabase.node'
-import { Usuario } from '../types'
+import { supabase } from '../services/supabase.node.js'
+import type { Usuario } from '../types/index.js'
 
 // Extende o IncomingMessage para carregar o usuário autenticado
 export interface RequisicaoAutenticada extends IncomingMessage {

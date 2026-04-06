@@ -1,19 +1,19 @@
 import { IncomingMessage, ServerResponse } from 'http'
-import { verificarAutenticacao, RequisicaoAutenticada } from '../middleware/autenticacao'
-import { lerBody } from '../utils/lerBody'
-import { aplicarCors } from '../utils/cors'
+import { verificarAutenticacao, RequisicaoAutenticada } from '../middleware/autenticacao.js'
+import { lerBody } from '../utils/lerBody.js'
+import { aplicarCors } from '../utils/cors.js'
 import {
   responderSucesso,
   responderErro,
   responderMetodoNaoPermitido,
-} from '../utils/responderHttp'
-import { mesAnoAtual } from '../utils'
+} from '../utils/responderHttp.js'
+import { mesAnoAtual } from '../utils/index.js'
 import {
   perguntarIA,
   gerarResumoMensal,
   categorizarTransacao,
-} from '../services/servicoIA'
-import { supabaseAdmin } from '../services/supabase.node'
+} from '../services/servicoIA.js'
+import { supabaseAdmin } from '../services/supabase.node.js'
 
 
 export default async function handlerIA(

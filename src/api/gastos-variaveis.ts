@@ -1,17 +1,17 @@
 import { IncomingMessage, ServerResponse } from 'http'
-import { verificarAutenticacao, RequisicaoAutenticada } from '../middleware/autenticacao'
-import { lerBody } from '../utils/lerBody'
-import { aplicarCors } from '../utils/cors'
+import { verificarAutenticacao, RequisicaoAutenticada } from '../middleware/autenticacao.js'
+import { lerBody } from '../utils/lerBody.js'
+import { aplicarCors } from '../utils/cors.js'
 import {
   responderSucesso, responderErro,
   responderNaoEncontrado, responderMetodoNaoPermitido,
-} from '../utils/responderHttp'
-import { validar } from '../validators'
-import { esquemaCriarGastoVariavel, esquemaAtualizarGastoVariavel } from '../validators/validadorGastos'
+} from '../utils/responderHttp.js'
+import { validar } from '../validators/index.js'
+import { esquemaCriarGastoVariavel, esquemaAtualizarGastoVariavel } from '../validators/validadorGastos.js'
 import {
   buscarGastosVariaveis, buscarGastoVariavelPorId,
   criarGastoVariavel, atualizarGastoVariavel, deletarGastoVariavel,
-} from '../services/servicoGastos'
+} from '../services/servicoGastos.js'
 
 export default async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
   aplicarCors(res)

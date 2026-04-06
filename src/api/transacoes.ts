@@ -1,25 +1,25 @@
 import { IncomingMessage, ServerResponse } from 'http'
-import { verificarAutenticacao, RequisicaoAutenticada } from '../middleware/autenticacao'
-import { lerBody } from '../utils/lerBody'
+import { verificarAutenticacao, RequisicaoAutenticada } from '../middleware/autenticacao.js'
+import { lerBody } from '../utils/lerBody.js'
 import {
   responderSucesso,
   responderErro,
   responderNaoEncontrado,
   responderMetodoNaoPermitido,
-} from '../utils/responderHttp'
-import { validar } from '../validators'
+} from '../utils/responderHttp.js'
+import { validar } from '../validators/index.js'
 import {
   esquemaCriarTransacao,
   esquemaAtualizarTransacao,
-} from '../validators/validadorTransacoes'
+} from '../validators/validadorTransacoes.js'
 import {
   buscarTransacoes,
   buscarTransacaoPorId,
   criarTransacao,
   atualizarTransacao,
   deletarTransacao,
-} from '../services/servicoTransacoes'
-import { supabaseAdmin } from '../services/supabase.node'
+} from '../services/servicoTransacoes.js'
+import { supabaseAdmin } from '../services/supabase.node.js'
 
 export default async function handlerTransacoes(
   req: IncomingMessage,

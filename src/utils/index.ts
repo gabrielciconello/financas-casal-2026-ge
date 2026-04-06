@@ -1,4 +1,4 @@
-import { RespostaApi, RespostaPaginada } from '../types'
+import type { RespostaApi, RespostaPaginada } from '../types/index.js'
 
 // Monta resposta de sucesso da API
 export function respostaSucesso<T>(dados: T): RespostaApi<T> {

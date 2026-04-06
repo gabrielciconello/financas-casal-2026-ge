@@ -1,5 +1,5 @@
 import { supabaseAdmin } from './supabase.node'
-import { AcaoAuditoria, ModuloAuditoria } from '../types'
+import { AcaoAuditoria, ModuloAuditoria } from '../types.js'
 
 interface RegistrarAuditoriaParams {
   usuarioId: string

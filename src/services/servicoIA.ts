@@ -1,7 +1,7 @@
-import { modelo } from './gemini'
+import { modelo } from './gemini.js'
 import { supabaseAdmin } from './supabase.node'
-import { RespostaApi } from '../types'
-import { respostaSucesso, respostaErro, mesAnoAtual } from '../utils'
+import { RespostaApi } from '../types.js'
+import { respostaSucesso, respostaErro, mesAnoAtual } from '../utils.js'
 
 interface RespostaIA {
   resposta: string

@@ -1,19 +1,19 @@
 import { IncomingMessage, ServerResponse } from 'http'
-import { verificarAutenticacao, RequisicaoAutenticada } from '../middleware/autenticacao'
-import { lerBody } from '../utils/lerBody'
+import { verificarAutenticacao, RequisicaoAutenticada } from '../middleware/autenticacao.js'
+import { lerBody } from '../utils/lerBody.js'
 import {
   responderSucesso,
   responderErro,
   responderNaoEncontrado,
   responderMetodoNaoPermitido,
-} from '../utils/responderHttp'
-import { validar } from '../validators'
+} from '../utils/responderHttp.js'
+import { validar } from '../validators/index.js'
 import {
   esquemaCriarCartao,
   esquemaAtualizarCartao,
   esquemaCriarCompraCartao,
   esquemaAtualizarCompraCartao,
-} from '../validators/validadorCartoes'
+} from '../validators/validadorCartoes.js'
 import {
   buscarCartoes,
   buscarCartaoPorId,
@@ -24,8 +24,8 @@ import {
   criarCompraCartao,
   atualizarCompraCartao,
   deletarCompraCartao,
-} from '../services/servicoCartoes'
-import { supabaseAdmin } from '../services/supabase.node'
+} from '../services/servicoCartoes.js'
+import { supabaseAdmin } from '../services/supabase.node.js'
 
 export default async function handlerCartoes(
   req: IncomingMessage,

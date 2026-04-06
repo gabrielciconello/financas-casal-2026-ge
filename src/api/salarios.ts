@@ -1,17 +1,17 @@
 import { IncomingMessage, ServerResponse } from 'http'
-import { verificarAutenticacao, RequisicaoAutenticada } from '../middleware/autenticacao'
-import { lerBody } from '../utils/lerBody'
-import { responderSucesso, responderErro, responderNaoEncontrado, responderMetodoNaoPermitido } from '../utils/responderHttp'
-import { validar } from '../validators'
-import { esquemaCriarSalario, esquemaAtualizarSalario } from '../validators/validadorSalarios'
+import { verificarAutenticacao, RequisicaoAutenticada } from '../middleware/autenticacao.js'
+import { lerBody } from '../utils/lerBody.js'
+import { responderSucesso, responderErro, responderNaoEncontrado, responderMetodoNaoPermitido } from '../utils/responderHttp.js'
+import { validar } from '../validators/index.js'
+import { esquemaCriarSalario, esquemaAtualizarSalario } from '../validators/validadorSalarios.js'
 import {
   buscarSalarios,
   buscarSalarioPorId,
   criarSalario,
   atualizarSalario,
   deletarSalario,
-} from '../services/servicoSalarios'
-import { supabaseAdmin } from '../services/supabase.node'
+} from '../services/servicoSalarios.js'
+import { supabaseAdmin } from '../services/supabase.node.js'
 
 export default async function handlerSalarios(
   req: IncomingMessage,

@@ -1,5 +1,5 @@
 import { supabaseAdmin } from './supabase.node'
-import { registrarAuditoria } from './servicoAuditoria'
+import { registrarAuditoria } from './servicoAuditoria.js'
 import {
   Cartao,
   CompraCartao,
@@ -10,13 +10,13 @@ import {
   RespostaApi,
   RespostaPaginada,
   ParametrosPaginacao,
-} from '../types'
+} from '../types.js'
 import {
   respostaSucesso,
   respostaErro,
   respostaPaginada,
   calcularOffset,
-} from '../utils'
+} from '../utils.js'
 
 // ============================================
 // CARTÕES
