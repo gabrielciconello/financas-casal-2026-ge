@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Plus, TrendingUp, TrendingDown, CheckCircle, Clock, AlertCircle } from 'lucide-react'
+import { Plus, TrendingUp, TrendingDown, CheckCircle, Clock, AlertCircle, Check } from 'lucide-react'
 import { useApi } from '../../hooks/useApi'
 import { Salario, CriarSalarioDTO } from '../../types'
 import { formatarMoeda, mesAnoAtual } from '../../utils'
@@ -61,9 +61,23 @@ export default function Salarios() {
     buscar()
   }
 
-  // Resumo do mês
+  async function handleConfirmarRecebimento(id: string) {
+    const salario = salarios.find((s) => s.id === id)
+    if (!salario) return
+    await apiForm.requisitar(`/api/salarios/${id}`, {
+      method: 'PUT',
+      body: {
+        status: 'recebido',
+        valor_recebido: salario.valor_esperado,
+        data_recebimento: new Date().toISOString().split('T')[0],
+      },
+    })
+    buscar()
+  }
+
+  // Resumo do mês — soma apenas salários com status 'recebido' ou 'parcial'
   const totalEsperado = salarios.reduce((acc, s) => acc + Number(s.valor_esperado), 0)
-  const totalRecebido = salarios.reduce((acc, s) => acc + Number(s.valor_recebido ?? 0), 0)
+  const totalRecebido = salarios.filter((s) => s.status === 'recebido' || s.status === 'parcial').reduce((acc, s) => acc + Number(s.valor_recebido ?? s.valor_esperado), 0)
   const pendentes = salarios.filter((s) => s.status === 'pendente').length
 
   const iconeStatus = (status: string) => {
@@ -198,6 +212,9 @@ export default function Salarios() {
                     <span style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)', textTransform: 'capitalize' }}>{s.status}</span>
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                    {s.status === 'pendente' && (
+                      <button className="btn" onClick={() => handleConfirmarRecebimento(s.id)} style={{ padding: '0.25rem 0.625rem', fontSize: '0.75rem', color: 'var(--cor-sucesso)', background: 'transparent' }} title="Confirmar recebimento"><Check size={14} /></button>
+                    )}
                     <button className="btn btn-secundario" onClick={() => { setSalarioEditando(s); setModalAberto(true) }} style={{ padding: '0.25rem 0.625rem', fontSize: '0.75rem' }}>Editar</button>
                     <button className="btn" onClick={() => handleDeletar(s.id)} style={{ padding: '0.25rem 0.625rem', fontSize: '0.75rem', color: 'var(--cor-perigo)', background: 'transparent' }}>Excluir</button>
                   </div>
@@ -230,6 +247,9 @@ export default function Salarios() {
                     </div>
                   </div>
                   <div className="flex gap-1.5 justify-end mt-1">
+                    {s.status === 'pendente' && (
+                      <button className="btn px-2 py-1 text-xs" title="Confirmar recebimento" onClick={() => handleConfirmarRecebimento(s.id)} style={{ color: 'var(--cor-sucesso)' }}><Check size={14} /></button>
+                    )}
                     <button className="btn btn-secundario px-2 py-1 text-xs" onClick={() => { setSalarioEditando(s); setModalAberto(true) }}>Editar</button>
                     <button className="btn px-2 py-1 text-xs" style={{ color: 'var(--cor-perigo)', background: 'transparent' }} onClick={() => handleDeletar(s.id)}>Excluir</button>
                   </div>

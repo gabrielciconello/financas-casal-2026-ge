@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { Plus, CreditCard } from 'lucide-react'
 import { useApi } from '../../hooks/useApi'
-import { Cartao, CompraCartao, CriarCartaoDTO, CriarCompraCartaoDTO } from '../../types'
+import { Cartao, CompraCartao, CriarCartaoDTO, CriarCompraCartaoDTO, AtualizarCompraCartaoDTO } from '../../types'
 import { formatarMoeda } from '../../utils'
 import Carregando from '../../components/ui/Carregando'
 import MensagemErro from '../../components/ui/MensagemErro'
@@ -24,20 +24,27 @@ export default function Cartoes() {
   const [modalCartao, setModalCartao] = useState(false)
   const [modalCompra, setModalCompra] = useState(false)
   const [cartaoEditando, setCartaoEditando] = useState<Cartao | null>(null)
+  const [compraEditando, setCompraEditando] = useState<CompraCartao | null>(null)
 
   const { carregando, erro, requisitar } = useApi()
   const apiForm = useApi()
+  const { carregando: carregandoCompras, requisitar: buscarComprasReq } = useApi()
+
+  const [todasCompras, setTodasCompras] = useState<CompraCartao[]>([])
 
   const buscarCartoes = useCallback(async () => {
     const resultado = await requisitar('/api/cartoes?pagina=1&limite=50')
     if (resultado) setCartoes(resultado.dados ?? [])
-  }, [requisitar])
+    // Busca todas as compras para calcular o uso de limite de todos os cartões
+    const resultadoCompras = await buscarComprasReq('/api/cartoes/compras-cartao?pagina=1&limite=1000')
+    if (resultadoCompras) {
+      setTodasCompras(resultadoCompras.dados ?? [])
+    }
+  }, [requisitar, buscarComprasReq])
 
   useEffect(() => {
     buscarCartoes()
   }, [buscarCartoes])
-
-  const { carregando: carregandoCompras, requisitar: buscarComprasReq } = useApi()
 
   useEffect(() => {
     async function fetch() {
@@ -76,7 +83,10 @@ export default function Cartoes() {
       method: 'POST', body: dados,
     })
     setModalCompra(false)
+    setCompraEditando(null)
     setPagina(1)
+    // Atualiza todas as compras para recalcular limites
+    buscarCartoes()
   }
 
   async function handleDeletarCartao(id: string) {
@@ -90,11 +100,22 @@ export default function Cartoes() {
     if (!confirm('Deseja deletar esta compra?')) return
     await requisitar(`/api/cartoes/compras-cartao/${id}`, { method: 'DELETE' })
     setPagina(1)
+    buscarCartoes()
+  }
+
+  async function handleAtualizarCompra(id: string, dados: CriarCompraCartaoDTO) {
+    await apiForm.requisitar(`/api/cartoes/compras-cartao/${id}`, {
+      method: 'PUT', body: dados,
+    })
+    setModalCompra(false)
+    setCompraEditando(null)
+    setPagina(1)
+    buscarCartoes()
   }
 
   // Calcula uso do limite
   const calcularUso = (cartao: Cartao) => {
-    const comprasCartao = compras.filter((c) => c.cartao_id === cartao.id)
+    const comprasCartao = todasCompras.filter((c) => c.cartao_id === cartao.id)
     // Soma o valor total de compras ativas (ajustado para parcelas restantes)
     let usado = 0
     for (const c of comprasCartao) {
@@ -307,7 +328,8 @@ export default function Cartoes() {
                       <div style={{ textAlign: 'center' }}>
                         <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>{c.parcela_atual}x de {c.parcelas} — {formatarMoeda(c.valor_parcela)}</span>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'center' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                        <button className="btn btn-secundario" onClick={() => { setCompraEditando(c); setModalCompra(true) }} style={{ padding: '0.25rem 0.625rem', fontSize: '0.75rem' }}>Editar</button>
                         <button className="btn" onClick={() => handleDeletarCompra(c.id)} style={{ padding: '0.25rem 0.625rem', fontSize: '0.75rem', color: 'var(--cor-perigo)', background: 'transparent' }}>Excluir</button>
                       </div>
                     </div>
@@ -331,7 +353,8 @@ export default function Cartoes() {
                         <span>{c.parcela_atual}/{c.parcelas} x {formatarMoeda(c.valor_parcela)}</span>
                         <span>{new Date(c.data_compra + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
                       </div>
-                      <div className="flex justify-end">
+                      <div className="flex gap-1.5 justify-end">
+                        <button className="btn btn-secundario px-2 py-1 text-xs" onClick={() => { setCompraEditando(c); setModalCompra(true) }}>Editar</button>
                         <button className="btn px-2 py-1 text-xs" style={{ color: 'var(--cor-perigo)', background: 'transparent' }} onClick={() => handleDeletarCompra(c.id)}>Excluir</button>
                       </div>
                     </div>
@@ -364,13 +387,15 @@ export default function Cartoes() {
       {/* Modal Compra */}
       <Modal
         aberto={modalCompra}
-        titulo="Nova Compra"
-        onFechar={() => setModalCompra(false)}
+        titulo={compraEditando ? 'Editar Compra' : 'Nova Compra'}
+        onFechar={() => { setModalCompra(false); setCompraEditando(null) }}
       >
         <FormularioCompra
           cartaoId={cartaoSelecionado?.id ?? ''}
-          onSalvar={handleSalvarCompra}
-          onCancelar={() => setModalCompra(false)}
+          compraEditando={compraEditando}
+          onNovo={handleSalvarCompra}
+          onAtualizar={handleAtualizarCompra}
+          onCancelar={() => { setModalCompra(false); setCompraEditando(null) }}
           carregando={apiForm.carregando}
         />
       </Modal>
@@ -483,24 +508,46 @@ function FormularioCartao({ cartao, onSalvar, onCancelar, carregando }: FormCart
 // ============================================
 interface FormCompraProps {
   cartaoId: string
-  onSalvar: (dados: CriarCompraCartaoDTO) => void
+  compraEditando?: CompraCartao | null
+  onNovo: (dados: CriarCompraCartaoDTO) => void
+  onAtualizar?: (id: string, dados: CriarCompraCartaoDTO) => void
   onCancelar: () => void
   carregando: boolean
 }
 
-function FormularioCompra({ cartaoId, onSalvar, onCancelar, carregando }: FormCompraProps) {
-  const [form, setForm] = useState<CriarCompraCartaoDTO>({
-    cartao_id: cartaoId,
-    descricao: '',
-    categoria: 'Alimentação',
-    valor_total: 0,
-    parcelas: 1,
-    parcela_inicial: 1,
-    data_compra: new Date().toISOString().split('T')[0],
+function FormularioCompra({ cartaoId, compraEditando, onNovo, onAtualizar, onCancelar, carregando }: FormCompraProps) {
+  const [form, setForm] = useState<CriarCompraCartaoDTO>(() => {
+    if (compraEditando) {
+      return {
+        cartao_id: compraEditando.cartao_id,
+        descricao: compraEditando.descricao,
+        categoria: compraEditando.categoria,
+        valor_total: compraEditando.valor_total,
+        parcelas: compraEditando.parcelas,
+        parcela_inicial: compraEditando.parcela_atual,
+        data_compra: compraEditando.data_compra,
+      }
+    }
+    return {
+      cartao_id: cartaoId,
+      descricao: '',
+      categoria: 'Alimentação',
+      valor_total: 0,
+      parcelas: 1,
+      parcela_inicial: 1,
+      data_compra: new Date().toISOString().split('T')[0],
+    }
   })
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSalvar(form) }}
+    <form onSubmit={(e) => {
+      e.preventDefault()
+      if (compraEditando && onAtualizar) {
+        onAtualizar(compraEditando.id, form)
+      } else {
+        onNovo(form)
+      }
+    }}
       style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
       <div>
@@ -589,7 +636,7 @@ function FormularioCompra({ cartaoId, onSalvar, onCancelar, carregando }: FormCo
       <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
         <button type="button" className="btn btn-secundario" onClick={onCancelar}>Cancelar</button>
         <button type="submit" className="btn btn-primario" disabled={carregando}>
-          {carregando ? 'Salvando...' : 'Registrar Compra'}
+          {carregando ? 'Salvando...' : compraEditando ? 'Salvar Alterações' : 'Registrar Compra'}
         </button>
       </div>
     </form>

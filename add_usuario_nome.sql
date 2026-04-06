@@ -8,6 +8,10 @@ ALTER TABLE salarios ADD COLUMN IF NOT EXISTS usuario_nome TEXT;
 ALTER TABLE cartoes ADD COLUMN IF NOT EXISTS usuario_nome TEXT;
 ALTER TABLE compras_cartao ADD COLUMN IF NOT EXISTS usuario_nome TEXT;
 ALTER TABLE contribuicoes_metas ADD COLUMN IF NOT EXISTS usuario_nome TEXT;
+ALTER TABLE metas ADD COLUMN IF NOT EXISTS usuario_nome TEXT;
+
+-- Obs: a tabela metas não possui coluna usuario_id, os registros existentes
+-- terão usuario_nome NULL ate serem atualizados via aplicacao.
 
 -- Preencher usuario_nome para registros existentes baseado no usuario_id
 -- Gabriel
