@@ -17,6 +17,7 @@
   },
   "keywords": [],
   "author": "",
+  "type": "module",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/gabrielciconello/financas-casal/issues"
