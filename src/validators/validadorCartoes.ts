@@ -63,7 +63,9 @@ export const esquemaCriarCompraCartao = z.object({
     .optional(),
 })
 
-export const esquemaAtualizarCompraCartao = esquemaCriarCompraCartao.partial()
+export const esquemaAtualizarCompraCartao = esquemaCriarCompraCartao.omit({ data_compra: true }).extend({
+  data_compra: z.string().optional(),
+}).partial()
 
 export type CriarCartaoInput = z.infer<typeof esquemaCriarCartao>
 export type AtualizarCartaoInput = z.infer<typeof esquemaAtualizarCartao>

@@ -14,7 +14,7 @@ interface ItemDetalhado {
   descricao: string
   valor: number
   data: string
-  fonte: 'transacao' | 'gasto_fixo' | 'gasto_variavel' | 'salario'
+  fonte: 'transacao' | 'gasto_fixo' | 'gasto_variavel' | 'salario' | 'compra_cartao'
   categoria: string
   status: string
 }
@@ -68,41 +68,65 @@ function intervaloMes(mes: number, ano: number): { inicio: string; fim: string }
 
 export async function buscarDadosDashboard(
   mes: number,
-  ano: number
+  ano: number,
+  usuarioId: string
 ): Promise<RespostaApi<DadosDashboard>> {
   try {
     const { inicio, fim } = intervaloMes(mes, ano)
 
     // ==========================================
-    // 1. TRANSAÇÕES DO MÊS ATUAL
+    // 1. TRANSAÇÕES DO MÊS ATUAL (filtrar por usuário)
     // ==========================================
     const { data: transacoes, error: erroTransacoes } = await supabaseAdmin
       .from('transacoes')
       .select('id, tipo, valor, categoria, descricao, data, status')
+      .eq('usuario_id', usuarioId)
       .gte('data', inicio)
       .lte('data', fim)
 
     if (erroTransacoes) return respostaErro(erroTransacoes.message)
 
     // ==========================================
-    // 2. GASTOS FIXOS DO MÊS (sempre inclui todos para o dashboard)
+    // 2. GASTOS FIXOS DO MÊS (filtrar por usuário)
     // ==========================================
     const { data: gastosFixos, error: erroGastosFixos } = await supabaseAdmin
       .from('gastos_fixos')
       .select('id, valor, status, dia_vencimento, descricao, categoria')
+      .eq('usuario_id', usuarioId)
       .eq('mes', mes)
       .eq('ano', ano)
 
     if (erroGastosFixos) return respostaErro(erroGastosFixos.message)
 
     // ==========================================
-    // 3. SALÁRIOS DO MÊS
+    // 3. SALÁRIOS DO MÊS (filtrar por usuário)
     // ==========================================
     const { data: salarios } = await supabaseAdmin
       .from('salarios')
       .select('id, valor_esperado, valor_recebido, status, descricao, data_esperada, mes',)
+      .eq('usuario_id', usuarioId)
       .eq('mes', mes)
       .eq('ano', ano)
+
+    // ==========================================
+    // 3a. GASTOS VARIÁVEIS DO MÊS (filtrar por usuário)
+    // ==========================================
+    const { data: gastosVariaveis } = await supabaseAdmin
+      .from('gastos_variaveis')
+      .select('id, valor_real, categoria')
+      .eq('usuario_id', usuarioId)
+      .eq('mes', mes)
+      .eq('ano', ano)
+
+    // ==========================================
+    // 4. COMPRAS CARTÃO DO MÊS (filtrar por usuário)
+    // ==========================================
+    const { data: comprasCartao } = await supabaseAdmin
+      .from('compras_cartao')
+      .select('id, descricao, categoria, valor_parcela, valor_total, data_compra, parcela_atual, parcelas, status')
+      .eq('usuario_id', usuarioId)
+      .gte('data_compra', inicio)
+      .lte('data_compra', fim)
 
     // ==========================================
     // CALCULAR TOTAIS
@@ -114,21 +138,17 @@ export async function buscarDadosDashboard(
     const totalGastosFixos = gastosFixos
       ?.reduce((acc, g) => acc + Number(g.valor), 0) ?? 0
 
-    const totalGastosVariaveis = await (async () => {
-      const { data: gv } = await supabaseAdmin
-        .from('gastos_variaveis')
-        .select('valor_real')
-        .eq('mes', mes)
-        .eq('ano', ano)
-      return gv?.reduce((acc: number, g: any) => acc + Number(g.valor_real ?? 0), 0) ?? 0
-    })()
+    const totalGastosVariaveis = gastosVariaveis
+      ?.reduce((acc: number, g: any) => acc + Number(g.valor_real ?? 0), 0) ?? 0
 
-    // Salários que foram recebidos contam como entrada
+    const totalComprasCartao = comprasCartao
+      ?.reduce((acc: number, c: any) => acc + Number(c.valor_parcela ?? 0), 0) ?? 0
+
     const totalSaidasTransacoes = transacoes
       ?.filter((t) => t.tipo === 'saida')
       .reduce((acc, t) => acc + Number(t.valor), 0) ?? 0
 
-    const totalSaidas = totalSaidasTransacoes + totalGastosFixos + totalGastosVariaveis
+    const totalSaidas = totalSaidasTransacoes + totalGastosFixos + totalGastosVariaveis + totalComprasCartao
     const totalEntradas = totalEntradasTransacoes
 
     const saldoAtual = totalEntradas - totalSaidas
@@ -183,6 +203,37 @@ export async function buscarDadosDashboard(
       })
     }
 
+    // Gastos variáveis como saída
+    for (const gv of gastosVariaveis ?? []) {
+      const val = Number(gv.valor_real ?? 0)
+      if (val > 0) {
+        itensDetalhados.push({
+          id: gv.id,
+          tipo: 'saida',
+          descricao: `Gasto Variável - ${gv.categoria}`,
+          valor: val,
+          data: `${ano}-${String(mes).padStart(2, '0')}-15`,
+          fonte: 'gasto_variavel',
+          categoria: gv.categoria,
+          status: 'pago',
+        })
+      }
+    }
+
+    // Compras cartão como saída (parcelas)
+    for (const c of comprasCartao ?? []) {
+      itensDetalhados.push({
+        id: c.id,
+        tipo: 'saida',
+        descricao: `${c.descricao} (${c.parcela_atual}/${c.parcelas})`,
+        valor: Number(c.valor_parcela ?? 0),
+        data: c.data_compra,
+        fonte: 'compra_cartao',
+        categoria: c.categoria,
+        status: c.status ?? 'pendente',
+      })
+    }
+
     // Ordenar por data (mais recente primeiro)
     itensDetalhados.sort((a, b) => (b.data > a.data ? 1 : a.data > b.data ? -1 : 0))
 
@@ -205,11 +256,19 @@ export async function buscarDadosDashboard(
         (totalPorCategoria[g.categoria] ?? 0) + Number(g.valor)
     }
 
-    // Gastos variáveis
-    for (const gv of (await supabaseAdmin.from('gastos_variaveis').select('valor_real, categoria').eq('mes', mes).eq('ano', ano)).data ?? []) {
+    // Gastos variáveis (já carregados acima)
+    for (const gv of gastosVariaveis ?? []) {
       const val = Number(gv.valor_real ?? 0)
       if (val > 0) {
         totalPorCategoria[gv.categoria] = (totalPorCategoria[gv.categoria] ?? 0) + val
+      }
+    }
+
+    // Compras cartão
+    for (const c of comprasCartao ?? []) {
+      const val = Number(c.valor_parcela ?? 0)
+      if (val > 0) {
+        totalPorCategoria[c.categoria] = (totalPorCategoria[c.categoria] ?? 0) + val
       }
     }
 
@@ -236,6 +295,7 @@ export async function buscarDadosDashboard(
       const { data: transMes } = await supabaseAdmin
         .from('transacoes')
         .select('tipo, valor')
+        .eq('usuario_id', usuarioId)
         .gte('data', inicioMes)
         .lte('data', fimMes)
 
@@ -246,6 +306,7 @@ export async function buscarDadosDashboard(
       const { data: gfMes } = await supabaseAdmin
         .from('gastos_fixos')
         .select('valor')
+        .eq('usuario_id', usuarioId)
         .eq('mes', mesBusca)
         .eq('ano', anoBusca)
       const totalGF = gfMes?.reduce((acc, g) => acc + Number(g.valor), 0) ?? 0
@@ -254,6 +315,7 @@ export async function buscarDadosDashboard(
       const { data: gvMes } = await supabaseAdmin
         .from('gastos_variaveis')
         .select('valor_real')
+        .eq('usuario_id', usuarioId)
         .eq('mes', mesBusca)
         .eq('ano', anoBusca)
       const totalGV = gvMes?.reduce((acc, g) => acc + Number(g.valor_real ?? 0), 0) ?? 0

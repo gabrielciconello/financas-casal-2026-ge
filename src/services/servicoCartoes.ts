@@ -165,8 +165,8 @@ export async function criarCompraCartao(
   usuarioEmail: string
 ): Promise<RespostaApi<CompraCartao>> {
   const usuarioNome = obterNomeUsuario(usuarioEmail)
-  const parcelas = dados.parcelas ?? 1
-  const parcelaInicial = dados.parcela_inicial ?? 1
+  const parcelas = Math.max(1, dados.parcelas ?? 1)
+  const parcelaInicial = Math.max(1, dados.parcela_inicial ?? 1)
   const valorParcela = Number((dados.valor_total / parcelas).toFixed(2))
 
   const { data, error } = await supabaseAdmin
@@ -206,14 +206,47 @@ export async function atualizarCompraCartao(
   usuarioId: string,
   usuarioEmail: string
 ): Promise<RespostaApi<CompraCartao>> {
+  // Normalize fields - coerce empty numeric strings to undefined
+  const normalized = { ...dados } as Record<string, any>
+
   // Remove parcelas_inicial before sending to DB - it's not a column
-  const { parcela_inicial, ...dadosLimpos } = dados as Record<string, any>
+  const { parcela_inicial, ...dadosLimpos } = normalized
 
   const dbUpdate: Record<string, any> = { ...dadosLimpos, atualizado_em: new Date().toISOString() }
 
-  // Map parcela_inicial to parcela_atual if provided
-  if (parcela_inicial != null) {
-    dbUpdate.parcela_atual = parcela_inicial
+  // Garantir que parcelas nunca seja 0 ou inválido
+  if (normalized.parcelas !== undefined) {
+    const parsed = typeof normalized.parcelas === 'number' ? normalized.parcelas : parseInt(normalized.parcelas, 10)
+    if (!isNaN(parsed) && parsed >= 1) {
+      dbUpdate.parcelas = parsed
+    } else {
+      delete dbUpdate.parcelas
+    }
+  }
+
+  // Recalcular valor_parcela se parcelas ou valor_total mudaram
+  if (dbUpdate.valor_total !== undefined || dbUpdate.parcelas !== undefined) {
+    // Buscar dados atuais para recalcular
+    const { data: atual } = await supabaseAdmin
+      .from('compras_cartao')
+      .select('valor_total, parcelas')
+      .eq('id', id)
+      .single()
+
+    const valorTotal = dbUpdate.valor_total !== undefined ? dbUpdate.valor_total : atual?.valor_total
+    const totalParcelas = dbUpdate.parcelas !== undefined ? dbUpdate.parcelas : atual?.parcelas
+
+    if (valorTotal != null && totalParcelas >= 1) {
+      dbUpdate.valor_parcela = Number((valorTotal / totalParcelas).toFixed(2))
+    }
+  }
+
+  // Map parcela_inicial to parcela_atual if provided and valid
+  if (parcela_inicial) {
+    const parsed = typeof parcela_inicial === 'number' ? parcela_inicial : parseInt(parcela_inicial, 10)
+    if (!isNaN(parsed) && parsed >= 1) {
+      dbUpdate.parcela_atual = parsed
+    }
   }
 
   const { data, error } = await supabaseAdmin

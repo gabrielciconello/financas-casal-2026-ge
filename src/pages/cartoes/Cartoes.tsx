@@ -35,11 +35,14 @@ export default function Cartoes() {
   const buscarCartoes = useCallback(async () => {
     const resultado = await requisitar('/api/cartoes?pagina=1&limite=50')
     if (resultado) setCartoes(resultado.dados ?? [])
+  }, [requisitar])
+
+  const buscarTodasCompras = useCallback(async () => {
     const resultadoCompras = await buscarComprasReq('/api/cartoes/compras-cartao?pagina=1&limite=1000')
     if (resultadoCompras) {
       setTodasCompras(resultadoCompras.dados ?? [])
     }
-  }, [requisitar, buscarComprasReq])
+  }, [buscarComprasReq])
 
   useEffect(() => { buscarCartoes() }, [buscarCartoes])
 
@@ -216,26 +219,32 @@ export default function Cartoes() {
                     <span style={{ textAlign: 'center' }}>Ações</span>
                   </div>
 
-                  {compras.map((c) => (
+                  {compras.map((c) => {
+                    const parcelasValidas = Math.max(1, Number(c.parcelas) || 1)
+                    const parcelaAtualValida = Math.max(1, Math.min(Number(c.parcela_atual) || 1, Math.max(1, Number(c.parcelas) || 1)))
+                    return (
                     <div key={c.id} style={{ display: 'grid', gridTemplateColumns: '1fr 120px 100px 120px 120px 80px', padding: '0.875rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', alignItems: 'center' }} className="transition-colors hover:bg-opacity-50">
                       <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--cor-texto)' }}>{c.descricao}</div>
                       <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>{c.categoria}</span>
                       <span style={{ fontSize: '0.8125rem', color: 'var(--cor-texto-suave)' }}>{new Date(c.data_compra + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
                       <span style={{ fontSize: '0.9375rem', fontWeight: 600, textAlign: 'right', color: 'var(--cor-texto)' }}>{formatarMoeda(c.valor_total)}</span>
                       <div style={{ textAlign: 'center' }}>
-                        <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>{c.parcela_atual}x de {c.parcelas} - {formatarMoeda(c.valor_parcela)}</span>
+                        <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>{parcelaAtualValida}x de {parcelasValidas} - {formatarMoeda(c.valor_parcela)}</span>
                       </div>
                       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
                         <button className="btn btn-secundario" onClick={() => { setCompraEditando(c); setModalCompra(true) }} style={{ padding: '0.25rem 0.625rem', fontSize: '0.75rem' }}>Editar</button>
                         <button className="btn" onClick={() => handleDeletarCompra(c.id)} style={{ padding: '0.25rem 0.625rem', fontSize: '0.75rem', color: 'var(--cor-perigo)', background: 'transparent' }}>Excluir</button>
                       </div>
                     </div>
-                  ))}
+                    )})}
                 </div>
 
                 {/* Mobile */}
                 <div className="md:hidden flex flex-col">
-                  {compras.map((c) => (
+                  {compras.map((c) => {
+                    const parcelasValidas = Math.max(1, Number(c.parcelas) || 1)
+                    const parcelaAtualValida = Math.max(1, Math.min(Number(c.parcela_atual) || 1, parcelasValidas))
+                    return (
                     <div key={c.id} style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--cor-borda)' }}>
                       <div className="flex items-start justify-between mb-1.5">
                         <div>
@@ -245,7 +254,7 @@ export default function Cartoes() {
                         <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--cor-texto)' }}>{formatarMoeda(c.valor_total)}</div>
                       </div>
                       <div className="flex items-center gap-2 text-xs mb-1.5" style={{ color: 'var(--cor-texto-suave)' }}>
-                        <span>{c.parcela_atual}/{c.parcelas} x {formatarMoeda(c.valor_parcela)}</span>
+                        <span>{parcelaAtualValida}/{parcelasValidas} x {formatarMoeda(c.valor_parcela)}</span>
                         <span>{new Date(c.data_compra + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
                       </div>
                       <div className="flex gap-1.5 justify-end">
@@ -253,7 +262,7 @@ export default function Cartoes() {
                         <button className="btn px-2 py-1 text-xs" style={{ color: 'var(--cor-perigo)', background: 'transparent' }} onClick={() => handleDeletarCompra(c.id)}>Excluir</button>
                       </div>
                     </div>
-                  ))}
+                    )})}
                 </div>
 
                 <div style={{ padding: '0 1.25rem' }}>

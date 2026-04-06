@@ -26,6 +26,9 @@ export default async function handlerDashboard(
   const autenticado = await verificarAutenticacao(req as RequisicaoAutenticada, res)
   if (!autenticado) return
 
+  const requisicao = req as RequisicaoAutenticada
+  const usuarioId = requisicao.usuario!.id
+
   if (req.method !== 'GET') return responderMetodoNaoPermitido(res)
 
   const url = new URL(req.url ?? '/', `http://${req.headers.host}`)
@@ -39,7 +42,7 @@ export default async function handlerDashboard(
     ? Number(url.searchParams.get('ano'))
     : anoAtual
 
-  const resultado = await buscarDadosDashboard(mes, ano)
+  const resultado = await buscarDadosDashboard(mes, ano, usuarioId)
 
   if (resultado.erro) return responderErro(res, resultado.erro)
   return responderSucesso(res, resultado.dados)
