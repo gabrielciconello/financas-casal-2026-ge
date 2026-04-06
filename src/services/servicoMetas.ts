@@ -49,6 +49,7 @@ export async function buscarMetaPorId(
 
 export async function criarMeta(
   dados: CriarMetaDTO,
+  usuarioEmail: string,
   usuarioId: string
 ): Promise<RespostaApi<Meta>> {
   const { data, error } = await supabaseAdmin
@@ -60,6 +61,7 @@ export async function criarMeta(
   if (error) return respostaErro(error.message)
 
   await registrarAuditoria({
+    usuarioEmail,
     usuarioId,
     acao: 'CRIAR',
     modulo: 'metas',
@@ -72,6 +74,7 @@ export async function criarMeta(
 
 export async function atualizarMeta(
   id: string,
+  usuarioEmail: string,
   dados: AtualizarMetaDTO,
   usuarioId: string
 ): Promise<RespostaApi<Meta>> {
@@ -85,6 +88,7 @@ export async function atualizarMeta(
   if (error) return respostaErro(error.message)
 
   await registrarAuditoria({
+    usuarioEmail,
     usuarioId,
     acao: 'ATUALIZAR',
     modulo: 'metas',
@@ -97,6 +101,7 @@ export async function atualizarMeta(
 
 export async function deletarMeta(
   id: string,
+  usuarioEmail: string,
   usuarioId: string
 ): Promise<RespostaApi<null>> {
   const { error } = await supabaseAdmin
@@ -107,6 +112,7 @@ export async function deletarMeta(
   if (error) return respostaErro(error.message)
 
   await registrarAuditoria({
+    usuarioEmail,
     usuarioId,
     acao: 'DELETAR',
     modulo: 'metas',
@@ -141,6 +147,7 @@ export async function buscarContribuicoes(
 
 export async function criarContribuicao(
   dados: CriarContribuicaoMetaDTO,
+  usuarioEmail: string,
   usuarioId: string
 ): Promise<RespostaApi<ContribuicaoMeta>> {
   const { data, error } = await supabaseAdmin
@@ -168,6 +175,7 @@ export async function criarContribuicao(
   }
 
   await registrarAuditoria({
+    usuarioEmail,
     usuarioId,
     acao: 'CRIAR',
     modulo: 'contribuicoes_metas',

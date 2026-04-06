@@ -4,6 +4,7 @@
 export interface Usuario {
   id: string
   email: string
+  nome: string
 }
 
 // ============================================
@@ -24,6 +25,7 @@ export type ModuloAuditoria =
 export interface LogAuditoria {
   id: string
   usuario_id: string
+  usuario_nome: string
   acao: AcaoAuditoria
   modulo: ModuloAuditoria
   registro_id: string

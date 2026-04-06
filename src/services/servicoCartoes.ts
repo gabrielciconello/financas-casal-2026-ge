@@ -54,6 +54,7 @@ export async function buscarCartaoPorId(
 
 export async function criarCartao(
   dados: CriarCartaoDTO,
+  usuarioEmail: string,
   usuarioId: string
 ): Promise<RespostaApi<Cartao>> {
   const { data, error } = await supabaseAdmin
@@ -65,6 +66,7 @@ export async function criarCartao(
   if (error) return respostaErro(error.message)
 
   await registrarAuditoria({
+    usuarioEmail,
     usuarioId,
     acao: 'CRIAR',
     modulo: 'cartoes',
@@ -78,6 +80,7 @@ export async function criarCartao(
 export async function atualizarCartao(
   id: string,
   dados: AtualizarCartaoDTO,
+  usuarioEmail: string,
   usuarioId: string
 ): Promise<RespostaApi<Cartao>> {
   const { data, error } = await supabaseAdmin
@@ -90,6 +93,7 @@ export async function atualizarCartao(
   if (error) return respostaErro(error.message)
 
   await registrarAuditoria({
+    usuarioEmail,
     usuarioId,
     acao: 'ATUALIZAR',
     modulo: 'cartoes',
@@ -102,6 +106,7 @@ export async function atualizarCartao(
 
 export async function deletarCartao(
   id: string,
+  usuarioEmail: string,
   usuarioId: string
 ): Promise<RespostaApi<null>> {
   // Soft delete — apenas desativa o cartão
@@ -113,6 +118,7 @@ export async function deletarCartao(
   if (error) return respostaErro(error.message)
 
   await registrarAuditoria({
+    usuarioEmail,
     usuarioId,
     acao: 'DELETAR',
     modulo: 'cartoes',
@@ -153,6 +159,7 @@ export async function buscarComprasCartao(
 
 export async function criarCompraCartao(
   dados: CriarCompraCartaoDTO,
+  usuarioEmail: string,
   usuarioId: string
 ): Promise<RespostaApi<CompraCartao>> {
   const parcelas = dados.parcelas ?? 1
@@ -173,6 +180,7 @@ export async function criarCompraCartao(
   if (error) return respostaErro(error.message)
 
   await registrarAuditoria({
+    usuarioEmail,
     usuarioId,
     acao: 'CRIAR',
     modulo: 'compras_cartao',
@@ -186,6 +194,7 @@ export async function criarCompraCartao(
 export async function atualizarCompraCartao(
   id: string,
   dados: AtualizarCompraCartaoDTO,
+  usuarioEmail: string,
   usuarioId: string
 ): Promise<RespostaApi<CompraCartao>> {
   const { data, error } = await supabaseAdmin
@@ -198,6 +207,7 @@ export async function atualizarCompraCartao(
   if (error) return respostaErro(error.message)
 
   await registrarAuditoria({
+    usuarioEmail,
     usuarioId,
     acao: 'ATUALIZAR',
     modulo: 'compras_cartao',
@@ -210,6 +220,7 @@ export async function atualizarCompraCartao(
 
 export async function deletarCompraCartao(
   id: string,
+  usuarioEmail: string,
   usuarioId: string
 ): Promise<RespostaApi<null>> {
   const { error } = await supabaseAdmin
@@ -220,6 +231,7 @@ export async function deletarCompraCartao(
   if (error) return respostaErro(error.message)
 
   await registrarAuditoria({
+    usuarioEmail,
     usuarioId,
     acao: 'DELETAR',
     modulo: 'compras_cartao',

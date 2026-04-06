@@ -34,6 +34,7 @@ export default async function handlerMetas(
 
   const requisicao = req as RequisicaoAutenticada
   const usuarioId = requisicao.usuario!.id
+  const usuarioEmail = requisicao.usuario!.email
   const url = new URL(req.url ?? '/', `http://${req.headers.host}`)
   const partes = url.pathname.split('/').filter(Boolean)
 
@@ -68,7 +69,7 @@ export default async function handlerMetas(
       if (!validacao.sucesso) {
         return responderErro(res, validacao.erros?.join(', ') ?? 'Dados inválidos')
       }
-      const resultado = await criarMeta(validacao.dados!, usuarioId)
+      const resultado = await criarMeta(validacao.dados!, usuarioEmail, usuarioId)
       if (resultado.erro) return responderErro(res, resultado.erro)
       return responderSucesso(res, resultado.dados, 201)
     }
@@ -79,14 +80,14 @@ export default async function handlerMetas(
       if (!validacao.sucesso) {
         return responderErro(res, validacao.erros?.join(', ') ?? 'Dados inválidos')
       }
-      const resultado = await atualizarMeta(id, validacao.dados!, usuarioId)
+      const resultado = await atualizarMeta(id, validacao.dados!, usuarioEmail, usuarioId)
       if (resultado.erro) return responderErro(res, resultado.erro)
       if (!resultado.dados) return responderNaoEncontrado(res)
       return responderSucesso(res, resultado.dados)
     }
 
     if (req.method === 'DELETE' && id) {
-      const resultado = await deletarMeta(id, usuarioId)
+      const resultado = await deletarMeta(id, usuarioEmail, usuarioId)
       if (resultado.erro) return responderErro(res, resultado.erro)
       return responderSucesso(res, { mensagem: 'Meta deletada com sucesso' })
     }
@@ -114,7 +115,7 @@ export default async function handlerMetas(
       if (!validacao.sucesso) {
         return responderErro(res, validacao.erros?.join(', ') ?? 'Dados inválidos')
       }
-      const resultado = await criarContribuicao(validacao.dados!, usuarioId)
+      const resultado = await criarContribuicao(validacao.dados!, usuarioEmail, usuarioId)
       if (resultado.erro) return responderErro(res, resultado.erro)
       return responderSucesso(res, resultado.dados, 201)
     }

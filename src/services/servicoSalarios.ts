@@ -59,7 +59,8 @@ export async function buscarSalarioPorId(
 
 export async function criarSalario(
   dados: CriarSalarioDTO,
-  usuarioId: string
+  usuarioId: string,
+  usuarioEmail: string
 ): Promise<RespostaApi<Salario>> {
   const { data, error } = await supabaseAdmin
     .from('salarios')
@@ -70,6 +71,7 @@ export async function criarSalario(
   if (error) return respostaErro(error.message)
 
   await registrarAuditoria({
+    usuarioEmail,
     usuarioId,
     acao: 'CRIAR',
     modulo: 'salarios',
@@ -83,7 +85,8 @@ export async function criarSalario(
 export async function atualizarSalario(
   id: string,
   dados: AtualizarSalarioDTO,
-  usuarioId: string
+  usuarioId: string,
+  usuarioEmail: string
 ): Promise<RespostaApi<Salario>> {
   const { data, error } = await supabaseAdmin
     .from('salarios')
@@ -95,6 +98,7 @@ export async function atualizarSalario(
   if (error) return respostaErro(error.message)
 
   await registrarAuditoria({
+    usuarioEmail,
     usuarioId,
     acao: 'ATUALIZAR',
     modulo: 'salarios',
@@ -107,7 +111,8 @@ export async function atualizarSalario(
 
 export async function deletarSalario(
   id: string,
-  usuarioId: string
+  usuarioId: string,
+  usuarioEmail: string
 ): Promise<RespostaApi<null>> {
   const { error } = await supabaseAdmin
     .from('salarios')
@@ -117,6 +122,7 @@ export async function deletarSalario(
   if (error) return respostaErro(error.message)
 
   await registrarAuditoria({
+    usuarioEmail,
     usuarioId,
     acao: 'DELETAR',
     modulo: 'salarios',

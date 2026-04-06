@@ -15,7 +15,7 @@ export const esquemaCriarTransacao = z.object({
     invalid_type_error: 'Tipo deve ser entrada ou saida',
   }),
 
-  valor: z
+  valor: z.coerce
     .number({ required_error: 'Valor é obrigatório' })
     .positive('Valor deve ser maior que zero'),
 

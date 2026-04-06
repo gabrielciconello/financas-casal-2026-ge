@@ -8,19 +8,19 @@ export const esquemaCriarCartao = z.object({
 
   bandeira: z.string().optional(),
 
-  limite: z
+  limite: z.coerce
     .number({ required_error: 'Limite é obrigatório' })
     .positive('Limite deve ser maior que zero'),
 
-  dia_fechamento: z
+  dia_fechamento: z.coerce
     .number({ required_error: 'Dia de fechamento é obrigatório' })
-    .int()
+    .int('Dia deve ser um número inteiro')
     .min(1, 'Dia deve ser entre 1 e 31')
     .max(31, 'Dia deve ser entre 1 e 31'),
 
-  dia_vencimento: z
+  dia_vencimento: z.coerce
     .number({ required_error: 'Dia de vencimento é obrigatório' })
-    .int()
+    .int('Dia deve ser um número inteiro')
     .min(1, 'Dia deve ser entre 1 e 31')
     .max(31, 'Dia deve ser entre 1 e 31'),
 })
@@ -41,13 +41,13 @@ export const esquemaCriarCompraCartao = z.object({
     .string({ required_error: 'Categoria é obrigatória' })
     .min(2, 'Categoria deve ter no mínimo 2 caracteres'),
 
-  valor_total: z
+  valor_total: z.coerce
     .number({ required_error: 'Valor total é obrigatório' })
     .positive('Valor total deve ser maior que zero'),
 
-  parcelas: z
+  parcelas: z.coerce
     .number()
-    .int()
+    .int('Parcelas deve ser um número inteiro')
     .min(1, 'Número de parcelas deve ser no mínimo 1')
     .default(1),
 

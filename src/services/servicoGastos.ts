@@ -65,7 +65,8 @@ export async function buscarGastoFixoPorId(
 
 export async function criarGastoFixo(
   dados: CriarGastoFixoDTO,
-  usuarioId: string
+  usuarioId: string,
+  usuarioEmail: string
 ): Promise<RespostaApi<GastoFixo>> {
   const { data, error } = await supabaseAdmin
     .from('gastos_fixos')
@@ -76,6 +77,7 @@ export async function criarGastoFixo(
   if (error) return respostaErro(error.message)
 
   await registrarAuditoria({
+    usuarioEmail,
     usuarioId,
     acao: 'CRIAR',
     modulo: 'gastos_fixos',
@@ -89,7 +91,8 @@ export async function criarGastoFixo(
 export async function atualizarGastoFixo(
   id: string,
   dados: AtualizarGastoFixoDTO,
-  usuarioId: string
+  usuarioId: string,
+  usuarioEmail: string
 ): Promise<RespostaApi<GastoFixo>> {
   const { data, error } = await supabaseAdmin
     .from('gastos_fixos')
@@ -101,6 +104,7 @@ export async function atualizarGastoFixo(
   if (error) return respostaErro(error.message)
 
   await registrarAuditoria({
+    usuarioEmail,
     usuarioId,
     acao: 'ATUALIZAR',
     modulo: 'gastos_fixos',
@@ -113,7 +117,8 @@ export async function atualizarGastoFixo(
 
 export async function deletarGastoFixo(
   id: string,
-  usuarioId: string
+  usuarioId: string,
+  usuarioEmail: string
 ): Promise<RespostaApi<null>> {
   const { error } = await supabaseAdmin
     .from('gastos_fixos')
@@ -123,6 +128,7 @@ export async function deletarGastoFixo(
   if (error) return respostaErro(error.message)
 
   await registrarAuditoria({
+    usuarioEmail,
     usuarioId,
     acao: 'DELETAR',
     modulo: 'gastos_fixos',
@@ -178,7 +184,8 @@ export async function buscarGastoVariavelPorId(
 
 export async function criarGastoVariavel(
   dados: CriarGastoVariavelDTO,
-  usuarioId: string
+  usuarioId: string,
+  usuarioEmail: string
 ): Promise<RespostaApi<GastoVariavel>> {
   const { data, error } = await supabaseAdmin
     .from('gastos_variaveis')
@@ -189,6 +196,7 @@ export async function criarGastoVariavel(
   if (error) return respostaErro(error.message)
 
   await registrarAuditoria({
+    usuarioEmail,
     usuarioId,
     acao: 'CRIAR',
     modulo: 'gastos_variaveis',
@@ -202,7 +210,8 @@ export async function criarGastoVariavel(
 export async function atualizarGastoVariavel(
   id: string,
   dados: AtualizarGastoVariavelDTO,
-  usuarioId: string
+  usuarioId: string,
+  usuarioEmail: string
 ): Promise<RespostaApi<GastoVariavel>> {
   const { data, error } = await supabaseAdmin
     .from('gastos_variaveis')
@@ -214,6 +223,7 @@ export async function atualizarGastoVariavel(
   if (error) return respostaErro(error.message)
 
   await registrarAuditoria({
+    usuarioEmail,
     usuarioId,
     acao: 'ATUALIZAR',
     modulo: 'gastos_variaveis',
@@ -226,7 +236,8 @@ export async function atualizarGastoVariavel(
 
 export async function deletarGastoVariavel(
   id: string,
-  usuarioId: string
+  usuarioId: string,
+  usuarioEmail: string
 ): Promise<RespostaApi<null>> {
   const { error } = await supabaseAdmin
     .from('gastos_variaveis')
@@ -236,6 +247,7 @@ export async function deletarGastoVariavel(
   if (error) return respostaErro(error.message)
 
   await registrarAuditoria({
+    usuarioEmail,
     usuarioId,
     acao: 'DELETAR',
     modulo: 'gastos_variaveis',

@@ -11,14 +11,15 @@ export const esquemaCriarSalario = z.object({
     .min(3, 'Descrição deve ter no mínimo 3 caracteres')
     .max(255, 'Descrição deve ter no máximo 255 caracteres'),
 
-  valor_esperado: z
+  valor_esperado: z.coerce
     .number({ required_error: 'Valor esperado é obrigatório' })
     .positive('Valor esperado deve ser maior que zero'),
 
-  valor_recebido: z
+  valor_recebido: z.coerce
     .number()
     .min(0, 'Valor recebido não pode ser negativo')
-    .optional(),
+    .optional()
+    .or(z.literal('')),
 
   status: z.enum(['pendente', 'recebido', 'parcial']).default('pendente'),
 
@@ -31,15 +32,15 @@ export const esquemaCriarSalario = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Data deve estar no formato YYYY-MM-DD')
     .optional(),
 
-  mes: z
+  mes: z.coerce
     .number({ required_error: 'Mês é obrigatório' })
-    .int()
+    .int('Mês deve ser um número inteiro')
     .min(1, 'Mês deve ser entre 1 e 12')
     .max(12, 'Mês deve ser entre 1 e 12'),
 
-  ano: z
+  ano: z.coerce
     .number({ required_error: 'Ano é obrigatório' })
-    .int()
+    .int('Ano deve ser um número inteiro')
     .min(2020, 'Ano inválido')
     .max(2100, 'Ano inválido'),
 

@@ -38,6 +38,7 @@ export default async function handlerGastos(
 
   const requisicao = req as RequisicaoAutenticada
   const usuarioId = requisicao.usuario!.id
+  const usuarioEmail = requisicao.usuario!.email
   const url = new URL(req.url ?? '/', `http://${req.headers.host}`)
   const partes = url.pathname.split('/').filter(Boolean)
 
@@ -77,7 +78,7 @@ export default async function handlerGastos(
       if (!validacao.sucesso) {
         return responderErro(res, validacao.erros?.join(', ') ?? 'Dados inválidos')
       }
-      const resultado = await criarGastoFixo(validacao.dados!, usuarioId)
+      const resultado = await criarGastoFixo(validacao.dados!, usuarioEmail, usuarioId)
       if (resultado.erro) return responderErro(res, resultado.erro)
       return responderSucesso(res, resultado.dados, 201)
     }
@@ -88,14 +89,14 @@ export default async function handlerGastos(
       if (!validacao.sucesso) {
         return responderErro(res, validacao.erros?.join(', ') ?? 'Dados inválidos')
       }
-      const resultado = await atualizarGastoFixo(id, validacao.dados!, usuarioId)
+      const resultado = await atualizarGastoFixo(id, validacao.dados!, usuarioEmail, usuarioId)
       if (resultado.erro) return responderErro(res, resultado.erro)
       if (!resultado.dados) return responderNaoEncontrado(res)
       return responderSucesso(res, resultado.dados)
     }
 
     if (req.method === 'DELETE' && id) {
-      const resultado = await deletarGastoFixo(id, usuarioId)
+      const resultado = await deletarGastoFixo(id, usuarioEmail, usuarioId)
       if (resultado.erro) return responderErro(res, resultado.erro)
       return responderSucesso(res, { mensagem: 'Gasto fixo deletado com sucesso' })
     }
@@ -130,7 +131,7 @@ export default async function handlerGastos(
       if (!validacao.sucesso) {
         return responderErro(res, validacao.erros?.join(', ') ?? 'Dados inválidos')
       }
-      const resultado = await criarGastoVariavel(validacao.dados!, usuarioId)
+      const resultado = await criarGastoVariavel(validacao.dados!, usuarioEmail, usuarioId)
       if (resultado.erro) return responderErro(res, resultado.erro)
       return responderSucesso(res, resultado.dados, 201)
     }
@@ -141,14 +142,14 @@ export default async function handlerGastos(
       if (!validacao.sucesso) {
         return responderErro(res, validacao.erros?.join(', ') ?? 'Dados inválidos')
       }
-      const resultado = await atualizarGastoVariavel(id, validacao.dados!, usuarioId)
+      const resultado = await atualizarGastoVariavel(id, validacao.dados!, usuarioEmail, usuarioId)
       if (resultado.erro) return responderErro(res, resultado.erro)
       if (!resultado.dados) return responderNaoEncontrado(res)
       return responderSucesso(res, resultado.dados)
     }
 
     if (req.method === 'DELETE' && id) {
-      const resultado = await deletarGastoVariavel(id, usuarioId)
+      const resultado = await deletarGastoVariavel(id, usuarioEmail, usuarioId)
       if (resultado.erro) return responderErro(res, resultado.erro)
       return responderSucesso(res, { mensagem: 'Gasto variável deletado com sucesso' })
     }

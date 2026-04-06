@@ -22,6 +22,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
 
   const requisicao = req as RequisicaoAutenticada
   const usuarioId = requisicao.usuario!.id
+  const usuarioEmail = requisicao.usuario!.email
   const url = new URL(req.url ?? '/', `http://${req.headers.host}`)
   const segmentos = url.pathname.split('/').filter(Boolean)
   const id = segmentos.length >= 4 ? segmentos[segmentos.length - 1] : null
@@ -50,7 +51,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     const body = await lerBody(req)
     const validacao = validar(esquemaCriarGastoFixo, body)
     if (!validacao.sucesso) return responderErro(res, validacao.erros?.join(', ') ?? 'Dados inválidos')
-    const resultado = await criarGastoFixo(validacao.dados!, usuarioId)
+    const resultado = await criarGastoFixo(validacao.dados!, usuarioEmail, usuarioId)
     if (resultado.erro) return responderErro(res, resultado.erro)
     return responderSucesso(res, resultado.dados, 201)
   }
@@ -59,14 +60,14 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     const body = await lerBody(req)
     const validacao = validar(esquemaAtualizarGastoFixo, body)
     if (!validacao.sucesso) return responderErro(res, validacao.erros?.join(', ') ?? 'Dados inválidos')
-    const resultado = await atualizarGastoFixo(id, validacao.dados!, usuarioId)
+    const resultado = await atualizarGastoFixo(id, validacao.dados!, usuarioEmail, usuarioId)
     if (resultado.erro) return responderErro(res, resultado.erro)
     if (!resultado.dados) return responderNaoEncontrado(res)
     return responderSucesso(res, resultado.dados)
   }
 
   if (req.method === 'DELETE' && id) {
-    const resultado = await deletarGastoFixo(id, usuarioId)
+    const resultado = await deletarGastoFixo(id, usuarioEmail, usuarioId)
     if (resultado.erro) return responderErro(res, resultado.erro)
     return responderSucesso(res, { mensagem: 'Gasto fixo deletado com sucesso' })
   }

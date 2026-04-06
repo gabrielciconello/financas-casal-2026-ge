@@ -72,7 +72,8 @@ export async function buscarTransacaoPorId(
 // Criar transação
 export async function criarTransacao(
   dados: CriarTransacaoDTO,
-  usuarioId: string
+  usuarioId: string,
+  usuarioEmail: string
 ): Promise<RespostaApi<Transacao>> {
   const { data, error } = await supabaseAdmin
     .from('transacoes')
@@ -84,6 +85,7 @@ export async function criarTransacao(
 
   await registrarAuditoria({
     usuarioId,
+    usuarioEmail,
     acao: 'CRIAR',
     modulo: 'transacoes',
     registroId: data.id,
@@ -97,7 +99,8 @@ export async function criarTransacao(
 export async function atualizarTransacao(
   id: string,
   dados: AtualizarTransacaoDTO,
-  usuarioId: string
+  usuarioId: string,
+  usuarioEmail: string
 ): Promise<RespostaApi<Transacao>> {
   const { data, error } = await supabaseAdmin
     .from('transacoes')
@@ -110,6 +113,7 @@ export async function atualizarTransacao(
 
   await registrarAuditoria({
     usuarioId,
+    usuarioEmail,
     acao: 'ATUALIZAR',
     modulo: 'transacoes',
     registroId: id,
@@ -122,7 +126,8 @@ export async function atualizarTransacao(
 // Deletar transação
 export async function deletarTransacao(
   id: string,
-  usuarioId: string
+  usuarioId: string,
+  usuarioEmail: string
 ): Promise<RespostaApi<null>> {
   const { error } = await supabaseAdmin
     .from('transacoes')
@@ -133,6 +138,7 @@ export async function deletarTransacao(
 
   await registrarAuditoria({
     usuarioId,
+    usuarioEmail,
     acao: 'DELETAR',
     modulo: 'transacoes',
     registroId: id,

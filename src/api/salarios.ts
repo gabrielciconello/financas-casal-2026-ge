@@ -22,6 +22,7 @@ export default async function handlerSalarios(
 
   const requisicao = req as RequisicaoAutenticada
   const usuarioId = requisicao.usuario!.id
+  const usuarioEmail = requisicao.usuario!.email
   const url = new URL(req.url ?? '/', `http://${req.headers.host}`)
   const partes = url.pathname.split('/').filter(Boolean)
   const pathname = url.pathname.replace(/\/$/, '')
@@ -57,7 +58,7 @@ export default async function handlerSalarios(
       return responderErro(res, validacao.erros?.join(', ') ?? 'Dados inválidos')
     }
 
-    const resultado = await criarSalario(validacao.dados!, usuarioId)
+    const resultado = await criarSalario(validacao.dados!, usuarioEmail, usuarioId)
 
     if (resultado.erro) return responderErro(res, resultado.erro)
     return responderSucesso(res, resultado.dados, 201)
@@ -71,7 +72,7 @@ export default async function handlerSalarios(
       return responderErro(res, validacao.erros?.join(', ') ?? 'Dados inválidos')
     }
 
-    const resultado = await atualizarSalario(id, validacao.dados!, usuarioId)
+    const resultado = await atualizarSalario(id, validacao.dados!, usuarioEmail, usuarioId)
 
     if (resultado.erro) return responderErro(res, resultado.erro)
     if (!resultado.dados) return responderNaoEncontrado(res)
@@ -79,7 +80,7 @@ export default async function handlerSalarios(
   }
 
   if (req.method === 'DELETE' && id) {
-    const resultado = await deletarSalario(id, usuarioId)
+    const resultado = await deletarSalario(id, usuarioEmail, usuarioId)
 
     if (resultado.erro) return responderErro(res, resultado.erro)
     return responderSucesso(res, { mensagem: 'Salário deletado com sucesso' })

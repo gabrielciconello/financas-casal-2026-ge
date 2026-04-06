@@ -1,6 +1,7 @@
 import { IncomingMessage, ServerResponse } from 'http'
 import { supabase } from '../services/supabase.node.js'
 import type { Usuario } from '../types/index.js'
+import { obterNomeUsuario } from '../config/usuarios.js'
 
 // Extende o IncomingMessage para carregar o usuário autenticado
 export interface RequisicaoAutenticada extends IncomingMessage {
@@ -40,6 +41,7 @@ export async function verificarAutenticacao(
   req.usuario = {
     id: data.user.id,
     email: data.user.email ?? '',
+    nome: data.user.email ? obterNomeUsuario(data.user.email) : '',
   }
 
   return true
