@@ -303,7 +303,7 @@ function FormularioCartao({ cartao, onSalvar, onCancelar, carregando }: FormCart
   })
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSalvar(form) }} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }} autoComplete="off"
+    <form onSubmit={(e) => { e.preventDefault(); onSalvar(form) }} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }} autoComplete="off">
       <div>
         <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>Nome do Cartão</label>
         <input className="input" value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} placeholder="Ex: Nubank, Inter..." required />
@@ -365,7 +365,7 @@ function FormularioCompra({ cartaoId, compraEditando, onNovo, onAtualizar, onCan
   })
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); if (compraEditando && onAtualizar) { onAtualizar(compraEditando.id, form) } else { onNovo(form) } }} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }} autoComplete="off"
+    <form onSubmit={(e) => { e.preventDefault(); if (compraEditando && onAtualizar) { onAtualizar(compraEditando.id, form) } else { onNovo(form) } }} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }} autoComplete="off">
       <div>
         <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>Descrição</label>
         <input className="input" value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} placeholder="Ex: Notebook, Supermercado..." required />
