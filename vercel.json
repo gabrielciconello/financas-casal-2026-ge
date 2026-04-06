@@ -17,19 +17,14 @@
     {
       "src": "package.json",
       "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
+      "config": { "distDir": "dist" }
     }
   ],
   "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "src/api/$1.ts"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
+    { "src": "/api/gastos/fixos(.*)", "dest": "src/api/gastos-fixos.ts" },
+    { "src": "/api/gastos/variaveis(.*)", "dest": "src/api/gastos-variaveis.ts" },
+    { "src": "/api/cartoes/compras-cartao(.*)", "dest": "src/api/cartoes.ts" },
+    { "src": "/api/(.*)", "dest": "src/api/$1.ts" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }

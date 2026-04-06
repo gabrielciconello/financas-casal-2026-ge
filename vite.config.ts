@@ -5,16 +5,22 @@ import path from 'path'
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
+    alias: { '@': path.resolve(__dirname, './src') },
   },
-  build: {
-    outDir: 'dist',
-  },
+  build: { outDir: 'dist' },
   server: {
     port: 3000,
     proxy: {
+      '/api/gastos/fixos': {
+        target: 'https://financas-casal-2026-gem.vercel.app',
+        changeOrigin: true,
+        secure: true,
+      },
+      '/api/gastos/variaveis': {
+        target: 'https://financas-casal-2026-gem.vercel.app',
+        changeOrigin: true,
+        secure: true,
+      },
       '/api': {
         target: 'https://financas-casal-2026-gem.vercel.app',
         changeOrigin: true,

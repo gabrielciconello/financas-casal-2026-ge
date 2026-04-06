@@ -1,44 +1,31 @@
 import { IncomingMessage, ServerResponse } from 'http'
-import { verificarAutenticacao, RequisicaoAutenticada } from '../../middleware/autenticacao'
-import { lerBody } from '../../utils/lerBody'
+import { verificarAutenticacao, RequisicaoAutenticada } from '../middleware/autenticacao'
+import { lerBody } from '../utils/lerBody'
+import { aplicarCors } from '../utils/cors'
 import {
-  responderSucesso,
-  responderErro,
-  responderNaoEncontrado,
-  responderMetodoNaoPermitido,
-} from '../../utils/responderHttp'
-import { validar } from '../../validators'
+  responderSucesso, responderErro,
+  responderNaoEncontrado, responderMetodoNaoPermitido,
+} from '../utils/responderHttp'
+import { validar } from '../validators'
+import { esquemaCriarGastoVariavel, esquemaAtualizarGastoVariavel } from '../validators/validadorGastos'
 import {
-  esquemaCriarGastoVariavel,
-  esquemaAtualizarGastoVariavel,
-} from '../../validators/validadorGastos'
-import {
-  buscarGastosVariaveis,
-  buscarGastoVariavelPorId,
-  criarGastoVariavel,
-  atualizarGastoVariavel,
-  deletarGastoVariavel,
-} from '../../services/servicoGastos'
+  buscarGastosVariaveis, buscarGastoVariavelPorId,
+  criarGastoVariavel, atualizarGastoVariavel, deletarGastoVariavel,
+} from '../services/servicoGastos'
 
-export default async function handlerGastosVariaveis(
-  req: IncomingMessage,
-  res: ServerResponse
-): Promise<void> {
+export default async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  aplicarCors(res)
+  if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return }
+
   const autenticado = await verificarAutenticacao(req as RequisicaoAutenticada, res)
   if (!autenticado) return
 
   const requisicao = req as RequisicaoAutenticada
   const usuarioId = requisicao.usuario!.id
   const url = new URL(req.url ?? '/', `http://${req.headers.host}`)
-
-  const pathname = url.pathname.replace(/\/$/, '')
-  const segmentos = pathname.split('/').filter(Boolean)
-  // segmentos: ['api','gastos','variaveis', id?]
+  const segmentos = url.pathname.split('/').filter(Boolean)
   const id = segmentos.length >= 4 ? segmentos[segmentos.length - 1] : null
 
-  // ==========================================
-  // GET /api/gastos/variaveis (lista)
-  // ==========================================
   if (req.method === 'GET' && !id) {
     const pagina = Number(url.searchParams.get('pagina')) || 1
     const limite = Number(url.searchParams.get('limite')) || 10
@@ -51,9 +38,6 @@ export default async function handlerGastosVariaveis(
     return responderSucesso(res, resultado)
   }
 
-  // ==========================================
-  // GET /api/gastos/variaveis/:id
-  // ==========================================
   if (req.method === 'GET' && id) {
     const resultado = await buscarGastoVariavelPorId(id)
     if (resultado.erro) return responderErro(res, resultado.erro)
@@ -61,38 +45,25 @@ export default async function handlerGastosVariaveis(
     return responderSucesso(res, resultado.dados)
   }
 
-  // ==========================================
-  // POST /api/gastos/variaveis
-  // ==========================================
   if (req.method === 'POST' && !id) {
     const body = await lerBody(req)
     const validacao = validar(esquemaCriarGastoVariavel, body)
-    if (!validacao.sucesso) {
-      return responderErro(res, validacao.erros?.join(', ') ?? 'Dados inválidos')
-    }
+    if (!validacao.sucesso) return responderErro(res, validacao.erros?.join(', ') ?? 'Dados inválidos')
     const resultado = await criarGastoVariavel(validacao.dados!, usuarioId)
     if (resultado.erro) return responderErro(res, resultado.erro)
     return responderSucesso(res, resultado.dados, 201)
   }
 
-  // ==========================================
-  // PUT /api/gastos/variaveis/:id
-  // ==========================================
   if (req.method === 'PUT' && id) {
     const body = await lerBody(req)
     const validacao = validar(esquemaAtualizarGastoVariavel, body)
-    if (!validacao.sucesso) {
-      return responderErro(res, validacao.erros?.join(', ') ?? 'Dados inválidos')
-    }
+    if (!validacao.sucesso) return responderErro(res, validacao.erros?.join(', ') ?? 'Dados inválidos')
     const resultado = await atualizarGastoVariavel(id, validacao.dados!, usuarioId)
     if (resultado.erro) return responderErro(res, resultado.erro)
     if (!resultado.dados) return responderNaoEncontrado(res)
     return responderSucesso(res, resultado.dados)
   }
 
-  // ==========================================
-  // DELETE /api/gastos/variaveis/:id
-  // ==========================================
   if (req.method === 'DELETE' && id) {
     const resultado = await deletarGastoVariavel(id, usuarioId)
     if (resultado.erro) return responderErro(res, resultado.erro)
