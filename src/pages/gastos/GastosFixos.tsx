@@ -333,10 +333,13 @@ function FormularioGastoFixo({ gasto, mesAtual, anoAtual, onSalvar, onCancelar, 
           <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>
             Valor (R$)
           </label>
-          <input className="input" type="number" step="0.01" min="0.01"
-            value={form.valor}
-            onChange={(e) => setForm({ ...form, valor: Number(e.target.value) })}
-            required />
+          <input className="input" type="text" inputMode="decimal"
+            value={form.valor === 0 ? '' : form.valor}
+            onChange={(e) => {
+              const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.')
+              setForm({ ...form, valor: v === '' ? 0 : Math.max(0, Number(v) || 0) })
+            }}
+            placeholder="0,00" required />
         </div>
       </div>
 

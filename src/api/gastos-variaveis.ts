@@ -50,7 +50,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     const body = await lerBody(req)
     const validacao = validar(esquemaCriarGastoVariavel, body)
     if (!validacao.sucesso) return responderErro(res, validacao.erros?.join(', ') ?? 'Dados inválidos')
-    const resultado = await criarGastoVariavel(validacao.dados!, usuarioEmail, usuarioId)
+    const resultado = await criarGastoVariavel(validacao.dados!, usuarioId, usuarioEmail)
     if (resultado.erro) return responderErro(res, resultado.erro)
     return responderSucesso(res, resultado.dados, 201)
   }
@@ -59,14 +59,14 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     const body = await lerBody(req)
     const validacao = validar(esquemaAtualizarGastoVariavel, body)
     if (!validacao.sucesso) return responderErro(res, validacao.erros?.join(', ') ?? 'Dados inválidos')
-    const resultado = await atualizarGastoVariavel(id, validacao.dados!, usuarioEmail, usuarioId)
+    const resultado = await atualizarGastoVariavel(id, validacao.dados!, usuarioId, usuarioEmail)
     if (resultado.erro) return responderErro(res, resultado.erro)
     if (!resultado.dados) return responderNaoEncontrado(res)
     return responderSucesso(res, resultado.dados)
   }
 
   if (req.method === 'DELETE' && id) {
-    const resultado = await deletarGastoVariavel(id, usuarioEmail, usuarioId)
+    const resultado = await deletarGastoVariavel(id, usuarioId, usuarioEmail)
     if (resultado.erro) return responderErro(res, resultado.erro)
     return responderSucesso(res, { mensagem: 'Gasto variável deletado com sucesso' })
   }

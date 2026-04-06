@@ -299,10 +299,18 @@ function FormularioGastoVariavel({ gasto, mesAtual, anoAtual, onSalvar, onCancel
           <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>
             Valor Estimado (R$)
           </label>
-          <input className="input" type="number" step="0.01" min="0"
-            value={form.valor_estimado ?? ''}
-            onChange={(e) => setForm({ ...form, valor_estimado: e.target.value ? Number(e.target.value) : undefined })}
-            placeholder="Opcional" />
+          <input className="input" type="text" inputMode="decimal"
+            value={form.valor_estimado != null && form.valor_estimado > 0 ? form.valor_estimado : ''}
+            onChange={(e) => {
+              const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.')
+              if (v === '') {
+                setForm({ ...form, valor_estimado: undefined })
+              } else {
+                const n = Number(v)
+                if (!isNaN(n)) setForm({ ...form, valor_estimado: Math.max(0, n) })
+              }
+            }}
+            placeholder="0,00" />
         </div>
       </div>
 
@@ -311,10 +319,18 @@ function FormularioGastoVariavel({ gasto, mesAtual, anoAtual, onSalvar, onCancel
           <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>
             Valor Real (R$)
           </label>
-          <input className="input" type="number" step="0.01" min="0"
-            value={form.valor_real ?? ''}
-            onChange={(e) => setForm({ ...form, valor_real: e.target.value ? Number(e.target.value) : undefined })}
-            placeholder="Opcional" />
+          <input className="input" type="text" inputMode="decimal"
+            value={form.valor_real != null && form.valor_real > 0 ? form.valor_real : ''}
+            onChange={(e) => {
+              const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.')
+              if (v === '') {
+                setForm({ ...form, valor_real: undefined })
+              } else {
+                const n = Number(v)
+                if (!isNaN(n)) setForm({ ...form, valor_real: Math.max(0, n) })
+              }
+            }}
+            placeholder="0,00" />
         </div>
         <div>
           <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>
