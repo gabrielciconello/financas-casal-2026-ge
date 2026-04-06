@@ -172,7 +172,11 @@ export async function criarCompraCartao(
   const { data, error } = await supabaseAdmin
     .from('compras_cartao')
     .insert({
-      ...dados,
+      cartao_id: dados.cartao_id,
+      descricao: dados.descricao,
+      categoria: dados.categoria,
+      valor_total: dados.valor_total,
+      data_compra: dados.data_compra ?? new Date().toISOString().split('T')[0],
       usuario_id: usuarioId,
       usuario_nome: usuarioNome,
       parcelas,

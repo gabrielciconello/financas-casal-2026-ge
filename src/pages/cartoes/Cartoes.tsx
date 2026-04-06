@@ -437,18 +437,28 @@ function FormularioCartao({ cartao, onSalvar, onCancelar, carregando }: FormCart
           <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>
             Dia de Fechamento
           </label>
-          <input className="input" type="number" min="1" max="31"
-            value={form.dia_fechamento}
-            onChange={(e) => setForm({ ...form, dia_fechamento: Number(e.target.value) })}
+          <input className="input" type="text" inputMode="numeric"
+            value={form.dia_fechamento === 1 ? '' : form.dia_fechamento}
+            onChange={(e) => {
+              const v = e.target.value.replace(/[^0-9]/g, '')
+              const val = v === '' ? 1 : Math.max(1, Math.min(31, Number(v)))
+              setForm({ ...form, dia_fechamento: val })
+            }}
+            placeholder="1"
             required />
         </div>
         <div>
           <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>
             Dia de Vencimento
           </label>
-          <input className="input" type="number" min="1" max="31"
-            value={form.dia_vencimento}
-            onChange={(e) => setForm({ ...form, dia_vencimento: Number(e.target.value) })}
+          <input className="input" type="text" inputMode="numeric"
+            value={form.dia_vencimento === 10 ? '' : form.dia_vencimento}
+            onChange={(e) => {
+              const v = e.target.value.replace(/[^0-9]/g, '')
+              const val = v === '' ? 10 : Math.max(1, Math.min(31, Number(v)))
+              setForm({ ...form, dia_vencimento: val })
+            }}
+            placeholder="10"
             required />
         </div>
       </div>
@@ -527,12 +537,15 @@ function FormularioCompra({ cartaoId, onSalvar, onCancelar, carregando }: FormCo
           <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>
             Parcelas
           </label>
-          <input className="input" type="number" min="1" max="48"
-            value={form.parcelas}
+          <input className="input" type="text" inputMode="numeric"
+            value={form.parcelas === 1 ? '' : form.parcelas}
             onChange={(e) => {
-              const parcelas = Number(e.target.value)
+              const v = e.target.value.replace(/[^0-9]/g, '')
+              const parcelas = v === '' ? 1 : Math.max(1, Math.min(48, Number(v)))
               setForm({ ...form, parcelas, parcela_inicial: Math.min(form.parcela_inicial ?? 1, parcelas) })
-            }} />
+            }}
+            placeholder="1"
+            required />
           {form.valor_total > 0 && form.parcelas && form.parcelas > 1 && (
             <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)', marginTop: '0.25rem' }}>
               {form.parcelas}x de {formatarMoeda(form.valor_total / form.parcelas)}
@@ -543,9 +556,14 @@ function FormularioCompra({ cartaoId, onSalvar, onCancelar, carregando }: FormCo
           <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>
             Parcela Inicial
           </label>
-          <input className="input" type="number" min="1" max={form.parcelas}
-            value={form.parcela_inicial ?? 1}
-            onChange={(e) => setForm({ ...form, parcela_inicial: Math.min(Number(e.target.value), form.parcelas ?? 1) })} />
+          <input className="input" type="text" inputMode="numeric"
+            value={form.parcela_inicial === 1 ? '' : form.parcela_inicial}
+            onChange={(e) => {
+              const v = e.target.value.replace(/[^0-9]/g, '')
+              const val = v === '' ? 1 : Math.max(1, Math.min(form.parcelas ?? 1, Number(v)))
+              setForm({ ...form, parcela_inicial: val })
+            }}
+            placeholder="1" />
           <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)', marginTop: '0.25rem' }}>
             {form.parcela_inicial && form.parcela_inicial > 1
               ? `Já na parcela ${form.parcela_inicial} de ${form.parcelas}`
