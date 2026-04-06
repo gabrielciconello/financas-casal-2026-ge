@@ -85,7 +85,7 @@ export default function Metas() {
       </div>
 
       {/* Cards de resumo */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(180px, 100%), 1fr))', gap: '1rem' }}>
         <div className="card">
           <div style={{ fontSize: '0.8125rem', color: 'var(--cor-texto-suave)', marginBottom: '0.5rem' }}>Total Alvo</div>
           <div style={{ fontFamily: 'var(--fonte-display)', fontSize: '1.5rem', fontWeight: 700, color: 'var(--cor-texto)' }}>
@@ -118,115 +118,92 @@ export default function Metas() {
           </div>
         ) : (
           <>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 140px 140px 120px 100px 130px',
-              padding: '0.75rem 1.25rem',
-              borderBottom: '1px solid var(--cor-borda)',
-              fontSize: '0.75rem', fontWeight: 600,
-              color: 'var(--cor-texto-suave)',
-              textTransform: 'uppercase', letterSpacing: '0.05em',
-            }}>
-              <span>Meta</span>
-              <span style={{ textAlign: 'right' }}>Valor Atual</span>
-              <span style={{ textAlign: 'right' }}>Valor Alvo</span>
-              <span style={{ textAlign: 'center' }}>Progresso</span>
-              <span style={{ textAlign: 'center' }}>Status</span>
-              <span style={{ textAlign: 'center' }}>Ações</span>
-            </div>
+            {/* Desktop */}
+            <div className="hidden md:block">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px 140px 120px 100px 130px', padding: '0.75rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--cor-texto-suave)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <span>Meta</span>
+                <span style={{ textAlign: 'right' }}>Valor Atual</span>
+                <span style={{ textAlign: 'right' }}>Valor Alvo</span>
+                <span style={{ textAlign: 'center' }}>Progresso</span>
+                <span style={{ textAlign: 'center' }}>Status</span>
+                <span style={{ textAlign: 'center' }}>Ações</span>
+              </div>
 
-            {metas.map((meta) => {
-              const percentual = meta.valor_alvo > 0
-                ? (meta.valor_atual / meta.valor_alvo) * 100
-                : 0
-              const corBarra = meta.concluida
-                ? 'var(--cor-sucesso)'
-                : percentual >= 70
-                ? 'var(--cor-primaria)'
-                : 'var(--cor-aviso)'
-
-              return (
-                <div key={meta.id} style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 140px 140px 120px 100px 130px',
-                  padding: '0.875rem 1.25rem',
-                  borderBottom: '1px solid var(--cor-borda)',
-                  alignItems: 'center',
-                  transition: 'var(--transicao)',
-                }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--cor-fundo-hover)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                >
-                  <div>
-                    <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--cor-texto)' }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem' }}>
-                        <Target size={15} color="var(--cor-primaria)" />
-                        {meta.titulo}
+              {metas.map((meta) => {
+                const percentual = meta.valor_alvo > 0 ? (meta.valor_atual / meta.valor_alvo) * 100 : 0
+                const corBarra = meta.concluida ? 'var(--cor-sucesso)' : percentual >= 70 ? 'var(--cor-primaria)' : 'var(--cor-aviso)'
+                return (
+                  <div key={meta.id} style={{ display: 'grid', gridTemplateColumns: '1fr 140px 140px 120px 100px 130px', padding: '0.875rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', alignItems: 'center' }} className="transition-colors hover:bg-opacity-50">
+                    <div>
+                      <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--cor-texto)' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem' }}>
+                          <Target size={15} color="var(--cor-primaria)" />{meta.titulo}
+                        </span>
+                      </div>
+                      {meta.aporte_mensal && (
+                        <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)', marginTop: '2px' }}>
+                          Aporte mensal: {formatarMoeda(meta.aporte_mensal)}
+                        </div>
+                      )}
+                    </div>
+                    <span style={{ fontSize: '0.9375rem', fontWeight: 600, textAlign: 'right', color: 'var(--cor-sucesso)' }}>{formatarMoeda(meta.valor_atual)}</span>
+                    <span style={{ fontSize: '0.9375rem', fontWeight: 600, textAlign: 'right', color: 'var(--cor-texto)' }}>{formatarMoeda(meta.valor_alvo)}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <div style={{ flex: 1, height: '6px', background: 'var(--cor-fundo)', borderRadius: '999px', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${Math.min(percentual, 100)}%`, background: corBarra, borderRadius: '999px', transition: 'width 0.5s ease' }} />
+                      </div>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)', whiteSpace: 'nowrap' }}>{percentual.toFixed(0)}%</span>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <span className={`badge ${meta.concluida ? 'badge-sucesso' : 'badge-aviso'}`} style={{ fontSize: '0.7rem' }}>
+                        {meta.concluida ? 'Concluída' : 'Em andamento'}
                       </span>
                     </div>
+                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                      <button className="btn btn-secundario" onClick={() => { setMetaSelecionada(meta); setModalContribuicao(true) }} style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem' }}>Contribuir</button>
+                      <button className="btn btn-secundario" onClick={() => { setMetaEditando(meta); setModalAberto(true) }} style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem' }}>Editar</button>
+                      <button className="btn" onClick={() => handleDeletar(meta.id)} style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', color: 'var(--cor-perigo)', background: 'transparent' }}>Excluir</button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Mobile cards */}
+            <div className="md:hidden flex flex-col">
+              {metas.map((meta) => {
+                const percentual = meta.valor_alvo > 0 ? (meta.valor_atual / meta.valor_alvo) * 100 : 0
+                const corBarra = meta.concluida ? 'var(--cor-sucesso)' : percentual >= 70 ? 'var(--cor-primaria)' : 'var(--cor-aviso)'
+                return (
+                  <div key={meta.id} style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--cor-borda)' }}>
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <Target size={15} color="var(--cor-primaria)" />
+                      <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--cor-texto)' }}>{meta.titulo}</span>
+                      <span className={`badge ${meta.concluida ? 'badge-sucesso' : 'badge-aviso'}`} style={{ fontSize: '0.65rem' }}>
+                        {meta.concluida ? 'Concluída' : 'Em andamento'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs mb-1.5" style={{ color: 'var(--cor-texto-suave)' }}>
+                      <span>{formatarMoeda(meta.valor_atual)} de {formatarMoeda(meta.valor_alvo)}</span>
+                      <span>{percentual.toFixed(0)}%</span>
+                    </div>
+                    <div style={{ height: '6px', background: 'var(--cor-fundo)', borderRadius: '999px', overflow: 'hidden', marginBottom: '0.5rem' }}>
+                      <div style={{ height: '100%', width: `${Math.min(percentual, 100)}%`, background: corBarra, borderRadius: '999px' }} />
+                    </div>
                     {meta.aporte_mensal && (
-                      <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)', marginTop: '2px' }}>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--cor-texto-suave)', marginBottom: '0.375rem' }}>
                         Aporte mensal: {formatarMoeda(meta.aporte_mensal)}
                       </div>
                     )}
-                  </div>
-
-                  <span style={{ fontSize: '0.9375rem', fontWeight: 600, textAlign: 'right', color: 'var(--cor-sucesso)' }}>
-                    {formatarMoeda(meta.valor_atual)}
-                  </span>
-
-                  <span style={{ fontSize: '0.9375rem', fontWeight: 600, textAlign: 'right', color: 'var(--cor-texto)' }}>
-                    {formatarMoeda(meta.valor_alvo)}
-                  </span>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <div style={{ flex: 1, height: '6px', background: 'var(--cor-fundo)', borderRadius: '999px', overflow: 'hidden' }}>
-                      <div style={{
-                        height: '100%',
-                        width: `${Math.min(percentual, 100)}%`,
-                        background: corBarra,
-                        borderRadius: '999px',
-                        transition: 'width 0.5s ease',
-                      }} />
+                    <div className="flex gap-1.5 justify-end">
+                      <button className="btn btn-secundario px-2 py-1 text-xs" onClick={() => { setMetaSelecionada(meta); setModalContribuicao(true) }}>Contribuir</button>
+                      <button className="btn btn-secundario px-2 py-1 text-xs" onClick={() => { setMetaEditando(meta); setModalAberto(true) }}>Editar</button>
+                      <button className="btn px-2 py-1 text-xs" style={{ color: 'var(--cor-perigo)', background: 'transparent' }} onClick={() => handleDeletar(meta.id)}>Excluir</button>
                     </div>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)', whiteSpace: 'nowrap' }}>
-                      {percentual.toFixed(0)}%
-                    </span>
                   </div>
-
-                  <div style={{ textAlign: 'center' }}>
-                    <span className={`badge ${meta.concluida ? 'badge-sucesso' : 'badge-aviso'}`}
-                      style={{ fontSize: '0.7rem' }}>
-                      {meta.concluida ? 'Concluída' : 'Em andamento'}
-                    </span>
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                    <button
-                      className="btn btn-secundario"
-                      onClick={() => { setMetaSelecionada(meta); setModalContribuicao(true) }}
-                      style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem' }}
-                    >
-                      <TrendingUp size={12} /> Contribuir
-                    </button>
-                    <button
-                      className="btn btn-secundario"
-                      onClick={() => { setMetaEditando(meta); setModalAberto(true) }}
-                      style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem' }}
-                    >
-                      Editar
-                    </button>
-                    <button
-                      className="btn"
-                      onClick={() => handleDeletar(meta.id)}
-                      style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', color: 'var(--cor-perigo)', background: 'transparent' }}
-                    >
-                      Excluir
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
 
             <div style={{ padding: '0 1.25rem' }}>
               <Paginacao paginaAtual={pagina} total={total} limite={10} onMudar={setPagina} />
@@ -305,19 +282,27 @@ function FormularioMeta({ meta, onSalvar, onCancelar, carregando }: FormMetaProp
           <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>
             Valor Alvo (R$)
           </label>
-          <input className="input" type="number" step="0.01" min="0.01"
-            value={form.valor_alvo}
-            onChange={(e) => setForm({ ...form, valor_alvo: Number(e.target.value) })}
+          <input className="input" type="text" inputMode="decimal"
+            value={form.valor_alvo === 0 ? '' : form.valor_alvo}
+            onChange={(e) => {
+              const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.')
+              setForm({ ...form, valor_alvo: v === '' ? 0 : Math.max(0, Number(v) || 0) })
+            }}
+            placeholder="0,00"
             required />
         </div>
         <div>
           <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>
             Aporte Mensal (R$)
           </label>
-          <input className="input" type="number" step="0.01" min="0"
-            value={form.aporte_mensal ?? ''}
-            onChange={(e) => setForm({ ...form, aporte_mensal: e.target.value ? Number(e.target.value) : undefined })}
-            placeholder="Opcional" />
+          <input className="input" type="text" inputMode="decimal"
+            value={form.aporte_mensal != null && form.aporte_mensal > 0 ? form.aporte_mensal : ''}
+            onChange={(e) => {
+              const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.')
+              if (v === '') { setForm({ ...form, aporte_mensal: undefined }) }
+              else { const n = Number(v); if (!isNaN(n)) setForm({ ...form, aporte_mensal: Math.max(0, n) }) }
+            }}
+            placeholder="0,00" />
         </div>
       </div>
 
@@ -383,9 +368,13 @@ function FormularioContribuicao({ meta, onSalvar, onCancelar, carregando }: Form
         <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>
           Valor da Contribuição (R$)
         </label>
-        <input className="input" type="number" step="0.01" min="0.01"
-          value={form.valor}
-          onChange={(e) => setForm({ ...form, valor: Number(e.target.value) })}
+        <input className="input" type="text" inputMode="decimal"
+          value={form.valor === 0 ? '' : form.valor}
+          onChange={(e) => {
+            const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.')
+            setForm({ ...form, valor: v === '' ? 0 : Math.max(0, Number(v) || 0) })
+          }}
+          placeholder="0,00"
           required />
       </div>
 

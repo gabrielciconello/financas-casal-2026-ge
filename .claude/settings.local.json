@@ -20,7 +20,11 @@
       "Bash(grep -n \"from ''./supabase.node.js''\" *.ts)",
       "Bash(grep -rn \"from ''''\\\\.\\\\/\" --include=\"*.ts\" .)",
       "Bash(grep -n \"from ''../utils.js''\" *.ts)",
-      "Bash(grep -n \"from ''../types.js''\" *.ts)"
+      "Bash(grep -n \"from ''../types.js''\" *.ts)",
+      "Bash(find /c/Users/gabri/Desktop/financas-casal -name supabase* -path *migrations* -o -name migrations*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }

@@ -80,17 +80,13 @@ export default function GastosFixos() {
   const totalPendente = totalGastos - totalPago
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
 
       {/* Cabeçalho */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1 style={{ fontFamily: 'var(--fonte-display)', fontSize: '1.625rem', fontWeight: 700, color: 'var(--cor-texto)' }}>
-            Gastos Fixos
-          </h1>
-          <p style={{ fontSize: '0.875rem', color: 'var(--cor-texto-suave)', marginTop: '0.25rem' }}>
-            Contas mensais recorrentes
-          </p>
+          <h1 style={{ fontFamily: 'var(--fonte-display)', fontSize: 'clamp(1.25rem, 4vw, 1.625rem)', fontWeight: 700, color: 'var(--cor-texto)' }}>Gastos Fixos</h1>
+          <p style={{ fontSize: 'clamp(0.75rem, 3vw, 0.875rem)', color: 'var(--cor-texto-suave)', marginTop: '0.25rem' }}>Contas mensais recorrentes</p>
         </div>
         <button className="btn btn-primario" onClick={() => { setGastoEditando(null); setModalAberto(true) }}>
           <Plus size={16} /> Novo Gasto Fixo
@@ -98,7 +94,7 @@ export default function GastosFixos() {
       </div>
 
       {/* Cards de resumo */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(180px, 100%), 1fr))', gap: '1rem' }}>
         <div className="card">
           <div style={{ fontSize: '0.8125rem', color: 'var(--cor-texto-suave)', marginBottom: '0.5rem' }}>Total do Mês</div>
           <div style={{ fontFamily: 'var(--fonte-display)', fontSize: '1.5rem', fontWeight: 700, color: 'var(--cor-texto)' }}>
@@ -182,82 +178,65 @@ export default function GastosFixos() {
           </div>
         ) : (
           <>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 120px 80px 120px 100px 120px',
-              padding: '0.75rem 1.25rem',
-              borderBottom: '1px solid var(--cor-borda)',
-              fontSize: '0.75rem', fontWeight: 600,
-              color: 'var(--cor-texto-suave)',
-              textTransform: 'uppercase', letterSpacing: '0.05em',
-            }}>
-              <span>Descrição</span>
-              <span>Categoria</span>
-              <span style={{ textAlign: 'center' }}>Vence</span>
-              <span style={{ textAlign: 'right' }}>Valor</span>
-              <span style={{ textAlign: 'center' }}>Status</span>
-              <span style={{ textAlign: 'center' }}>Ações</span>
+            {/* Desktop table */}
+            <div className="hidden md:block">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px 80px 120px 100px 120px', padding: '0.75rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--cor-texto-suave)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <span>Descrição</span><span>Categoria</span>
+                <span style={{ textAlign: 'center' }}>Vence</span>
+                <span style={{ textAlign: 'right' }}>Valor</span>
+                <span style={{ textAlign: 'center' }}>Status</span>
+                <span style={{ textAlign: 'center' }}>Ações</span>
+              </div>
+
+              {gastos.map((g) => (
+                <div key={g.id} style={{ display: 'grid', gridTemplateColumns: '1fr 120px 80px 120px 100px 120px', padding: '0.875rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', alignItems: 'center' }} className="transition-colors hover:bg-opacity-50">
+                  <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--cor-texto)' }}>{g.descricao}</span>
+                  <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>{g.categoria}</span>
+                  <span style={{ fontSize: '0.8125rem', color: 'var(--cor-texto-suave)', textAlign: 'center' }}>Dia {g.dia_vencimento}</span>
+                  <span style={{ fontSize: '0.9375rem', fontWeight: 600, textAlign: 'right', color: 'var(--cor-texto)' }}>{formatarMoeda(g.valor)}</span>
+                  <div style={{ textAlign: 'center' }}>
+                    <button onClick={() => handleMarcarPago(g)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: g.status === 'pago' ? 'var(--cor-sucesso)' : 'var(--cor-texto-suave)', fontSize: '0.75rem', fontWeight: 500 }}>
+                      {g.status === 'pago' ? <CheckCircle size={16} /> : <Clock size={16} />}
+                      {g.status}
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                    <button className="btn btn-secundario" onClick={() => { setGastoEditando(g); setModalAberto(true) }} style={{ padding: '0.25rem 0.625rem', fontSize: '0.75rem' }}>Editar</button>
+                    <button className="btn" onClick={() => handleDeletar(g.id)} style={{ padding: '0.25rem 0.625rem', fontSize: '0.75rem', color: 'var(--cor-perigo)', background: 'transparent' }}>Excluir</button>
+                  </div>
+                </div>
+              ))}
             </div>
 
-            {gastos.map((g) => (
-              <div key={g.id} style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 120px 80px 120px 100px 120px',
-                padding: '0.875rem 1.25rem',
-                borderBottom: '1px solid var(--cor-borda)',
-                alignItems: 'center',
-                transition: 'var(--transicao)',
-              }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--cor-fundo-hover)')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-              >
-                <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--cor-texto)' }}>
-                  {g.descricao}
-                </span>
-                <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>
-                  {g.categoria}
-                </span>
-                <span style={{ fontSize: '0.8125rem', color: 'var(--cor-texto-suave)', textAlign: 'center' }}>
-                  Dia {g.dia_vencimento}
-                </span>
-                <span style={{ fontSize: '0.9375rem', fontWeight: 600, textAlign: 'right', color: 'var(--cor-texto)' }}>
-                  {formatarMoeda(g.valor)}
-                </span>
-                <div style={{ textAlign: 'center' }}>
-                  <button
-                    onClick={() => handleMarcarPago(g)}
-                    style={{
-                      background: 'none', border: 'none', cursor: 'pointer',
-                      display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
-                      color: g.status === 'pago' ? 'var(--cor-sucesso)' : 'var(--cor-texto-suave)',
-                      fontSize: '0.75rem', fontWeight: 500,
-                    }}
-                  >
-                    {g.status === 'pago'
-                      ? <CheckCircle size={16} />
-                      : <Clock size={16} />
-                    }
-                    {g.status}
-                  </button>
+            {/* Mobile cards */}
+            <div className="md:hidden flex flex-col">
+              {gastos.map((g) => (
+                <div key={g.id} style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--cor-borda)' }}>
+                  <div className="flex items-start justify-between mb-2">
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--cor-texto)' }}>{g.descricao}</div>
+                      <div className="flex items-center gap-2 mt-1.5 text-xs" style={{ color: 'var(--cor-texto-suave)' }}>
+                        <span className="badge badge-info" style={{ fontSize: '0.65rem' }}>{g.categoria}</span>
+                        <span>Dia {g.dia_vencimento}</span>
+                      </div>
+                    </div>
+                    <div style={{ fontSize: '1.05rem', fontWeight: 700, textAlign: 'right', color: 'var(--cor-texto)' }}>
+                      {formatarMoeda(g.valor)}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mt-2">
+                    <button onClick={() => handleMarcarPago(g)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: g.status === 'pago' ? 'var(--cor-sucesso)' : 'var(--cor-texto-suave)', fontSize: '0.8rem', fontWeight: 500 }}>
+                      {g.status === 'pago' ? <CheckCircle size={14} /> : <Clock size={14} />}
+                      {g.status === 'pago' ? 'Pago' : 'Pendente'}
+                    </button>
+                    <div className="flex gap-1.5">
+                      <button className="btn btn-secundario px-2 py-1 text-xs" onClick={() => { setGastoEditando(g); setModalAberto(true) }}>Editar</button>
+                      <button className="btn px-2 py-1 text-xs" style={{ color: 'var(--cor-perigo)', background: 'transparent' }} onClick={() => handleDeletar(g.id)}>Excluir</button>
+                    </div>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                  <button
-                    className="btn btn-secundario"
-                    onClick={() => { setGastoEditando(g); setModalAberto(true) }}
-                    style={{ padding: '0.25rem 0.625rem', fontSize: '0.75rem' }}
-                  >
-                    Editar
-                  </button>
-                  <button
-                    className="btn"
-                    onClick={() => handleDeletar(g.id)}
-                    style={{ padding: '0.25rem 0.625rem', fontSize: '0.75rem', color: 'var(--cor-perigo)', background: 'transparent' }}
-                  >
-                    Excluir
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
 
             <div style={{ padding: '0 1.25rem' }}>
               <Paginacao paginaAtual={pagina} total={total} limite={10} onMudar={setPagina} />

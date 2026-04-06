@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth, useTema } from '../../hooks/useContexto'
 import {
@@ -53,6 +53,8 @@ function SidebarConteudo({ fechar, mostrarFechar }: { fechar: () => void, mostra
             key={caminho}
             to={caminho}
             onClick={fechar}
+            onMouseEnter={() => preloadModule(caminho)}
+            onFocus={() => preloadModule(caminho)}
             className={({ isActive }) =>
               `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all no-underline ${
                 isActive
@@ -69,6 +71,7 @@ function SidebarConteudo({ fechar, mostrarFechar }: { fechar: () => void, mostra
 
       {/* Rodapé */}
       <div className="pt-3 flex flex-col gap-1.5 mt-3" style={{ borderTop: '1px solid var(--cor-borda)' }}>
+        <p className="texto-nav px-2 truncate text-xs" style={{ fontWeight: 500 }}>{usuario?.nome || usuario?.email?.split('@')[0]}</p>
         <p className="texto-nav px-2 truncate text-xs">{usuario?.email}</p>
         <button onClick={alternarTema} className="btn btn-secundario w-full justify-start gap-2 text-sm">
           {tema === 'claro' ? <Moon size={15} /> : <Sun size={15} />}
@@ -83,8 +86,35 @@ function SidebarConteudo({ fechar, mostrarFechar }: { fechar: () => void, mostra
   )
 }
 
+// Módulos lazy-loaded
+const lazyModules: Record<string, (() => Promise<any>)[]> = {
+  '/dashboard': [() => import('../../pages/dashboard/Dashboard')],
+  '/transacoes': [() => import('../../pages/transacoes/Transacoes')],
+  '/salarios': [() => import('../../pages/salarios/Salarios')],
+  '/cartoes': [() => import('../../pages/cartoes/Cartoes')],
+  '/gastos/fixos': [() => import('../../pages/gastos/GastosFixos')],
+  '/gastos/variaveis': [() => import('../../pages/gastos/GastosVariaveis')],
+  '/metas': [() => import('../../pages/metas/Metas')],
+}
+
 export default function Layout() {
   const [menuAberto, setMenuAberto] = useState(false)
+
+  // Pre-load lazy modules on hover/focus
+  const preloadModule = (path: string) => {
+    const modules = lazyModules[path]
+    if (modules) modules.forEach(importFn => importFn())
+  }
+
+  useEffect(() => {
+    // Preload all routes on idle so first navigation is instant
+    const requestCallback = (window as any).requestIdleCallback || setTimeout
+    const cancelCallback = (window as any).cancelIdleCallback || clearTimeout
+    const timer = requestCallback(() => {
+      Object.values(lazyModules).forEach(fns => fns.forEach(fn => fn()))
+    })
+    return () => cancelCallback(timer)
+  }, [])
 
   return (
     <div className="flex min-h-screen bg-pagina" style={{ backgroundColor: 'var(--cor-fundo-pagina)' }}>
@@ -116,11 +146,13 @@ export default function Layout() {
             <Menu size={20} />
           </button>
           <span className="font-display font-bold text-base" style={{ color: 'var(--cor-texto)' }}>Finanças Casal</span>
-          <div className="w-9" /> {/* spacer */}
+          <span style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)', maxWidth: '70px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {usuario?.nome || usuario?.email?.split('@')[0] || ''}
+          </span>
         </header>
 
         {/* CONTEÚDO DA PÁGINA */}
-        <main className="flex-1 p-4 md:p-6">
+        <main className="flex-1 p-4 md:p-6 w-full max-w-full overflow-x-hidden">
           <Outlet />
         </main>
       </div>

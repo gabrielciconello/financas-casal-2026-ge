@@ -91,7 +91,7 @@ export default function Salarios() {
       </div>
 
       {/* Cards de resumo */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '1rem' }}>
         <div className="card">
           <div style={{ fontSize: '0.8125rem', color: 'var(--cor-texto-suave)', marginBottom: '0.5rem' }}>
             Total Esperado
@@ -164,78 +164,70 @@ export default function Salarios() {
           </div>
         ) : (
           <>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 100px 130px 130px 100px 100px',
-              padding: '0.75rem 1.25rem',
-              borderBottom: '1px solid var(--cor-borda)',
-              fontSize: '0.75rem',
-              fontWeight: 600,
-              color: 'var(--cor-texto-suave)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-            }}>
-              <span>Descrição</span>
-              <span>Tipo</span>
-              <span style={{ textAlign: 'right' }}>Esperado</span>
-              <span style={{ textAlign: 'right' }}>Recebido</span>
-              <span style={{ textAlign: 'center' }}>Status</span>
-              <span style={{ textAlign: 'center' }}>Ações</span>
+            {/* Desktop */}
+            <div className="hidden md:block">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 130px 130px 100px 100px', padding: '0.75rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--cor-texto-suave)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <span>Descrição</span><span>Tipo</span>
+                <span style={{ textAlign: 'right' }}>Esperado</span>
+                <span style={{ textAlign: 'right' }}>Recebido</span>
+                <span style={{ textAlign: 'center' }}>Status</span>
+                <span style={{ textAlign: 'center' }}>Ações</span>
+              </div>
+
+              {salarios.map((s) => (
+                <div key={s.id} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 130px 130px 100px 100px', padding: '0.875rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', alignItems: 'center' }} className="transition-colors hover:bg-opacity-50">
+                  <div>
+                    <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--cor-texto)' }}>{s.descricao}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)', marginTop: '2px' }}>
+                      Previsto: {new Date(s.data_esperada + 'T00:00:00').toLocaleDateString('pt-BR')}
+                    </div>
+                  </div>
+                  <span className={`badge ${s.tipo === 'fixo' ? 'badge-info' : 'badge-aviso'}`} style={{ fontSize: '0.7rem' }}>{s.tipo}</span>
+                  <span style={{ fontSize: '0.9375rem', fontWeight: 600, textAlign: 'right', color: 'var(--cor-texto)' }}>{formatarMoeda(s.valor_esperado)}</span>
+                  <span style={{ fontSize: '0.9375rem', fontWeight: 600, textAlign: 'right', color: 'var(--cor-sucesso)' }}>{s.valor_recebido ? formatarMoeda(s.valor_recebido) : '—'}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem' }}>
+                    {iconeStatus(s.status)}
+                    <span style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)', textTransform: 'capitalize' }}>{s.status}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                    <button className="btn btn-secundario" onClick={() => { setSalarioEditando(s); setModalAberto(true) }} style={{ padding: '0.25rem 0.625rem', fontSize: '0.75rem' }}>Editar</button>
+                    <button className="btn" onClick={() => handleDeletar(s.id)} style={{ padding: '0.25rem 0.625rem', fontSize: '0.75rem', color: 'var(--cor-perigo)', background: 'transparent' }}>Excluir</button>
+                  </div>
+                </div>
+              ))}
             </div>
 
-            {salarios.map((s) => (
-              <div key={s.id} style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 100px 130px 130px 100px 100px',
-                padding: '0.875rem 1.25rem',
-                borderBottom: '1px solid var(--cor-borda)',
-                alignItems: 'center',
-                transition: 'var(--transicao)',
-              }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--cor-fundo-hover)')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-              >
-                <div>
-                  <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--cor-texto)' }}>
-                    {s.descricao}
+            {/* Mobile cards */}
+            <div className="md:hidden flex flex-col">
+              {salarios.map((s) => (
+                <div key={s.id} style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--cor-borda)' }}>
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--cor-texto)' }}>{s.descricao}</div>
+                      <div className="flex items-center gap-2 mt-1.5 text-xs" style={{ color: 'var(--cor-texto-suave)' }}>
+                        <span className={`badge ${s.tipo === 'fixo' ? 'badge-info' : 'badge-aviso'}`} style={{ fontSize: '0.65rem' }}>{s.tipo}</span>
+                        <span>{new Date(s.data_esperada + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
+                        <span className="text-xs" style={{ color: 'var(--cor-texto-suave)', textTransform: 'capitalize' }}>{s.status}</span>
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--cor-texto-suave)' }}>Esperado</div>
+                      <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--cor-texto)' }}>{formatarMoeda(s.valor_esperado)}</div>
+                      {s.valor_recebido && (
+                        <>
+                          <div style={{ fontSize: '0.7rem', color: 'var(--cor-texto-suave)' }}>Recebido</div>
+                          <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--cor-sucesso)' }}>{formatarMoeda(s.valor_recebido)}</div>
+                        </>
+                      )}
+                    </div>
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)', marginTop: '2px' }}>
-                    Previsto: {new Date(s.data_esperada + 'T00:00:00').toLocaleDateString('pt-BR')}
+                  <div className="flex gap-1.5 justify-end mt-1">
+                    <button className="btn btn-secundario px-2 py-1 text-xs" onClick={() => { setSalarioEditando(s); setModalAberto(true) }}>Editar</button>
+                    <button className="btn px-2 py-1 text-xs" style={{ color: 'var(--cor-perigo)', background: 'transparent' }} onClick={() => handleDeletar(s.id)}>Excluir</button>
                   </div>
                 </div>
-                <span className={`badge ${s.tipo === 'fixo' ? 'badge-info' : 'badge-aviso'}`} style={{ fontSize: '0.7rem' }}>
-                  {s.tipo}
-                </span>
-                <span style={{ fontSize: '0.9375rem', fontWeight: 600, textAlign: 'right', color: 'var(--cor-texto)' }}>
-                  {formatarMoeda(s.valor_esperado)}
-                </span>
-                <span style={{ fontSize: '0.9375rem', fontWeight: 600, textAlign: 'right', color: 'var(--cor-sucesso)' }}>
-                  {s.valor_recebido ? formatarMoeda(s.valor_recebido) : '—'}
-                </span>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem' }}>
-                  {iconeStatus(s.status)}
-                  <span style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)', textTransform: 'capitalize' }}>
-                    {s.status}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                  <button
-                    className="btn btn-secundario"
-                    onClick={() => { setSalarioEditando(s); setModalAberto(true) }}
-                    style={{ padding: '0.25rem 0.625rem', fontSize: '0.75rem' }}
-                  >
-                    Editar
-                  </button>
-                  <button
-                    className="btn"
-                    onClick={() => handleDeletar(s.id)}
-                    style={{ padding: '0.25rem 0.625rem', fontSize: '0.75rem', color: 'var(--cor-perigo)', background: 'transparent' }}
-                  >
-                    Excluir
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
 
             <div style={{ padding: '0 1.25rem' }}>
               <Paginacao paginaAtual={pagina} total={total} limite={10} onMudar={setPagina} />
@@ -340,11 +332,14 @@ function FormularioSalario({ salario, mesAtual, anoAtual, onSalvar, onCancelar, 
           </label>
           <input
             className="input"
-            type="number"
-            step="0.01"
-            min="0.01"
-            value={form.valor_esperado}
-            onChange={(e) => setForm({ ...form, valor_esperado: Number(e.target.value) })}
+            type="text"
+            inputMode="decimal"
+            value={form.valor_esperado === 0 ? '' : form.valor_esperado}
+            onChange={(e) => {
+              const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.')
+              setForm({ ...form, valor_esperado: v === '' ? 0 : Math.max(0, Number(v) || 0) })
+            }}
+            placeholder="0,00"
             required
           />
         </div>
@@ -354,12 +349,19 @@ function FormularioSalario({ salario, mesAtual, anoAtual, onSalvar, onCancelar, 
           </label>
           <input
             className="input"
-            type="number"
-            step="0.01"
-            min="0"
-            value={form.valor_recebido ?? ''}
-            onChange={(e) => setForm({ ...form, valor_recebido: e.target.value ? Number(e.target.value) : undefined })}
-            placeholder="Opcional"
+            type="text"
+            inputMode="decimal"
+            value={form.valor_recebido != null && form.valor_recebido > 0 ? form.valor_recebido : ''}
+            onChange={(e) => {
+              const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.')
+              if (v === '') {
+                setForm({ ...form, valor_recebido: undefined })
+              } else {
+                const n = Number(v)
+                if (!isNaN(n)) setForm({ ...form, valor_recebido: Math.max(0, n) })
+              }
+            }}
+            placeholder="0,00"
           />
         </div>
       </div>

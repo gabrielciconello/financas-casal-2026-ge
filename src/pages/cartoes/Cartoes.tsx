@@ -119,7 +119,7 @@ export default function Cartoes() {
       ) : erro ? (
         <MensagemErro mensagem={erro} onTentar={buscarCartoes} />
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))', gap: '1rem' }}>
           {cartoes.map((cartao) => {
             const { usado, percentual } = calcularUso(cartao)
             const corBarra = percentual >= 90 ? 'var(--cor-perigo)' :
@@ -260,63 +260,54 @@ export default function Cartoes() {
               </div>
             ) : (
               <>
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 120px 100px 120px 120px 80px',
-                  padding: '0.75rem 1.25rem',
-                  borderBottom: '1px solid var(--cor-borda)',
-                  fontSize: '0.75rem', fontWeight: 600,
-                  color: 'var(--cor-texto-suave)',
-                  textTransform: 'uppercase', letterSpacing: '0.05em',
-                }}>
-                  <span>Descrição</span>
-                  <span>Categoria</span>
-                  <span>Data</span>
-                  <span style={{ textAlign: 'right' }}>Total</span>
-                  <span style={{ textAlign: 'center' }}>Parcelas</span>
-                  <span style={{ textAlign: 'center' }}>Ações</span>
+                {/* Desktop */}
+                <div className="hidden md:block">
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px 100px 120px 120px 80px', padding: '0.75rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--cor-texto-suave)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <span>Descrição</span><span>Categoria</span><span>Data</span>
+                    <span style={{ textAlign: 'right' }}>Total</span>
+                    <span style={{ textAlign: 'center' }}>Parcelas</span>
+                    <span style={{ textAlign: 'center' }}>Ações</span>
+                  </div>
+
+                  {compras.map((c) => (
+                    <div key={c.id} style={{ display: 'grid', gridTemplateColumns: '1fr 120px 100px 120px 120px 80px', padding: '0.875rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', alignItems: 'center' }} className="transition-colors hover:bg-opacity-50">
+                      <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--cor-texto)' }}>{c.descricao}</div>
+                      <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>{c.categoria}</span>
+                      <span style={{ fontSize: '0.8125rem', color: 'var(--cor-texto-suave)' }}>{new Date(c.data_compra + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
+                      <span style={{ fontSize: '0.9375rem', fontWeight: 600, textAlign: 'right', color: 'var(--cor-texto)' }}>{formatarMoeda(c.valor_total)}</span>
+                      <div style={{ textAlign: 'center' }}>
+                        <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>{c.parcela_atual}x de {c.parcelas} — {formatarMoeda(c.valor_parcela)}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'center' }}>
+                        <button className="btn" onClick={() => handleDeletarCompra(c.id)} style={{ padding: '0.25rem 0.625rem', fontSize: '0.75rem', color: 'var(--cor-perigo)', background: 'transparent' }}>Excluir</button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
 
-                {compras.map((c) => (
-                  <div key={c.id} style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 120px 100px 120px 120px 80px',
-                    padding: '0.875rem 1.25rem',
-                    borderBottom: '1px solid var(--cor-borda)',
-                    alignItems: 'center',
-                    transition: 'var(--transicao)',
-                  }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--cor-fundo-hover)')}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                  >
-                    <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--cor-texto)' }}>
-                      {c.descricao}
+                {/* Mobile cards */}
+                <div className="md:hidden flex flex-col">
+                  {compras.map((c) => (
+                    <div key={c.id} style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--cor-borda)' }}>
+                      <div className="flex items-start justify-between mb-1.5">
+                        <div>
+                          <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--cor-texto)' }}>{c.descricao}</div>
+                          <span className="badge badge-info" style={{ fontSize: '0.65rem' }}>{c.categoria}</span>
+                        </div>
+                        <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--cor-texto)' }}>
+                          {formatarMoeda(c.valor_total)}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs mb-1.5" style={{ color: 'var(--cor-texto-suave)' }}>
+                        <span>{c.parcela_atual}/{c.parcelas} x {formatarMoeda(c.valor_parcela)}</span>
+                        <span>{new Date(c.data_compra + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
+                      </div>
+                      <div className="flex justify-end">
+                        <button className="btn px-2 py-1 text-xs" style={{ color: 'var(--cor-perigo)', background: 'transparent' }} onClick={() => handleDeletarCompra(c.id)}>Excluir</button>
+                      </div>
                     </div>
-                    <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>
-                      {c.categoria}
-                    </span>
-                    <span style={{ fontSize: '0.8125rem', color: 'var(--cor-texto-suave)' }}>
-                      {new Date(c.data_compra + 'T00:00:00').toLocaleDateString('pt-BR')}
-                    </span>
-                    <span style={{ fontSize: '0.9375rem', fontWeight: 600, textAlign: 'right', color: 'var(--cor-texto)' }}>
-                      {formatarMoeda(c.valor_total)}
-                    </span>
-                    <div style={{ textAlign: 'center' }}>
-                      <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>
-                        {c.parcela_atual}x de {c.parcelas} — {formatarMoeda(c.valor_parcela)}
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'center' }}>
-                      <button
-                        className="btn"
-                        onClick={() => handleDeletarCompra(c.id)}
-                        style={{ padding: '0.25rem 0.625rem', fontSize: '0.75rem', color: 'var(--cor-perigo)', background: 'transparent' }}
-                      >
-                        Excluir
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
 
                 <div style={{ padding: '0 1.25rem' }}>
                   <Paginacao paginaAtual={pagina} total={total} limite={10} onMudar={setPagina} />
@@ -405,9 +396,13 @@ function FormularioCartao({ cartao, onSalvar, onCancelar, carregando }: FormCart
           <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>
             Limite (R$)
           </label>
-          <input className="input" type="number" step="0.01" min="0.01"
-            value={form.limite}
-            onChange={(e) => setForm({ ...form, limite: Number(e.target.value) })}
+          <input className="input" type="text" inputMode="decimal"
+            value={form.limite === 0 ? '' : form.limite}
+            onChange={(e) => {
+              const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.')
+              setForm({ ...form, limite: v === '' ? 0 : Math.max(0, Number(v) || 0) })
+            }}
+            placeholder="0,00"
             required />
         </div>
       </div>
@@ -490,9 +485,13 @@ function FormularioCompra({ cartaoId, onSalvar, onCancelar, carregando }: FormCo
           <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>
             Valor Total (R$)
           </label>
-          <input className="input" type="number" step="0.01" min="0.01"
-            value={form.valor_total}
-            onChange={(e) => setForm({ ...form, valor_total: Number(e.target.value) })}
+          <input className="input" type="text" inputMode="decimal"
+            value={form.valor_total === 0 ? '' : form.valor_total}
+            onChange={(e) => {
+              const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.')
+              setForm({ ...form, valor_total: v === '' ? 0 : Math.max(0, Number(v) || 0) })
+            }}
+            placeholder="0,00"
             required />
         </div>
       </div>

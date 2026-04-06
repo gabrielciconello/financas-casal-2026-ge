@@ -90,7 +90,7 @@ export default function GastosVariaveis() {
       </div>
 
       {/* Cards de resumo */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(180px, 100%), 1fr))', gap: '1rem' }}>
         <div className="card">
           <div style={{ fontSize: '0.8125rem', color: 'var(--cor-texto-suave)', marginBottom: '0.5rem' }}>Estimado</div>
           <div style={{ fontFamily: 'var(--fonte-display)', fontSize: '1.5rem', fontWeight: 700, color: 'var(--cor-texto)' }}>
@@ -155,76 +155,72 @@ export default function GastosVariaveis() {
           </div>
         ) : (
           <>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 120px 130px 130px 100px 100px',
-              padding: '0.75rem 1.25rem',
-              borderBottom: '1px solid var(--cor-borda)',
-              fontSize: '0.75rem', fontWeight: 600,
-              color: 'var(--cor-texto-suave)',
-              textTransform: 'uppercase', letterSpacing: '0.05em',
-            }}>
-              <span>Descrição</span>
-              <span>Categoria</span>
-              <span style={{ textAlign: 'right' }}>Estimado</span>
-              <span style={{ textAlign: 'right' }}>Real</span>
-              <span style={{ textAlign: 'center' }}>Desvio</span>
-              <span style={{ textAlign: 'center' }}>Ações</span>
+            {/* Desktop */}
+            <div className="hidden md:block">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px 130px 130px 100px 100px', padding: '0.75rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--cor-texto-suave)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <span>Descrição</span><span>Categoria</span>
+                <span style={{ textAlign: 'right' }}>Estimado</span>
+                <span style={{ textAlign: 'right' }}>Real</span>
+                <span style={{ textAlign: 'center' }}>Desvio</span>
+                <span style={{ textAlign: 'center' }}>Ações</span>
+              </div>
+
+              {gastos.map((g) => {
+                const desvioItem = Number(g.valor_real ?? 0) - Number(g.valor_estimado ?? 0)
+                return (
+                  <div key={g.id} style={{ display: 'grid', gridTemplateColumns: '1fr 120px 130px 130px 100px 100px', padding: '0.875rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', alignItems: 'center' }} className="transition-colors hover:bg-opacity-50">
+                    <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--cor-texto)' }}>{g.descricao}</span>
+                    <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>{g.categoria}</span>
+                    <span style={{ fontSize: '0.875rem', textAlign: 'right', color: 'var(--cor-texto-suave)' }}>{g.valor_estimado ? formatarMoeda(g.valor_estimado) : '—'}</span>
+                    <span style={{ fontSize: '0.9375rem', fontWeight: 600, textAlign: 'right', color: 'var(--cor-texto)' }}>{g.valor_real ? formatarMoeda(g.valor_real) : '—'}</span>
+                    <div style={{ textAlign: 'center' }}>
+                      {g.valor_estimado && g.valor_real ? (
+                        <span className={`badge ${desvioItem > 0 ? 'badge-perigo' : 'badge-sucesso'}`} style={{ fontSize: '0.7rem' }}>
+                          {desvioItem > 0 ? '+' : ''}{formatarMoeda(desvioItem)}
+                        </span>
+                      ) : '—'}
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                      <button className="btn btn-secundario" onClick={() => { setGastoEditando(g); setModalAberto(true) }} style={{ padding: '0.25rem 0.625rem', fontSize: '0.75rem' }}>Editar</button>
+                      <button className="btn" onClick={() => handleDeletar(g.id)} style={{ padding: '0.25rem 0.625rem', fontSize: '0.75rem', color: 'var(--cor-perigo)', background: 'transparent' }}>Excluir</button>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
 
-            {gastos.map((g) => {
-              const desvioItem = Number(g.valor_real ?? 0) - Number(g.valor_estimado ?? 0)
-              return (
-                <div key={g.id} style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 120px 130px 130px 100px 100px',
-                  padding: '0.875rem 1.25rem',
-                  borderBottom: '1px solid var(--cor-borda)',
-                  alignItems: 'center',
-                  transition: 'var(--transicao)',
-                }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--cor-fundo-hover)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                >
-                  <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--cor-texto)' }}>
-                    {g.descricao}
-                  </span>
-                  <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>
-                    {g.categoria}
-                  </span>
-                  <span style={{ fontSize: '0.875rem', textAlign: 'right', color: 'var(--cor-texto-suave)' }}>
-                    {g.valor_estimado ? formatarMoeda(g.valor_estimado) : '—'}
-                  </span>
-                  <span style={{ fontSize: '0.9375rem', fontWeight: 600, textAlign: 'right', color: 'var(--cor-texto)' }}>
-                    {g.valor_real ? formatarMoeda(g.valor_real) : '—'}
-                  </span>
-                  <div style={{ textAlign: 'center' }}>
-                    {g.valor_estimado && g.valor_real ? (
-                      <span className={`badge ${desvioItem > 0 ? 'badge-perigo' : 'badge-sucesso'}`}
-                        style={{ fontSize: '0.7rem' }}>
-                        {desvioItem > 0 ? '+' : ''}{formatarMoeda(desvioItem)}
-                      </span>
-                    ) : '—'}
+            {/* Mobile cards */}
+            <div className="md:hidden flex flex-col">
+              {gastos.map((g) => {
+                const desvioItem = Number(g.valor_real ?? 0) - Number(g.valor_estimado ?? 0)
+                return (
+                  <div key={g.id} style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--cor-borda)' }}>
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--cor-texto)' }}>{g.descricao}</div>
+                        <span className="badge badge-info" style={{ fontSize: '0.65rem' }}>{g.categoria}</span>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--cor-texto-suave)' }}>Real</div>
+                        <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--cor-texto)' }}>{g.valor_real ? formatarMoeda(g.valor_real) : '—'}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs mb-2" style={{ color: 'var(--cor-texto-suave)' }}>
+                      {g.valor_estimado && <span>Estimado: {formatarMoeda(g.valor_estimado)}</span>}
+                      {g.valor_estimado && g.valor_real && (
+                        <span className={`badge ${desvioItem > 0 ? 'badge-perigo' : 'badge-sucesso'}`} style={{ fontSize: '0.65rem' }}>
+                          {desvioItem > 0 ? '+' : ''}{formatarMoeda(desvioItem)}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex gap-1.5 justify-end mt-1">
+                      <button className="btn btn-secundario px-2 py-1 text-xs" onClick={() => { setGastoEditando(g); setModalAberto(true) }}>Editar</button>
+                      <button className="btn px-2 py-1 text-xs" style={{ color: 'var(--cor-perigo)', background: 'transparent' }} onClick={() => handleDeletar(g.id)}>Excluir</button>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                    <button
-                      className="btn btn-secundario"
-                      onClick={() => { setGastoEditando(g); setModalAberto(true) }}
-                      style={{ padding: '0.25rem 0.625rem', fontSize: '0.75rem' }}
-                    >
-                      Editar
-                    </button>
-                    <button
-                      className="btn"
-                      onClick={() => handleDeletar(g.id)}
-                      style={{ padding: '0.25rem 0.625rem', fontSize: '0.75rem', color: 'var(--cor-perigo)', background: 'transparent' }}
-                    >
-                      Excluir
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
 
             <div style={{ padding: '0 1.25rem' }}>
               <Paginacao paginaAtual={pagina} total={total} limite={10} onMudar={setPagina} />
