@@ -98,6 +98,7 @@ const lazyModules: Record<string, (() => Promise<any>)[]> = {
 }
 
 export default function Layout() {
+  const { usuario } = useAuth()
   const [menuAberto, setMenuAberto] = useState(false)
 
   // Pre-load lazy modules on hover/focus
