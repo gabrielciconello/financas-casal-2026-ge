@@ -7,13 +7,13 @@ import {
   RespostaApi,
   RespostaPaginada,
   ParametrosPaginacao,
-} from '../types.js'
+} from '../types/index.js'
 import {
   respostaSucesso,
   respostaErro,
   respostaPaginada,
   calcularOffset,
-} from '../utils.js'
+} from '../utils/index.js'
 
 export async function buscarSalarios(
   params: ParametrosPaginacao & {
