@@ -120,8 +120,8 @@ export default function Metas() {
           <>
             {/* Desktop */}
             <div className="hidden md:block">
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 140px 140px 120px 100px 130px', padding: '0.75rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--cor-texto-suave)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                <span>Meta</span>
+              <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 140px 140px 120px 100px 130px', padding: '0.75rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--cor-texto-suave)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <span>Usuário</span><span>Meta</span>
                 <span style={{ textAlign: 'right' }}>Valor Atual</span>
                 <span style={{ textAlign: 'right' }}>Valor Alvo</span>
                 <span style={{ textAlign: 'center' }}>Progresso</span>
@@ -133,7 +133,15 @@ export default function Metas() {
                 const percentual = meta.valor_alvo > 0 ? (meta.valor_atual / meta.valor_alvo) * 100 : 0
                 const corBarra = meta.concluida ? 'var(--cor-sucesso)' : percentual >= 70 ? 'var(--cor-primaria)' : 'var(--cor-aviso)'
                 return (
-                  <div key={meta.id} style={{ display: 'grid', gridTemplateColumns: '1fr 140px 140px 120px 100px 130px', padding: '0.875rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', alignItems: 'center' }} className="transition-colors hover:bg-opacity-50">
+                  <div key={meta.id} style={{ display: 'grid', gridTemplateColumns: '100px 1fr 140px 140px 120px 100px 130px', padding: '0.875rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', alignItems: 'center' }} className="transition-colors hover:bg-opacity-50">
+                    <div style={{
+                      fontSize: '0.8125rem', fontWeight: 600, color: 'var(--cor-texto)',
+                      padding: '0.25rem 0.5rem', borderRadius: '0.375rem',
+                      background: meta.usuario_nome === 'Gabriel' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(236, 72, 153, 0.1)',
+                      textAlign: 'center',
+                    }}>
+                      {meta.usuario_nome || 'N/A'}
+                    </div>
                     <div>
                       <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--cor-texto)' }}>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem' }}>

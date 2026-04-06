@@ -1,5 +1,6 @@
 import { supabaseAdmin } from './supabase.node.js'
 import { registrarAuditoria } from './servicoAuditoria.js'
+import { obterNomeUsuario } from '../config/usuarios.js'
 import {
   Salario,
   CriarSalarioDTO,
@@ -62,9 +63,10 @@ export async function criarSalario(
   usuarioId: string,
   usuarioEmail: string
 ): Promise<RespostaApi<Salario>> {
+  const usuarioNome = obterNomeUsuario(usuarioEmail)
   const { data, error } = await supabaseAdmin
     .from('salarios')
-    .insert({ ...dados, usuario_id: usuarioId })
+    .insert({ ...dados, usuario_id: usuarioId, usuario_nome: usuarioNome })
     .select()
     .single()
 

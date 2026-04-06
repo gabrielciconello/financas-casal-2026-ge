@@ -1,5 +1,6 @@
 import { supabaseAdmin } from './supabase.node.js'
 import { registrarAuditoria } from './servicoAuditoria.js'
+import { obterNomeUsuario } from '../config/usuarios.js'
 import {
   Transacao,
   CriarTransacaoDTO,
@@ -75,9 +76,10 @@ export async function criarTransacao(
   usuarioId: string,
   usuarioEmail: string
 ): Promise<RespostaApi<Transacao>> {
+  const usuarioNome = obterNomeUsuario(usuarioEmail)
   const { data, error } = await supabaseAdmin
     .from('transacoes')
-    .insert({ ...dados, usuario_id: usuarioId })
+    .insert({ ...dados, usuario_id: usuarioId, usuario_nome: usuarioNome })
     .select()
     .single()
 

@@ -43,6 +43,7 @@ export type TipoRecorrencia = 'mensal' | 'semanal'
 export interface Transacao {
   id: string
   usuario_id: string
+  usuario_nome: string
   descricao: string
   categoria: string
   tipo: TipoTransacao
@@ -81,6 +82,7 @@ export type StatusSalario = 'pendente' | 'recebido' | 'parcial'
 export interface Salario {
   id: string
   usuario_id: string
+  usuario_nome: string
   tipo: TipoSalario
   descricao: string
   valor_esperado: number
@@ -116,6 +118,7 @@ export interface AtualizarSalarioDTO extends Partial<CriarSalarioDTO> {}
 export interface Cartao {
   id: string
   usuario_id: string
+  usuario_nome: string
   nome: string
   bandeira?: string
   limite: number
@@ -143,6 +146,7 @@ export interface CompraCartao {
   id: string
   cartao_id: string
   usuario_id: string
+  usuario_nome: string
   descricao: string
   categoria: string
   valor_total: number
@@ -173,6 +177,7 @@ export type StatusGasto = 'pendente' | 'pago'
 export interface GastoFixo {
   id: string
   usuario_id: string
+  usuario_nome: string
   descricao: string
   categoria: string
   valor: number
@@ -202,6 +207,7 @@ export interface AtualizarGastoFixoDTO extends Partial<CriarGastoFixoDTO> {}
 export interface GastoVariavel {
   id: string
   usuario_id: string
+  usuario_nome: string
   descricao: string
   categoria: string
   valor_estimado?: number
@@ -229,6 +235,7 @@ export interface AtualizarGastoVariavelDTO extends Partial<CriarGastoVariavelDTO
 export interface Meta {
   id: string
   titulo: string
+  usuario_nome: string
   valor_alvo: number
   valor_atual: number
   aporte_mensal?: number
@@ -254,6 +261,7 @@ export interface ContribuicaoMeta {
   id: string
   meta_id: string
   usuario_id: string
+  usuario_nome: string
   valor: number
   observacoes?: string
   data: string

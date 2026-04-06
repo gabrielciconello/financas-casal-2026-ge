@@ -157,8 +157,8 @@ export default function GastosVariaveis() {
           <>
             {/* Desktop */}
             <div className="hidden md:block">
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px 130px 130px 100px 100px', padding: '0.75rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--cor-texto-suave)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                <span>Descrição</span><span>Categoria</span>
+              <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 120px 130px 130px 100px 100px', padding: '0.75rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--cor-texto-suave)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <span>Usuário</span><span>Descrição</span><span>Categoria</span>
                 <span style={{ textAlign: 'right' }}>Estimado</span>
                 <span style={{ textAlign: 'right' }}>Real</span>
                 <span style={{ textAlign: 'center' }}>Desvio</span>
@@ -168,7 +168,15 @@ export default function GastosVariaveis() {
               {gastos.map((g) => {
                 const desvioItem = Number(g.valor_real ?? 0) - Number(g.valor_estimado ?? 0)
                 return (
-                  <div key={g.id} style={{ display: 'grid', gridTemplateColumns: '1fr 120px 130px 130px 100px 100px', padding: '0.875rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', alignItems: 'center' }} className="transition-colors hover:bg-opacity-50">
+                  <div key={g.id} style={{ display: 'grid', gridTemplateColumns: '100px 1fr 120px 130px 130px 100px 100px', padding: '0.875rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', alignItems: 'center' }} className="transition-colors hover:bg-opacity-50">
+                    <div style={{
+                      fontSize: '0.8125rem', fontWeight: 600, color: 'var(--cor-texto)',
+                      padding: '0.25rem 0.5rem', borderRadius: '0.375rem',
+                      background: g.usuario_nome === 'Gabriel' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(236, 72, 153, 0.1)',
+                      textAlign: 'center',
+                    }}>
+                      {g.usuario_nome || 'N/A'}
+                    </div>
                     <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--cor-texto)' }}>{g.descricao}</span>
                     <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>{g.categoria}</span>
                     <span style={{ fontSize: '0.875rem', textAlign: 'right', color: 'var(--cor-texto-suave)' }}>{g.valor_estimado ? formatarMoeda(g.valor_estimado) : '—'}</span>

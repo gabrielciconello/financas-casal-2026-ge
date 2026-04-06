@@ -1,5 +1,6 @@
 import { supabaseAdmin } from './supabase.node.js'
 import { registrarAuditoria } from './servicoAuditoria.js'
+import { obterNomeUsuario } from '../config/usuarios.js'
 import {
   Meta,
   ContribuicaoMeta,
@@ -49,12 +50,13 @@ export async function buscarMetaPorId(
 
 export async function criarMeta(
   dados: CriarMetaDTO,
-  usuarioEmail: string,
-  usuarioId: string
+  usuarioId: string,
+  usuarioEmail: string
 ): Promise<RespostaApi<Meta>> {
+  const usuarioNome = obterNomeUsuario(usuarioEmail)
   const { data, error } = await supabaseAdmin
     .from('metas')
-    .insert(dados)
+    .insert({ ...dados, usuario_nome: usuarioNome })
     .select()
     .single()
 
@@ -74,9 +76,9 @@ export async function criarMeta(
 
 export async function atualizarMeta(
   id: string,
-  usuarioEmail: string,
   dados: AtualizarMetaDTO,
-  usuarioId: string
+  usuarioId: string,
+  usuarioEmail: string
 ): Promise<RespostaApi<Meta>> {
   const { data, error } = await supabaseAdmin
     .from('metas')
@@ -101,8 +103,8 @@ export async function atualizarMeta(
 
 export async function deletarMeta(
   id: string,
-  usuarioEmail: string,
-  usuarioId: string
+  usuarioId: string,
+  usuarioEmail: string
 ): Promise<RespostaApi<null>> {
   const { error } = await supabaseAdmin
     .from('metas')
@@ -147,12 +149,13 @@ export async function buscarContribuicoes(
 
 export async function criarContribuicao(
   dados: CriarContribuicaoMetaDTO,
-  usuarioEmail: string,
-  usuarioId: string
+  usuarioId: string,
+  usuarioEmail: string
 ): Promise<RespostaApi<ContribuicaoMeta>> {
+  const usuarioNome = obterNomeUsuario(usuarioEmail)
   const { data, error } = await supabaseAdmin
     .from('contribuicoes_metas')
-    .insert({ ...dados, usuario_id: usuarioId })
+    .insert({ ...dados, usuario_id: usuarioId, usuario_nome: usuarioNome })
     .select()
     .single()
 

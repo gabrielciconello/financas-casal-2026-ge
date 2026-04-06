@@ -1,5 +1,6 @@
 import { supabaseAdmin } from './supabase.node.js'
 import { registrarAuditoria } from './servicoAuditoria.js'
+import { obterNomeUsuario } from '../config/usuarios.js'
 import {
   Cartao,
   CompraCartao,
@@ -54,12 +55,13 @@ export async function buscarCartaoPorId(
 
 export async function criarCartao(
   dados: CriarCartaoDTO,
-  usuarioEmail: string,
-  usuarioId: string
+  usuarioId: string,
+  usuarioEmail: string
 ): Promise<RespostaApi<Cartao>> {
+  const usuarioNome = obterNomeUsuario(usuarioEmail)
   const { data, error } = await supabaseAdmin
     .from('cartoes')
-    .insert({ ...dados, usuario_id: usuarioId })
+    .insert({ ...dados, usuario_id: usuarioId, usuario_nome: usuarioNome })
     .select()
     .single()
 
@@ -80,8 +82,8 @@ export async function criarCartao(
 export async function atualizarCartao(
   id: string,
   dados: AtualizarCartaoDTO,
-  usuarioEmail: string,
-  usuarioId: string
+  usuarioId: string,
+  usuarioEmail: string
 ): Promise<RespostaApi<Cartao>> {
   const { data, error } = await supabaseAdmin
     .from('cartoes')
@@ -106,8 +108,8 @@ export async function atualizarCartao(
 
 export async function deletarCartao(
   id: string,
-  usuarioEmail: string,
-  usuarioId: string
+  usuarioId: string,
+  usuarioEmail: string
 ): Promise<RespostaApi<null>> {
   // Soft delete — apenas desativa o cartão
   const { error } = await supabaseAdmin
@@ -159,9 +161,10 @@ export async function buscarComprasCartao(
 
 export async function criarCompraCartao(
   dados: CriarCompraCartaoDTO,
-  usuarioEmail: string,
-  usuarioId: string
+  usuarioId: string,
+  usuarioEmail: string
 ): Promise<RespostaApi<CompraCartao>> {
+  const usuarioNome = obterNomeUsuario(usuarioEmail)
   const parcelas = dados.parcelas ?? 1
   const valorParcela = Number((dados.valor_total / parcelas).toFixed(2))
 
@@ -170,6 +173,7 @@ export async function criarCompraCartao(
     .insert({
       ...dados,
       usuario_id: usuarioId,
+      usuario_nome: usuarioNome,
       parcelas,
       parcela_atual: 1,
       valor_parcela: valorParcela,
@@ -194,8 +198,8 @@ export async function criarCompraCartao(
 export async function atualizarCompraCartao(
   id: string,
   dados: AtualizarCompraCartaoDTO,
-  usuarioEmail: string,
-  usuarioId: string
+  usuarioId: string,
+  usuarioEmail: string
 ): Promise<RespostaApi<CompraCartao>> {
   const { data, error } = await supabaseAdmin
     .from('compras_cartao')
@@ -220,8 +224,8 @@ export async function atualizarCompraCartao(
 
 export async function deletarCompraCartao(
   id: string,
-  usuarioEmail: string,
-  usuarioId: string
+  usuarioId: string,
+  usuarioEmail: string
 ): Promise<RespostaApi<null>> {
   const { error } = await supabaseAdmin
     .from('compras_cartao')

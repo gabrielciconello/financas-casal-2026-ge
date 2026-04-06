@@ -74,7 +74,7 @@ export default async function handlerCartoes(
       if (!validacao.sucesso) {
         return responderErro(res, validacao.erros?.join(', ') ?? 'Dados inválidos')
       }
-      const resultado = await criarCartao(validacao.dados!, usuarioEmail, usuarioId)
+      const resultado = await criarCartao(validacao.dados!, usuarioId, usuarioEmail)
       if (resultado.erro) return responderErro(res, resultado.erro)
       return responderSucesso(res, resultado.dados, 201)
     }
@@ -85,14 +85,14 @@ export default async function handlerCartoes(
       if (!validacao.sucesso) {
         return responderErro(res, validacao.erros?.join(', ') ?? 'Dados inválidos')
       }
-      const resultado = await atualizarCartao(cartaoId, validacao.dados!, usuarioEmail, usuarioId)
+      const resultado = await atualizarCartao(cartaoId, validacao.dados!, usuarioId, usuarioEmail)
       if (resultado.erro) return responderErro(res, resultado.erro)
       if (!resultado.dados) return responderNaoEncontrado(res)
       return responderSucesso(res, resultado.dados)
     }
 
     if (req.method === 'DELETE' && cartaoId) {
-      const resultado = await deletarCartao(cartaoId, usuarioEmail, usuarioId)
+      const resultado = await deletarCartao(cartaoId, usuarioId, usuarioEmail)
       if (resultado.erro) return responderErro(res, resultado.erro)
       return responderSucesso(res, { mensagem: 'Cartão desativado com sucesso' })
     }
@@ -120,7 +120,7 @@ export default async function handlerCartoes(
       if (!validacao.sucesso) {
         return responderErro(res, validacao.erros?.join(', ') ?? 'Dados inválidos')
       }
-      const resultado = await criarCompraCartao(validacao.dados!, usuarioEmail, usuarioId)
+      const resultado = await criarCompraCartao(validacao.dados!, usuarioId, usuarioEmail)
       if (resultado.erro) return responderErro(res, resultado.erro)
       return responderSucesso(res, resultado.dados, 201)
     }
@@ -131,14 +131,14 @@ export default async function handlerCartoes(
       if (!validacao.sucesso) {
         return responderErro(res, validacao.erros?.join(', ') ?? 'Dados inválidos')
       }
-      const resultado = await atualizarCompraCartao(id, validacao.dados!, usuarioEmail, usuarioId)
+      const resultado = await atualizarCompraCartao(id, validacao.dados!, usuarioId, usuarioEmail)
       if (resultado.erro) return responderErro(res, resultado.erro)
       if (!resultado.dados) return responderNaoEncontrado(res)
       return responderSucesso(res, resultado.dados)
     }
 
     if (req.method === 'DELETE' && id) {
-      const resultado = await deletarCompraCartao(id, usuarioId)
+      const resultado = await deletarCompraCartao(id, usuarioId, usuarioEmail)
       if (resultado.erro) return responderErro(res, resultado.erro)
       return responderSucesso(res, { mensagem: 'Compra deletada com sucesso' })
     }

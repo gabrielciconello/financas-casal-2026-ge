@@ -149,8 +149,19 @@ export default function Cartoes() {
                       <CreditCard size={20} color="var(--cor-primaria)" />
                     </div>
                     <div>
-                      <div style={{ fontWeight: 600, fontSize: '0.9375rem', color: 'var(--cor-texto)' }}>
-                        {cartao.nome}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{ fontWeight: 600, fontSize: '0.9375rem', color: 'var(--cor-texto)' }}>
+                          {cartao.nome}
+                        </span>
+                        {cartao.usuario_nome && (
+                          <span style={{
+                            fontSize: '0.65rem', fontWeight: 600, color: 'var(--cor-texto)',
+                            padding: '0.125rem 0.375rem', borderRadius: '0.25rem',
+                            background: cartao.usuario_nome === 'Gabriel' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(236, 72, 153, 0.1)',
+                          }}>
+                            {cartao.usuario_nome}
+                          </span>
+                        )}
                       </div>
                       {cartao.bandeira && (
                         <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)' }}>
@@ -262,15 +273,23 @@ export default function Cartoes() {
               <>
                 {/* Desktop */}
                 <div className="hidden md:block">
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px 100px 120px 120px 80px', padding: '0.75rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--cor-texto-suave)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    <span>Descrição</span><span>Categoria</span><span>Data</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 120px 100px 120px 120px 80px', padding: '0.75rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--cor-texto-suave)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <span>Usuário</span><span>Descrição</span><span>Categoria</span><span>Data</span>
                     <span style={{ textAlign: 'right' }}>Total</span>
                     <span style={{ textAlign: 'center' }}>Parcelas</span>
                     <span style={{ textAlign: 'center' }}>Ações</span>
                   </div>
 
                   {compras.map((c) => (
-                    <div key={c.id} style={{ display: 'grid', gridTemplateColumns: '1fr 120px 100px 120px 120px 80px', padding: '0.875rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', alignItems: 'center' }} className="transition-colors hover:bg-opacity-50">
+                    <div key={c.id} style={{ display: 'grid', gridTemplateColumns: '100px 1fr 120px 100px 120px 120px 80px', padding: '0.875rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', alignItems: 'center' }} className="transition-colors hover:bg-opacity-50">
+                      <div style={{
+                        fontSize: '0.8125rem', fontWeight: 600, color: 'var(--cor-texto)',
+                        padding: '0.25rem 0.5rem', borderRadius: '0.375rem',
+                        background: c.usuario_nome === 'Gabriel' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(236, 72, 153, 0.1)',
+                        textAlign: 'center',
+                      }}>
+                        {c.usuario_nome || 'N/A'}
+                      </div>
                       <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--cor-texto)' }}>{c.descricao}</div>
                       <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>{c.categoria}</span>
                       <span style={{ fontSize: '0.8125rem', color: 'var(--cor-texto-suave)' }}>{new Date(c.data_compra + 'T00:00:00').toLocaleDateString('pt-BR')}</span>

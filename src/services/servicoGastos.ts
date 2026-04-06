@@ -1,5 +1,6 @@
 import { supabaseAdmin } from './supabase.node.js'
 import { registrarAuditoria } from './servicoAuditoria.js'
+import { obterNomeUsuario } from '../config/usuarios.js'
 import {
   GastoFixo,
   GastoVariavel,
@@ -68,9 +69,10 @@ export async function criarGastoFixo(
   usuarioId: string,
   usuarioEmail: string
 ): Promise<RespostaApi<GastoFixo>> {
+  const usuarioNome = obterNomeUsuario(usuarioEmail)
   const { data, error } = await supabaseAdmin
     .from('gastos_fixos')
-    .insert({ ...dados, usuario_id: usuarioId })
+    .insert({ ...dados, usuario_id: usuarioId, usuario_nome: usuarioNome })
     .select()
     .single()
 
@@ -187,9 +189,10 @@ export async function criarGastoVariavel(
   usuarioId: string,
   usuarioEmail: string
 ): Promise<RespostaApi<GastoVariavel>> {
+  const usuarioNome = obterNomeUsuario(usuarioEmail)
   const { data, error } = await supabaseAdmin
     .from('gastos_variaveis')
-    .insert({ ...dados, usuario_id: usuarioId })
+    .insert({ ...dados, usuario_id: usuarioId, usuario_nome: usuarioNome })
     .select()
     .single()
 

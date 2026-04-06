@@ -69,7 +69,7 @@ export default async function handlerMetas(
       if (!validacao.sucesso) {
         return responderErro(res, validacao.erros?.join(', ') ?? 'Dados inválidos')
       }
-      const resultado = await criarMeta(validacao.dados!, usuarioEmail, usuarioId)
+      const resultado = await criarMeta(validacao.dados!, usuarioId, usuarioEmail)
       if (resultado.erro) return responderErro(res, resultado.erro)
       return responderSucesso(res, resultado.dados, 201)
     }
@@ -80,14 +80,14 @@ export default async function handlerMetas(
       if (!validacao.sucesso) {
         return responderErro(res, validacao.erros?.join(', ') ?? 'Dados inválidos')
       }
-      const resultado = await atualizarMeta(id, validacao.dados!, usuarioEmail, usuarioId)
+      const resultado = await atualizarMeta(id, validacao.dados!, usuarioId, usuarioEmail)
       if (resultado.erro) return responderErro(res, resultado.erro)
       if (!resultado.dados) return responderNaoEncontrado(res)
       return responderSucesso(res, resultado.dados)
     }
 
     if (req.method === 'DELETE' && id) {
-      const resultado = await deletarMeta(id, usuarioEmail, usuarioId)
+      const resultado = await deletarMeta(id, usuarioId, usuarioEmail)
       if (resultado.erro) return responderErro(res, resultado.erro)
       return responderSucesso(res, { mensagem: 'Meta deletada com sucesso' })
     }
@@ -115,7 +115,7 @@ export default async function handlerMetas(
       if (!validacao.sucesso) {
         return responderErro(res, validacao.erros?.join(', ') ?? 'Dados inválidos')
       }
-      const resultado = await criarContribuicao(validacao.dados!, usuarioEmail, usuarioId)
+      const resultado = await criarContribuicao(validacao.dados!, usuarioId, usuarioEmail)
       if (resultado.erro) return responderErro(res, resultado.erro)
       return responderSucesso(res, resultado.dados, 201)
     }

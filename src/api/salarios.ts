@@ -58,7 +58,7 @@ export default async function handlerSalarios(
       return responderErro(res, validacao.erros?.join(', ') ?? 'Dados inválidos')
     }
 
-    const resultado = await criarSalario(validacao.dados!, usuarioEmail, usuarioId)
+    const resultado = await criarSalario(validacao.dados!, usuarioId, usuarioEmail)
 
     if (resultado.erro) return responderErro(res, resultado.erro)
     return responderSucesso(res, resultado.dados, 201)
@@ -72,7 +72,7 @@ export default async function handlerSalarios(
       return responderErro(res, validacao.erros?.join(', ') ?? 'Dados inválidos')
     }
 
-    const resultado = await atualizarSalario(id, validacao.dados!, usuarioEmail, usuarioId)
+    const resultado = await atualizarSalario(id, validacao.dados!, usuarioId, usuarioEmail)
 
     if (resultado.erro) return responderErro(res, resultado.erro)
     if (!resultado.dados) return responderNaoEncontrado(res)
@@ -80,7 +80,7 @@ export default async function handlerSalarios(
   }
 
   if (req.method === 'DELETE' && id) {
-    const resultado = await deletarSalario(id, usuarioEmail, usuarioId)
+    const resultado = await deletarSalario(id, usuarioId, usuarioEmail)
 
     if (resultado.erro) return responderErro(res, resultado.erro)
     return responderSucesso(res, { mensagem: 'Salário deletado com sucesso' })

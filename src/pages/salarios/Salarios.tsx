@@ -166,8 +166,8 @@ export default function Salarios() {
           <>
             {/* Desktop */}
             <div className="hidden md:block">
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 130px 130px 100px 100px', padding: '0.75rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--cor-texto-suave)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                <span>Descrição</span><span>Tipo</span>
+              <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 100px 130px 130px 100px 100px', padding: '0.75rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--cor-texto-suave)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <span>Usuário</span><span>Descrição</span><span>Tipo</span>
                 <span style={{ textAlign: 'right' }}>Esperado</span>
                 <span style={{ textAlign: 'right' }}>Recebido</span>
                 <span style={{ textAlign: 'center' }}>Status</span>
@@ -175,7 +175,15 @@ export default function Salarios() {
               </div>
 
               {salarios.map((s) => (
-                <div key={s.id} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 130px 130px 100px 100px', padding: '0.875rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', alignItems: 'center' }} className="transition-colors hover:bg-opacity-50">
+                <div key={s.id} style={{ display: 'grid', gridTemplateColumns: '100px 1fr 100px 130px 130px 100px 100px', padding: '0.875rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', alignItems: 'center' }} className="transition-colors hover:bg-opacity-50">
+                  <div style={{
+                    fontSize: '0.8125rem', fontWeight: 600, color: 'var(--cor-texto)',
+                    padding: '0.25rem 0.5rem', borderRadius: '0.375rem',
+                    background: s.usuario_nome === 'Gabriel' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(236, 72, 153, 0.1)',
+                    textAlign: 'center',
+                  }}>
+                    {s.usuario_nome || 'N/A'}
+                  </div>
                   <div>
                     <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--cor-texto)' }}>{s.descricao}</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)', marginTop: '2px' }}>
