@@ -17,7 +17,7 @@ const itensMenu = [
   { caminho: '/metas', icone: Target, rotulo: 'Metas' },
 ]
 
-function SidebarConteudo({ fechar, mostrarFechar }: { fechar: () => void, mostrarFechar: boolean }) {
+function SidebarConteudo({ fechar, mostrarFechar, onPreload }: { fechar: () => void, mostrarFechar: boolean, onPreload?: (path: string) => void }) {
   const { usuario, sair } = useAuth()
   const { tema, alternarTema } = useTema()
   const navegar = useNavigate()
@@ -53,8 +53,8 @@ function SidebarConteudo({ fechar, mostrarFechar }: { fechar: () => void, mostra
             key={caminho}
             to={caminho}
             onClick={fechar}
-            onMouseEnter={() => preloadModule(caminho)}
-            onFocus={() => preloadModule(caminho)}
+            onMouseEnter={() => onPreload?.(caminho)}
+            onFocus={() => onPreload?.(caminho)}
             className={({ isActive }) =>
               `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all no-underline ${
                 isActive
@@ -122,7 +122,7 @@ export default function Layout() {
 
       {/* SIDEBAR DESKTOP */}
       <aside className="hidden md:flex fixed top-0 left-0 h-screen w-56 flex-col bg-lateral border-r z-50" style={{ background: 'var(--cor-fundo-card)', borderRight: '1px solid var(--cor-borda)' }}>
-        <SidebarConteudo fechar={() => {}} mostrarFechar={false} />
+        <SidebarConteudo fechar={() => {}} mostrarFechar={false} onPreload={preloadModule} />
       </aside>
 
       {/* SIDEBAR MOBILE — Drawer */}
@@ -133,7 +133,7 @@ export default function Layout() {
             onClick={() => setMenuAberto(false)}
           />
           <aside className="fixed top-0 left-0 h-screen w-64 bg-lateral border-r z-50 md:hidden shadow-xl" style={{ background: 'var(--cor-fundo-card)', borderRight: '1px solid var(--cor-borda)' }}>
-            <SidebarConteudo fechar={() => setMenuAberto(false)} mostrarFechar={true} />
+            <SidebarConteudo fechar={() => setMenuAberto(false)} mostrarFechar={true} onPreload={preloadModule} />
           </aside>
         </>
       )}

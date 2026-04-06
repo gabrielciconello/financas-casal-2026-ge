@@ -73,7 +73,7 @@ export default async function handlerTransacoes(
       return responderErro(res, validacao.erros?.join(', ') ?? 'Dados inválidos')
     }
 
-    const resultado = await criarTransacao(validacao.dados!, usuarioEmail, usuarioId)
+    const resultado = await criarTransacao(validacao.dados!, usuarioId, usuarioEmail)
 
     if (resultado.erro) return responderErro(res, resultado.erro)
     return responderSucesso(res, resultado.dados, 201)
@@ -88,7 +88,7 @@ export default async function handlerTransacoes(
       return responderErro(res, validacao.erros?.join(', ') ?? 'Dados inválidos')
     }
 
-    const resultado = await atualizarTransacao(id, validacao.dados!, usuarioEmail, usuarioId)
+    const resultado = await atualizarTransacao(id, validacao.dados!, usuarioId, usuarioEmail)
 
     if (resultado.erro) return responderErro(res, resultado.erro)
     if (!resultado.dados) return responderNaoEncontrado(res)
@@ -97,7 +97,7 @@ export default async function handlerTransacoes(
 
   // DELETE /api/transacoes/:id
   if (req.method === 'DELETE' && id) {
-    const resultado = await deletarTransacao(id, usuarioEmail, usuarioId)
+    const resultado = await deletarTransacao(id, usuarioId, usuarioEmail)
 
     if (resultado.erro) return responderErro(res, resultado.erro)
     return responderSucesso(res, { mensagem: 'Transação deletada com sucesso' })
