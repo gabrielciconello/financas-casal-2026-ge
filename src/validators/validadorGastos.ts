@@ -13,7 +13,7 @@ export const esquemaCriarGastoFixo = z.object({
 
   valor: z.coerce
     .number({ required_error: 'Valor é obrigatório' })
-    .positive('Valor deve ser maior que zero'),
+    .min(0, 'Valor não pode ser negativo'),
 
   dia_vencimento: z.coerce
     .number({ required_error: 'Dia de vencimento é obrigatório' })

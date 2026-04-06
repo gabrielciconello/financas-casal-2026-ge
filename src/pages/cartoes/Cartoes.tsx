@@ -35,16 +35,13 @@ export default function Cartoes() {
   const buscarCartoes = useCallback(async () => {
     const resultado = await requisitar('/api/cartoes?pagina=1&limite=50')
     if (resultado) setCartoes(resultado.dados ?? [])
-    // Busca todas as compras para calcular o uso de limite de todos os cartões
     const resultadoCompras = await buscarComprasReq('/api/cartoes/compras-cartao?pagina=1&limite=1000')
     if (resultadoCompras) {
       setTodasCompras(resultadoCompras.dados ?? [])
     }
   }, [requisitar, buscarComprasReq])
 
-  useEffect(() => {
-    buscarCartoes()
-  }, [buscarCartoes])
+  useEffect(() => { buscarCartoes() }, [buscarCartoes])
 
   useEffect(() => {
     async function fetch() {
@@ -69,9 +66,7 @@ export default function Cartoes() {
         method: 'PUT', body: dados,
       })
     } else {
-      await apiForm.requisitar('/api/cartoes', {
-        method: 'POST', body: dados,
-      })
+      await apiForm.requisitar('/api/cartoes', { method: 'POST', body: dados })
     }
     setModalCartao(false)
     setCartaoEditando(null)
@@ -79,13 +74,10 @@ export default function Cartoes() {
   }
 
   async function handleSalvarCompra(dados: CriarCompraCartaoDTO) {
-    await apiForm.requisitar('/api/cartoes/compras-cartao', {
-      method: 'POST', body: dados,
-    })
+    await apiForm.requisitar('/api/cartoes/compras-cartao', { method: 'POST', body: dados })
     setModalCompra(false)
     setCompraEditando(null)
     setPagina(1)
-    // Atualiza todas as compras para recalcular limites
     buscarCartoes()
   }
 
@@ -104,19 +96,15 @@ export default function Cartoes() {
   }
 
   async function handleAtualizarCompra(id: string, dados: CriarCompraCartaoDTO) {
-    await apiForm.requisitar(`/api/cartoes/compras-cartao/${id}`, {
-      method: 'PUT', body: dados,
-    })
+    await apiForm.requisitar(`/api/cartoes/compras-cartao/${id}`, { method: 'PUT', body: dados })
     setModalCompra(false)
     setCompraEditando(null)
     setPagina(1)
     buscarCartoes()
   }
 
-  // Calcula uso do limite
   const calcularUso = (cartao: Cartao) => {
     const comprasCartao = todasCompras.filter((c) => c.cartao_id === cartao.id)
-    // Soma o valor total de compras ativas (ajustado para parcelas restantes)
     let usado = 0
     for (const c of comprasCartao) {
       const parcelasRestantes = c.parcelas - c.parcela_atual + 1
@@ -128,23 +116,16 @@ export default function Cartoes() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-
-      {/* Cabeçalho */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1 style={{ fontFamily: 'var(--fonte-display)', fontSize: '1.625rem', fontWeight: 700, color: 'var(--cor-texto)' }}>
-            Cartões de Crédito
-          </h1>
-          <p style={{ fontSize: '0.875rem', color: 'var(--cor-texto-suave)', marginTop: '0.25rem' }}>
-            Gerencie seus cartões e compras parceladas
-          </p>
+          <h1 style={{ fontFamily: 'var(--fonte-display)', fontSize: '1.625rem', fontWeight: 700, color: 'var(--cor-texto)' }}>Cartões de Crédito</h1>
+          <p style={{ fontSize: '0.875rem', color: 'var(--cor-texto-suave)', marginTop: '0.25rem' }}>Gerencie seus cartões e compras parceladas</p>
         </div>
         <button className="btn btn-primario" onClick={() => { setCartaoEditando(null); setModalCartao(true) }}>
           <Plus size={16} /> Novo Cartão
         </button>
       </div>
 
-      {/* Cards dos cartões */}
       {carregando && cartoes.length === 0 ? (
         <Carregando texto="Buscando cartões..." />
       ) : erro ? (
@@ -153,92 +134,37 @@ export default function Cartoes() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))', gap: '1rem' }}>
           {cartoes.map((cartao) => {
             const { usado, percentual } = calcularUso(cartao)
-            const corBarra = percentual >= 90 ? 'var(--cor-perigo)' :
-                             percentual >= 70 ? 'var(--cor-aviso)' : 'var(--cor-primaria)'
+            const corBarra = percentual >= 90 ? 'var(--cor-perigo)' : percentual >= 70 ? 'var(--cor-aviso)' : 'var(--cor-primaria)'
             const selecionado = cartaoSelecionado?.id === cartao.id
 
             return (
-              <div
-                key={cartao.id}
-                className="card"
-                onClick={() => setCartaoSelecionado(selecionado ? null : cartao)}
-                style={{
-                  cursor: 'pointer',
-                  border: selecionado ? '2px solid var(--cor-primaria)' : '1px solid var(--cor-borda)',
-                  transition: 'var(--transicao)',
-                }}
-              >
-                {/* Header do cartão */}
+              <div key={cartao.id} className="card" onClick={() => setCartaoSelecionado(selecionado ? null : cartao)} style={{ cursor: 'pointer', border: selecionado ? '2px solid var(--cor-primaria)' : '1px solid var(--cor-borda)', transition: 'var(--transicao)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-                    <div style={{
-                      width: '38px', height: '38px',
-                      background: 'var(--cor-primaria-suave)',
-                      borderRadius: 'var(--raio-sm)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
+                    <div style={{ width: '38px', height: '38px', background: 'var(--cor-primaria-suave)', borderRadius: 'var(--raio-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <CreditCard size={20} color="var(--cor-primaria)" />
                     </div>
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span style={{ fontWeight: 600, fontSize: '0.9375rem', color: 'var(--cor-texto)' }}>
-                          {cartao.nome}
-                        </span>
-                        {cartao.usuario_nome && (
-                          <span style={{
-                            fontSize: '0.65rem', fontWeight: 600, color: 'var(--cor-texto)',
-                            padding: '0.125rem 0.375rem', borderRadius: '0.25rem',
-                            background: cartao.usuario_nome === 'Gabriel' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(236, 72, 153, 0.1)',
-                          }}>
-                            {cartao.usuario_nome}
-                          </span>
-                        )}
-                      </div>
-                      {cartao.bandeira && (
-                        <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)' }}>
-                          {cartao.bandeira}
-                        </div>
-                      )}
+                      <span style={{ fontWeight: 600, fontSize: '0.9375rem', color: 'var(--cor-texto)' }}>{cartao.nome}</span>
+                      {cartao.bandeira && <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)' }}>{cartao.bandeira}</div>}
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button
-                      className="btn btn-secundario"
-                      onClick={(e) => { e.stopPropagation(); setCartaoEditando(cartao); setModalCartao(true) }}
-                      style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
-                    >
-                      Editar
-                    </button>
-                    <button
-                      className="btn"
-                      onClick={(e) => { e.stopPropagation(); handleDeletarCartao(cartao.id) }}
-                      style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', color: 'var(--cor-perigo)', background: 'transparent' }}
-                    >
-                      Excluir
-                    </button>
+                    <button className="btn btn-secundario" onClick={(e) => { e.stopPropagation(); setCartaoEditando(cartao); setModalCartao(true) }} style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}>Editar</button>
+                    <button className="btn" onClick={(e) => { e.stopPropagation(); handleDeletarCartao(cartao.id) }} style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', color: 'var(--cor-perigo)', background: 'transparent' }}>Excluir</button>
                   </div>
                 </div>
 
-                {/* Limite */}
                 <div style={{ marginBottom: '0.75rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.375rem' }}>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)' }}>
-                      Limite usado
-                    </span>
-                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: corBarra }}>
-                      {percentual.toFixed(0)}%
-                    </span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)' }}>Limite usado</span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: corBarra }}>{percentual.toFixed(0)}%</span>
                   </div>
                   <div style={{ height: '6px', background: 'var(--cor-fundo)', borderRadius: '999px', overflow: 'hidden' }}>
-                    <div style={{
-                      height: '100%', width: `${percentual}%`,
-                      background: corBarra, borderRadius: '999px',
-                      transition: 'width 0.5s ease',
-                    }} />
+                    <div style={{ height: '100%', width: `${percentual}%`, background: corBarra, borderRadius: '999px', transition: 'width 0.5s ease' }} />
                   </div>
                 </div>
 
-                {/* Valores */}
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)' }}>Limite Total</div>
@@ -246,47 +172,28 @@ export default function Cartoes() {
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)' }}>Disponível</div>
-                    <div style={{ fontWeight: 600, color: 'var(--cor-sucesso)' }}>
-                      {formatarMoeda(cartao.limite - usado)}
-                    </div>
+                    <div style={{ fontWeight: 600, color: 'var(--cor-sucesso)' }}>{formatarMoeda(cartao.limite - usado)}</div>
                   </div>
                 </div>
 
-                {/* Datas */}
-                <div style={{
-                  marginTop: '0.875rem', paddingTop: '0.875rem',
-                  borderTop: '1px solid var(--cor-borda)',
-                  display: 'flex', justifyContent: 'space-between',
-                  fontSize: '0.75rem', color: 'var(--cor-texto-suave)',
-                }}>
+                <div style={{ marginTop: '0.875rem', paddingTop: '0.875rem', borderTop: '1px solid var(--cor-borda)', display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--cor-texto-suave)' }}>
                   <span>Fecha dia {cartao.dia_fechamento}</span>
                   <span>Vence dia {cartao.dia_vencimento}</span>
                 </div>
               </div>
             )
           })}
-
           {cartoes.length === 0 && (
-            <div style={{
-              gridColumn: '1 / -1', padding: '3rem',
-              textAlign: 'center', color: 'var(--cor-texto-suave)',
-              fontSize: '0.875rem',
-            }}>
-              Nenhum cartão cadastrado
-            </div>
+            <div style={{ gridColumn: '1 / -1', padding: '3rem', textAlign: 'center', color: 'var(--cor-texto-suave)', fontSize: '0.875rem' }}>Nenhum cartão cadastrado</div>
           )}
         </div>
       )}
 
-      {/* Compras do cartão selecionado */}
       {cartaoSelecionado && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h2 style={{
-              fontFamily: 'var(--fonte-display)', fontSize: '1.125rem',
-              fontWeight: 700, color: 'var(--cor-texto)',
-            }}>
-              Compras — {cartaoSelecionado.nome}
+            <h2 style={{ fontFamily: 'var(--fonte-display)', fontSize: '1.125rem', fontWeight: 700, color: 'var(--cor-texto)' }}>
+              Compras - {cartaoSelecionado.nome}
             </h2>
             <button className="btn btn-primario" onClick={() => setModalCompra(true)}>
               <Plus size={16} /> Nova Compra
@@ -297,36 +204,26 @@ export default function Cartoes() {
             {carregandoCompras ? (
               <Carregando texto="Buscando compras..." />
             ) : compras.length === 0 ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--cor-texto-suave)', fontSize: '0.875rem' }}>
-                Nenhuma compra registrada neste cartão
-              </div>
+              <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--cor-texto-suave)', fontSize: '0.875rem' }}>Nenhuma compra registrada neste cartão</div>
             ) : (
               <>
                 {/* Desktop */}
                 <div className="hidden md:block">
-                  <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 120px 100px 120px 120px 80px', padding: '0.75rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--cor-texto-suave)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    <span>Usuário</span><span>Descrição</span><span>Categoria</span><span>Data</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px 100px 120px 120px 80px', padding: '0.75rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--cor-texto-suave)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <span>Descrição</span><span>Categoria</span><span>Data</span>
                     <span style={{ textAlign: 'right' }}>Total</span>
                     <span style={{ textAlign: 'center' }}>Parcelas</span>
                     <span style={{ textAlign: 'center' }}>Ações</span>
                   </div>
 
                   {compras.map((c) => (
-                    <div key={c.id} style={{ display: 'grid', gridTemplateColumns: '100px 1fr 120px 100px 120px 120px 80px', padding: '0.875rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', alignItems: 'center' }} className="transition-colors hover:bg-opacity-50">
-                      <div style={{
-                        fontSize: '0.8125rem', fontWeight: 600, color: 'var(--cor-texto)',
-                        padding: '0.25rem 0.5rem', borderRadius: '0.375rem',
-                        background: c.usuario_nome === 'Gabriel' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(236, 72, 153, 0.1)',
-                        textAlign: 'center',
-                      }}>
-                        {c.usuario_nome || 'N/A'}
-                      </div>
+                    <div key={c.id} style={{ display: 'grid', gridTemplateColumns: '1fr 120px 100px 120px 120px 80px', padding: '0.875rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', alignItems: 'center' }} className="transition-colors hover:bg-opacity-50">
                       <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--cor-texto)' }}>{c.descricao}</div>
                       <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>{c.categoria}</span>
                       <span style={{ fontSize: '0.8125rem', color: 'var(--cor-texto-suave)' }}>{new Date(c.data_compra + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
                       <span style={{ fontSize: '0.9375rem', fontWeight: 600, textAlign: 'right', color: 'var(--cor-texto)' }}>{formatarMoeda(c.valor_total)}</span>
                       <div style={{ textAlign: 'center' }}>
-                        <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>{c.parcela_atual}x de {c.parcelas} — {formatarMoeda(c.valor_parcela)}</span>
+                        <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>{c.parcela_atual}x de {c.parcelas} - {formatarMoeda(c.valor_parcela)}</span>
                       </div>
                       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
                         <button className="btn btn-secundario" onClick={() => { setCompraEditando(c); setModalCompra(true) }} style={{ padding: '0.25rem 0.625rem', fontSize: '0.75rem' }}>Editar</button>
@@ -336,7 +233,7 @@ export default function Cartoes() {
                   ))}
                 </div>
 
-                {/* Mobile cards */}
+                {/* Mobile */}
                 <div className="md:hidden flex flex-col">
                   {compras.map((c) => (
                     <div key={c.id} style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--cor-borda)' }}>
@@ -345,9 +242,7 @@ export default function Cartoes() {
                           <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--cor-texto)' }}>{c.descricao}</div>
                           <span className="badge badge-info" style={{ fontSize: '0.65rem' }}>{c.categoria}</span>
                         </div>
-                        <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--cor-texto)' }}>
-                          {formatarMoeda(c.valor_total)}
-                        </div>
+                        <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--cor-texto)' }}>{formatarMoeda(c.valor_total)}</div>
                       </div>
                       <div className="flex items-center gap-2 text-xs mb-1.5" style={{ color: 'var(--cor-texto-suave)' }}>
                         <span>{c.parcela_atual}/{c.parcelas} x {formatarMoeda(c.valor_parcela)}</span>
@@ -370,43 +265,18 @@ export default function Cartoes() {
         </div>
       )}
 
-      {/* Modal Cartão */}
-      <Modal
-        aberto={modalCartao}
-        titulo={cartaoEditando ? 'Editar Cartão' : 'Novo Cartão'}
-        onFechar={() => { setModalCartao(false); setCartaoEditando(null) }}
-      >
-        <FormularioCartao
-          cartao={cartaoEditando}
-          onSalvar={handleSalvarCartao}
-          onCancelar={() => { setModalCartao(false); setCartaoEditando(null) }}
-          carregando={apiForm.carregando}
-        />
+      <Modal aberto={modalCartao} titulo={cartaoEditando ? 'Editar Cartão' : 'Novo Cartão'} onFechar={() => { setModalCartao(false); setCartaoEditando(null) }}>
+        <FormularioCartao cartao={cartaoEditando} onSalvar={handleSalvarCartao} onCancelar={() => { setModalCartao(false); setCartaoEditando(null) }} carregando={apiForm.carregando} />
       </Modal>
 
-      {/* Modal Compra */}
-      <Modal
-        aberto={modalCompra}
-        titulo={compraEditando ? 'Editar Compra' : 'Nova Compra'}
-        onFechar={() => { setModalCompra(false); setCompraEditando(null) }}
-      >
-        <FormularioCompra
-          cartaoId={cartaoSelecionado?.id ?? ''}
-          compraEditando={compraEditando}
-          onNovo={handleSalvarCompra}
-          onAtualizar={handleAtualizarCompra}
-          onCancelar={() => { setModalCompra(false); setCompraEditando(null) }}
-          carregando={apiForm.carregando}
-        />
+      <Modal aberto={modalCompra} titulo={compraEditando ? 'Editar Compra' : 'Nova Compra'} onFechar={() => { setModalCompra(false); setCompraEditando(null) }}>
+        <FormularioCompra cartaoId={cartaoSelecionado?.id ?? ''} compraEditando={compraEditando} onNovo={handleSalvarCompra} onAtualizar={handleAtualizarCompra} onCancelar={() => { setModalCompra(false); setCompraEditando(null) }} carregando={apiForm.carregando} />
       </Modal>
-
     </div>
   )
 }
 
-// ============================================
 // FORMULÁRIO CARTÃO
-// ============================================
 interface FormCartaoProps {
   cartao: Cartao | null
   onSalvar: (dados: CriarCartaoDTO) => void
@@ -424,88 +294,42 @@ function FormularioCartao({ cartao, onSalvar, onCancelar, carregando }: FormCart
   })
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSalvar(form) }}
-      style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-
+    <form onSubmit={(e) => { e.preventDefault(); onSalvar(form) }} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <div>
-        <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>
-          Nome do Cartão
-        </label>
-        <input className="input" value={form.nome}
-          onChange={(e) => setForm({ ...form, nome: e.target.value })}
-          placeholder="Ex: Nubank, Inter..." required />
+        <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>Nome do Cartão</label>
+        <input className="input" value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} placeholder="Ex: Nubank, Inter..." required />
       </div>
-
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
         <div>
-          <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>
-            Bandeira
-          </label>
-          <select className="input" value={form.bandeira}
-            onChange={(e) => setForm({ ...form, bandeira: e.target.value })}>
+          <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>Bandeira</label>
+          <select className="input" value={form.bandeira} onChange={(e) => setForm({ ...form, bandeira: e.target.value })}>
             {BANDEIRAS.map((b) => <option key={b} value={b}>{b}</option>)}
           </select>
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>
-            Limite (R$)
-          </label>
-          <input className="input" type="text" inputMode="decimal"
-            value={form.limite}
-            onChange={(e) => {
-              const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.')
-              const num = v === '' ? 0 : Number(v)
-              if (!isNaN(num)) setForm({ ...form, limite: Math.max(0, num) })
-            }}
-            placeholder="0,00"
-            required />
+          <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>Limite (R$)</label>
+          <input className="input" type="text" inputMode="decimal" value={form.limite} onChange={(e) => { const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.'); const num = v === '' ? 0 : Number(v) || 0; if (!isNaN(num)) setForm({ ...form, limite: Math.max(0, num) }) }} placeholder="0,00" required />
         </div>
       </div>
-
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
         <div>
-          <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>
-            Dia de Fechamento
-          </label>
-          <input className="input" type="text" inputMode="numeric"
-            value={form.dia_fechamento}
-            onChange={(e) => {
-              const v = e.target.value.replace(/[^0-9]/g, '')
-              const val = v === '' ? 1 : Math.max(1, Math.min(31, Number(v)))
-              setForm({ ...form, dia_fechamento: val })
-            }}
-            placeholder="1"
-            required />
+          <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>Dia de Fechamento</label>
+          <input className="input" type="text" inputMode="numeric" value={form.dia_fechamento} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); const val = v === '' ? 1 : Math.max(1, Math.min(31, Number(v))); setForm({ ...form, dia_fechamento: val }) }} placeholder="1" required />
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>
-            Dia de Vencimento
-          </label>
-          <input className="input" type="text" inputMode="numeric"
-            value={form.dia_vencimento}
-            onChange={(e) => {
-              const v = e.target.value.replace(/[^0-9]/g, '')
-              const val = v === '' ? 10 : Math.max(1, Math.min(31, Number(v)))
-              setForm({ ...form, dia_vencimento: val })
-            }}
-            placeholder="10"
-            required />
+          <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>Dia de Vencimento</label>
+          <input className="input" type="text" inputMode="numeric" value={form.dia_vencimento} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); const val = v === '' ? 10 : Math.max(1, Math.min(31, Number(v))); setForm({ ...form, dia_vencimento: val }) }} placeholder="10" required />
         </div>
       </div>
-
       <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
         <button type="button" className="btn btn-secundario" onClick={onCancelar}>Cancelar</button>
-        <button type="submit" className="btn btn-primario" disabled={carregando}>
-          {carregando ? 'Salvando...' : cartao ? 'Salvar Alterações' : 'Criar Cartão'}
-        </button>
+        <button type="submit" className="btn btn-primario" disabled={carregando}>{carregando ? 'Salvando...' : cartao ? 'Salvar Alterações' : 'Criar Cartão'}</button>
       </div>
     </form>
   )
 }
 
-// ============================================
 // FORMULÁRIO COMPRA
-// ============================================
 interface FormCompraProps {
   cartaoId: string
   compraEditando?: CompraCartao | null
@@ -528,116 +352,46 @@ function FormularioCompra({ cartaoId, compraEditando, onNovo, onAtualizar, onCan
         data_compra: compraEditando.data_compra,
       }
     }
-    return {
-      cartao_id: cartaoId,
-      descricao: '',
-      categoria: 'Alimentação',
-      valor_total: 0,
-      parcelas: 1,
-      parcela_inicial: 1,
-      data_compra: new Date().toISOString().split('T')[0],
-    }
+    return { cartao_id: cartaoId, descricao: '', categoria: 'Alimentação', valor_total: 0, parcelas: 1, parcela_inicial: 1, data_compra: new Date().toISOString().split('T')[0] }
   })
 
   return (
-    <form onSubmit={(e) => {
-      e.preventDefault()
-      if (compraEditando && onAtualizar) {
-        onAtualizar(compraEditando.id, form)
-      } else {
-        onNovo(form)
-      }
-    }}
-      style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-
+    <form onSubmit={(e) => { e.preventDefault(); if (compraEditando && onAtualizar) { onAtualizar(compraEditando.id, form) } else { onNovo(form) } }} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <div>
-        <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>
-          Descrição
-        </label>
-        <input className="input" value={form.descricao}
-          onChange={(e) => setForm({ ...form, descricao: e.target.value })}
-          placeholder="Ex: Notebook, Supermercado..." required />
+        <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>Descrição</label>
+        <input className="input" value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} placeholder="Ex: Notebook, Supermercado..." required />
       </div>
-
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
         <div>
-          <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>
-            Categoria
-          </label>
-          <select className="input" value={form.categoria}
-            onChange={(e) => setForm({ ...form, categoria: e.target.value })}>
-            {CATEGORIAS.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
+          <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>Categoria</label>
+          <select className="input" value={form.categoria} onChange={(e) => setForm({ ...form, categoria: e.target.value })}>{CATEGORIAS.map((c) => <option key={c} value={c}>{c}</option>)}</select>
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>
-            Valor Total (R$)
-          </label>
-          <input className="input" type="text" inputMode="decimal"
-            value={form.valor_total}
-            onChange={(e) => {
-              const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.')
-              const num = v === '' ? 0 : Number(v)
-              if (!isNaN(num)) setForm({ ...form, valor_total: Math.max(0, num) })
-            }}
-            placeholder="0,00"
-            required />
+          <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>Valor Total (R$)</label>
+          <input className="input" type="text" inputMode="decimal" value={form.valor_total} onChange={(e) => { const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.'); const num = v === '' ? 0 : Number(v) || 0; if (!isNaN(num)) setForm({ ...form, valor_total: Math.max(0, num) }) }} placeholder="0,00" required />
         </div>
       </div>
-
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
         <div>
-          <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>
-            Parcelas
-          </label>
-          <input className="input" type="text" inputMode="numeric"
-            value={form.parcelas === 1 ? '' : form.parcelas}
-            onChange={(e) => {
-              const v = e.target.value.replace(/[^0-9]/g, '')
-              const parcelas = v === '' ? 1 : Math.max(1, Math.min(48, Number(v)))
-              setForm({ ...form, parcelas, parcela_inicial: Math.min(form.parcela_inicial ?? 1, parcelas) })
-            }}
-            placeholder="1"
-            required />
+          <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>Parcelas</label>
+          <input className="input" type="text" inputMode="numeric" value={form.parcelas === 1 ? '' : form.parcelas} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); const parcelas = v === '' ? 1 : Math.max(1, Math.min(48, Number(v))); setForm({ ...form, parcelas, parcela_inicial: Math.min(form.parcela_inicial ?? 1, parcelas) }) }} placeholder="1" required />
           {form.valor_total > 0 && form.parcelas && form.parcelas > 1 && (
-            <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)', marginTop: '0.25rem' }}>
-              {form.parcelas}x de {formatarMoeda(form.valor_total / form.parcelas)}
-            </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)', marginTop: '0.25rem' }}>{form.parcelas}x de {formatarMoeda(form.valor_total / form.parcelas)}</div>
           )}
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>
-            Parcela Inicial
-          </label>
-          <input className="input" type="text" inputMode="numeric"
-            value={form.parcela_inicial === 1 ? '' : form.parcela_inicial}
-            onChange={(e) => {
-              const v = e.target.value.replace(/[^0-9]/g, '')
-              const val = v === '' ? 1 : Math.max(1, Math.min(form.parcelas ?? 1, Number(v)))
-              setForm({ ...form, parcela_inicial: val })
-            }}
-            placeholder="1" />
-          <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)', marginTop: '0.25rem' }}>
-            {form.parcela_inicial && form.parcela_inicial > 1
-              ? `Já na parcela ${form.parcela_inicial} de ${form.parcelas}`
-              : 'Compra nova (parcela 1)'}
-          </div>
+          <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>Parcela Inicial</label>
+          <input className="input" type="text" inputMode="numeric" value={form.parcela_inicial === 1 ? '' : form.parcela_inicial} onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, ''); const val = v === '' ? 1 : Math.max(1, Math.min(form.parcelas ?? 1, Number(v))); setForm({ ...form, parcela_inicial: val }) }} placeholder="1" />
+          <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)', marginTop: '0.25rem' }}>{form.parcela_inicial && form.parcela_inicial > 1 ? `Já na parcela ${form.parcela_inicial} de ${form.parcelas}` : 'Compra nova (parcela 1)'}</div>
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>
-            Data da Compra
-          </label>
-          <input className="input" type="date"
-            value={form.data_compra}
-            onChange={(e) => setForm({ ...form, data_compra: e.target.value })} />
+          <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>Data da Compra</label>
+          <input className="input" type="date" value={form.data_compra} onChange={(e) => setForm({ ...form, data_compra: e.target.value })} />
         </div>
       </div>
-
       <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
         <button type="button" className="btn btn-secundario" onClick={onCancelar}>Cancelar</button>
-        <button type="submit" className="btn btn-primario" disabled={carregando}>
-          {carregando ? 'Salvando...' : compraEditando ? 'Salvar Alterações' : 'Registrar Compra'}
-        </button>
+        <button type="submit" className="btn btn-primario" disabled={carregando}>{carregando ? 'Salvando...' : compraEditando ? 'Salvar Alterações' : 'Registrar Compra'}</button>
       </div>
     </form>
   )

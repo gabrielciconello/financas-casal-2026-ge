@@ -6,7 +6,17 @@ interface ResumoFinanceiro {
   total_entradas: number
   total_saidas: number
   saldo_atual: number
-  saldo_projetado: number
+}
+
+interface ItemDetalhado {
+  id: string
+  tipo: 'entrada' | 'saida'
+  descricao: string
+  valor: number
+  data: string
+  fonte: 'transacao' | 'gasto_fixo' | 'gasto_variavel' | 'salario'
+  categoria: string
+  status: string
 }
 
 interface ResumoCategoria {
@@ -32,6 +42,7 @@ interface AlertaVencimento {
 
 interface DadosDashboard {
   resumo: ResumoFinanceiro
+  itens_detalhados: ItemDetalhado[]
   gastos_por_categoria: ResumoCategoria[]
   historico_mensal: ResumoMensal[]
   proximos_vencimentos: AlertaVencimento[]
@@ -47,7 +58,7 @@ interface DadosDashboard {
   }
 }
 
-// Retorna o primeiro e último dia do mês no formato YYYY-MM-DD
+// Returns first and last day of month in YYYY-MM-DD
 function intervaloMes(mes: number, ano: number): { inicio: string; fim: string } {
   const inicio = `${ano}-${String(mes).padStart(2, '0')}-01`
   const ultimoDia = new Date(ano, mes, 0).getDate()
@@ -67,92 +78,196 @@ export async function buscarDadosDashboard(
     // ==========================================
     const { data: transacoes, error: erroTransacoes } = await supabaseAdmin
       .from('transacoes')
-      .select('tipo, valor, categoria')
+      .select('id, tipo, valor, categoria, descricao, data, status')
       .gte('data', inicio)
       .lte('data', fim)
 
     if (erroTransacoes) return respostaErro(erroTransacoes.message)
 
-    const totalEntradas = transacoes
-      ?.filter((t) => t.tipo === 'entrada')
-      .reduce((acc, t) => acc + Number(t.valor), 0) ?? 0
-
-    const totalSaidas = transacoes
-      ?.filter((t) => t.tipo === 'saida')
-      .reduce((acc, t) => acc + Number(t.valor), 0) ?? 0
-
     // ==========================================
-    // 2. GASTOS FIXOS DO MÊS
+    // 2. GASTOS FIXOS DO MÊS (sempre inclui todos para o dashboard)
     // ==========================================
-    const { data: gastosFixos } = await supabaseAdmin
+    const { data: gastosFixos, error: erroGastosFixos } = await supabaseAdmin
       .from('gastos_fixos')
-      .select('valor, status')
+      .select('id, valor, status, dia_vencimento, descricao, categoria')
       .eq('mes', mes)
       .eq('ano', ano)
 
-    const totalGastosFixosPendentes = gastosFixos
-      ?.filter((g) => g.status === 'pendente')
-      .reduce((acc, g) => acc + Number(g.valor), 0) ?? 0
+    if (erroGastosFixos) return respostaErro(erroGastosFixos.message)
+
+    // ==========================================
+    // 3. SALÁRIOS DO MÊS
+    // ==========================================
+    const { data: salarios } = await supabaseAdmin
+      .from('salarios')
+      .select('id, valor_esperado, valor_recebido, status, descricao, data_esperada, mes',)
+      .eq('mes', mes)
+      .eq('ano', ano)
+
+    // ==========================================
+    // CALCULAR TOTAIS
+    // ==========================================
+    const totalEntradasTransacoes = transacoes
+      ?.filter((t) => t.tipo === 'entrada')
+      .reduce((acc, t) => acc + Number(t.valor), 0) ?? 0
+
+    const totalGastosFixos = gastosFixos
+      ?.reduce((acc, g) => acc + Number(g.valor), 0) ?? 0
+
+    const totalGastosVariaveis = await (async () => {
+      const { data: gv } = await supabaseAdmin
+        .from('gastos_variaveis')
+        .select('valor_real')
+        .eq('mes', mes)
+        .eq('ano', ano)
+      return gv?.reduce((acc: number, g: any) => acc + Number(g.valor_real ?? 0), 0) ?? 0
+    })()
+
+    // Salários que foram recebidos contam como entrada
+    const totalSaidasTransacoes = transacoes
+      ?.filter((t) => t.tipo === 'saida')
+      .reduce((acc, t) => acc + Number(t.valor), 0) ?? 0
+
+    const totalSaidas = totalSaidasTransacoes + totalGastosFixos + totalGastosVariaveis
+    const totalEntradas = totalEntradasTransacoes
 
     const saldoAtual = totalEntradas - totalSaidas
-    const saldoProjetado = saldoAtual - totalGastosFixosPendentes
 
     // ==========================================
-    // 3. GASTOS POR CATEGORIA
+    // ITENS DETALHADOS (para mostrar no dashboard)
+    // ==========================================
+    const itensDetalhados: ItemDetalhado[] = []
+
+    // Transações de saída
+    for (const t of transacoes ?? []) {
+      itensDetalhados.push({
+        id: t.id,
+        tipo: t.tipo,
+        descricao: t.descricao,
+        valor: Number(t.valor),
+        data: t.data,
+        fonte: 'transacao',
+        categoria: t.categoria,
+        status: t.status,
+      })
+    }
+
+    // Gastos fixos (todos, como saída)
+    for (const g of gastosFixos ?? []) {
+      itensDetalhados.push({
+        id: g.id,
+        tipo: 'saida',
+        descricao: g.descricao,
+        valor: Number(g.valor),
+        data: `${ano}-${String(mes).padStart(2, '0')}-${String(g.dia_vencimento).padStart(2, '0')}`,
+        fonte: 'gasto_fixo',
+        categoria: g.categoria,
+        status: g.status,
+      })
+    }
+
+    // Salários como entrada
+    for (const s of salarios ?? []) {
+      const valorBase = s.status === 'recebido'
+        ? Number(s.valor_recebido ?? s.valor_esperado)
+        : Number(s.valor_esperado)
+      itensDetalhados.push({
+        id: s.id,
+        tipo: 'entrada',
+        descricao: s.descricao || `Salário - mês ${mes}/${ano}`,
+        valor: valorBase,
+        data: s.data_esperada,
+        fonte: 'salario',
+        categoria: 'Salário',
+        status: s.status,
+      })
+    }
+
+    // Ordenar por data (mais recente primeiro)
+    itensDetalhados.sort((a, b) => (b.data > a.data ? 1 : a.data > b.data ? -1 : 0))
+
+    // ==========================================
+    // GASTOS POR CATEGORIA (inclui tudo)
     // ==========================================
     const totalPorCategoria: Record<string, number> = {}
-    transacoes
-      ?.filter((t) => t.tipo === 'saida')
-      .forEach((t) => {
+
+    // Transações de saída
+    for (const t of transacoes ?? []) {
+      if (t.tipo === 'saida') {
         totalPorCategoria[t.categoria] =
           (totalPorCategoria[t.categoria] ?? 0) + Number(t.valor)
-      })
+      }
+    }
+
+    // Gastos fixos
+    for (const g of gastosFixos ?? []) {
+      totalPorCategoria[g.categoria] =
+        (totalPorCategoria[g.categoria] ?? 0) + Number(g.valor)
+    }
+
+    // Gastos variáveis
+    for (const gv of (await supabaseAdmin.from('gastos_variaveis').select('valor_real, categoria').eq('mes', mes).eq('ano', ano)).data ?? []) {
+      const val = Number(gv.valor_real ?? 0)
+      if (val > 0) {
+        totalPorCategoria[gv.categoria] = (totalPorCategoria[gv.categoria] ?? 0) + val
+      }
+    }
 
     const gastosPorCategoria: ResumoCategoria[] = Object.entries(totalPorCategoria)
       .map(([categoria, total]) => ({
         categoria,
         total,
-        percentual: totalSaidas > 0
-          ? Number(((total / totalSaidas) * 100).toFixed(1))
-          : 0,
+        percentual: totalSaidas > 0 ? Number(((total / totalSaidas) * 100).toFixed(1)) : 0,
       }))
       .sort((a, b) => b.total - a.total)
 
     // ==========================================
-    // 4. HISTÓRICO DOS ÚLTIMOS 6 MESES
+    // HISTÓRICO DOS ÚLTIMOS 6 MESES
     // ==========================================
     const historico: ResumoMensal[] = []
-
     for (let i = 5; i >= 0; i--) {
       let mesBusca = mes - i
       let anoBusca = ano
-
-      if (mesBusca <= 0) {
-        mesBusca += 12
-        anoBusca -= 1
-      }
+      if (mesBusca <= 0) { mesBusca += 12; anoBusca -= 1 }
 
       const { inicio: inicioMes, fim: fimMes } = intervaloMes(mesBusca, anoBusca)
 
-      const { data: transacoesMes } = await supabaseAdmin
+      // Transações
+      const { data: transMes } = await supabaseAdmin
         .from('transacoes')
         .select('tipo, valor')
         .gte('data', inicioMes)
         .lte('data', fimMes)
 
-      const entradas = transacoesMes
-        ?.filter((t) => t.tipo === 'entrada')
-        .reduce((acc, t) => acc + Number(t.valor), 0) ?? 0
+      const entradas = transMes?.filter((t) => t.tipo === 'entrada').reduce((acc, t) => acc + Number(t.valor), 0) ?? 0
+      const saidasTransacoes = transMes?.filter((t) => t.tipo === 'saida').reduce((acc, t) => acc + Number(t.valor), 0) ?? 0
 
-      const saidas = transacoesMes
-        ?.filter((t) => t.tipo === 'saida')
-        .reduce((acc, t) => acc + Number(t.valor), 0) ?? 0
+      // Gastos fixos do mês
+      const { data: gfMes } = await supabaseAdmin
+        .from('gastos_fixos')
+        .select('valor')
+        .eq('mes', mesBusca)
+        .eq('ano', anoBusca)
+      const totalGF = gfMes?.reduce((acc, g) => acc + Number(g.valor), 0) ?? 0
 
-      historico.push({ mes: mesBusca, ano: anoBusca, total_entradas: entradas, total_saidas: saidas })
+      // Gastos variáveis
+      const { data: gvMes } = await supabaseAdmin
+        .from('gastos_variaveis')
+        .select('valor_real')
+        .eq('mes', mesBusca)
+        .eq('ano', anoBusca)
+      const totalGV = gvMes?.reduce((acc, g) => acc + Number(g.valor_real ?? 0), 0) ?? 0
+
+      historico.push({
+        mes: mesBusca,
+        ano: anoBusca,
+        total_entradas: entradas,
+        total_saidas: saidasTransacoes + totalGF + totalGV,
+      })
     }
 
     // ==========================================
-    // 5. PRÓXIMOS VENCIMENTOS (7 DIAS)
+    // PRÓXIMOS VENCIMENTOS (7 DIAS)
     // ==========================================
     const diaAtual = new Date().getDate()
     const diaLimite = diaAtual + 7
@@ -176,37 +291,27 @@ export async function buscarDadosDashboard(
     }))
 
     // ==========================================
-    // 6. COMPARATIVO MÊS ANTERIOR
+    // COMPARATIVO MÊS ANTERIOR
     // ==========================================
     let mesAnterior = mes - 1
     let anoAnterior = ano
-    if (mesAnterior <= 0) {
-      mesAnterior = 12
-      anoAnterior -= 1
-    }
+    if (mesAnterior <= 0) { mesAnterior = 12; anoAnterior -= 1 }
 
     const { inicio: inicioAnterior, fim: fimAnterior } = intervaloMes(mesAnterior, anoAnterior)
 
-    const { data: transacoesAnterior } = await supabaseAdmin
+    const { data: transAnterior } = await supabaseAdmin
       .from('transacoes')
       .select('tipo, valor')
       .gte('data', inicioAnterior)
       .lte('data', fimAnterior)
 
-    const entradasAnterior = transacoesAnterior
-      ?.filter((t) => t.tipo === 'entrada')
-      .reduce((acc, t) => acc + Number(t.valor), 0) ?? 0
-
-    const saidasAnterior = transacoesAnterior
-      ?.filter((t) => t.tipo === 'saida')
-      .reduce((acc, t) => acc + Number(t.valor), 0) ?? 0
+    const entradasAnterior = transAnterior?.filter((t) => t.tipo === 'entrada').reduce((acc, t) => acc + Number(t.valor), 0) ?? 0
+    const saidasAnterior = transAnterior?.filter((t) => t.tipo === 'saida').reduce((acc, t) => acc + Number(t.valor), 0) ?? 0
 
     // ==========================================
-    // 7. SAÚDE FINANCEIRA
+    // SAÚDE FINANCEIRA
     // ==========================================
-    const percentualGasto = totalEntradas > 0
-      ? Number(((totalSaidas / totalEntradas) * 100).toFixed(1))
-      : 0
+    const percentualGasto = totalEntradas > 0 ? Number(((totalSaidas / totalEntradas) * 100).toFixed(1)) : 0
 
     const classificacao =
       percentualGasto <= 50 ? 'otima' :
@@ -218,16 +323,16 @@ export async function buscarDadosDashboard(
         total_entradas: totalEntradas,
         total_saidas: totalSaidas,
         saldo_atual: saldoAtual,
-        saldo_projetado: saldoProjetado,
       },
+      itens_detalhados: itensDetalhados,
       gastos_por_categoria: gastosPorCategoria,
       historico_mensal: historico,
       proximos_vencimentos: proximosVencimentos,
       comparativo: {
-        entradas_mes_atual: totalEntradas,
+        entradas_mes_atual: entradasAnterior,
         entradas_mes_anterior: entradasAnterior,
         saidas_mes_atual: totalSaidas,
-        saidas_mes_anterior: saidasAnterior,
+        saidas_mes_anterior: saidasAnterior + (await supabaseAdmin.from('gastos_fixos').select('valor').eq('mes', mesAnterior).eq('ano', anoAnterior).then(r => r.data?.reduce((a, g) => a + Number(g.valor), 0) ?? 0)),
       },
       saude_financeira: {
         percentual_gasto: percentualGasto,

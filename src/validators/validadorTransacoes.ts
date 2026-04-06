@@ -17,7 +17,7 @@ export const esquemaCriarTransacao = z.object({
 
   valor: z.coerce
     .number({ required_error: 'Valor é obrigatório' })
-    .positive('Valor deve ser maior que zero'),
+    .min(0, 'Valor não pode ser negativo'),
 
   metodo_pagamento: z.string().optional(),
 

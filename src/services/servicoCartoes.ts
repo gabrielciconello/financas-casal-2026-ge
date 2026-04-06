@@ -206,9 +206,19 @@ export async function atualizarCompraCartao(
   usuarioId: string,
   usuarioEmail: string
 ): Promise<RespostaApi<CompraCartao>> {
+  // Remove parcelas_inicial before sending to DB - it's not a column
+  const { parcela_inicial, ...dadosLimpos } = dados as Record<string, any>
+
+  const dbUpdate: Record<string, any> = { ...dadosLimpos, atualizado_em: new Date().toISOString() }
+
+  // Map parcela_inicial to parcela_atual if provided
+  if (parcela_inicial != null) {
+    dbUpdate.parcela_atual = parcela_inicial
+  }
+
   const { data, error } = await supabaseAdmin
     .from('compras_cartao')
-    .update({ ...dados, atualizado_em: new Date().toISOString() })
+    .update(dbUpdate)
     .eq('id', id)
     .select()
     .single()

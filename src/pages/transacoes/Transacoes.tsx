@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Plus, Search, Filter, Download } from 'lucide-react'
+import { Plus, Filter, Download } from 'lucide-react'
 import { useApi } from '../../hooks/useApi'
 import { Transacao, CriarTransacaoDTO } from '../../types'
 import { formatarMoeda, mesAnoAtual } from '../../utils'
@@ -237,8 +237,7 @@ export default function Transacoes() {
           <>
             {/* Desktop table */}
             <div className="hidden md:block">
-              <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 100px 90px 110px 80px 90px', borderBottom: '1px solid var(--cor-borda)', ...colunaHeaderStyle }}>
-                <span>Usuário</span>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 110px 110px 80px 90px', borderBottom: '1px solid var(--cor-borda)', ...colunaHeaderStyle }}>
                 <span>Descrição</span>
                 <span>Categoria</span>
                 <span>Data</span>
@@ -250,19 +249,11 @@ export default function Transacoes() {
               {transacoes.map((t) => (
                 <div key={t.id}
                   style={{
-                    display: 'grid', gridTemplateColumns: '100px 1fr 100px 90px 110px 80px 90px',
+                    display: 'grid', gridTemplateColumns: '1fr 100px 110px 110px 80px 90px',
                     padding: '0.875rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', alignItems: 'center',
                   }}
                   className="transition-colors hover:bg-opacity-50"
                 >
-                  <div style={{
-                    fontSize: '0.8125rem', fontWeight: 600, color: 'var(--cor-texto)',
-                    padding: '0.25rem 0.5rem', borderRadius: '0.375rem',
-                    background: t.usuario_nome === 'Gabriel' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(236, 72, 153, 0.1)',
-                    textAlign: 'center',
-                  }}>
-                    {t.usuario_nome || 'N/A'}
-                  </div>
                   <div>
                     <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--cor-texto)' }}>{t.descricao}</div>
                     {t.metodo_pagamento && <div style={{ fontSize: '0.75rem', color: 'var(--cor-texto-suave)' }}>{t.metodo_pagamento}</div>}

@@ -180,32 +180,33 @@ export default function GastosFixos() {
           <>
             {/* Desktop table */}
             <div className="hidden md:block">
-              <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr 120px 80px 120px 100px 120px', padding: '0.75rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--cor-texto-suave)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                <span>Usuário</span><span>Descrição</span><span>Categoria</span>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px 80px 120px 110px 120px', padding: '0.75rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', fontSize: '0.75rem', fontWeight: 600, color: 'var(--cor-texto-suave)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <span>Descrição</span><span>Categoria</span>
                 <span style={{ textAlign: 'center' }}>Vence</span>
                 <span style={{ textAlign: 'right' }}>Valor</span>
-                <span style={{ textAlign: 'center' }}>Status</span>
+                <span style={{ textAlign: 'center' }}>Confirmar</span>
                 <span style={{ textAlign: 'center' }}>Ações</span>
               </div>
 
               {gastos.map((g) => (
-                <div key={g.id} style={{ display: 'grid', gridTemplateColumns: '100px 1fr 120px 80px 120px 100px 120px', padding: '0.875rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', alignItems: 'center' }} className="transition-colors hover:bg-opacity-50">
-                  <div style={{
-                    fontSize: '0.8125rem', fontWeight: 600, color: 'var(--cor-texto)',
-                    padding: '0.25rem 0.5rem', borderRadius: '0.375rem',
-                    background: g.usuario_nome === 'Gabriel' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(236, 72, 153, 0.1)',
-                    textAlign: 'center',
-                  }}>
-                    {g.usuario_nome || 'N/A'}
-                  </div>
+                <div key={g.id} style={{ display: 'grid', gridTemplateColumns: '1fr 120px 80px 120px 110px 120px', padding: '0.875rem 1.25rem', borderBottom: '1px solid var(--cor-borda)', alignItems: 'center' }} className="transition-colors hover:bg-opacity-50">
                   <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--cor-texto)' }}>{g.descricao}</span>
                   <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>{g.categoria}</span>
                   <span style={{ fontSize: '0.8125rem', color: 'var(--cor-texto-suave)', textAlign: 'center' }}>Dia {g.dia_vencimento}</span>
                   <span style={{ fontSize: '0.9375rem', fontWeight: 600, textAlign: 'right', color: 'var(--cor-texto)' }}>{formatarMoeda(g.valor)}</span>
                   <div style={{ textAlign: 'center' }}>
-                    <button onClick={() => handleMarcarPago(g)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: g.status === 'pago' ? 'var(--cor-sucesso)' : 'var(--cor-texto-suave)', fontSize: '0.75rem', fontWeight: 500 }}>
-                      {g.status === 'pago' ? <CheckCircle size={16} /> : <Clock size={16} />}
-                      {g.status}
+                    <button
+                      onClick={() => handleMarcarPago(g)}
+                      style={{
+                        border: 'none', cursor: 'pointer',
+                        padding: '0.375rem 0.875rem', borderRadius: '0.375rem',
+                        fontSize: '0.8125rem', fontWeight: 600,
+                        background: g.status === 'pago' ? 'var(--cor-sucesso)' : 'var(--cor-fundo-hover)',
+                        color: g.status === 'pago' ? '#fff' : 'var(--cor-texto)',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      {g.status === 'pago' ? 'Pago' : 'Confirmar'}
                     </button>
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
@@ -233,9 +234,17 @@ export default function GastosFixos() {
                     </div>
                   </div>
                   <div className="flex items-center justify-between mt-2">
-                    <button onClick={() => handleMarcarPago(g)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: g.status === 'pago' ? 'var(--cor-sucesso)' : 'var(--cor-texto-suave)', fontSize: '0.8rem', fontWeight: 500 }}>
-                      {g.status === 'pago' ? <CheckCircle size={14} /> : <Clock size={14} />}
-                      {g.status === 'pago' ? 'Pago' : 'Pendente'}
+                    <button
+                      onClick={() => handleMarcarPago(g)}
+                      style={{
+                        border: 'none', cursor: 'pointer',
+                        padding: '0.375rem 1rem', borderRadius: '0.375rem',
+                        fontSize: '0.8125rem', fontWeight: 600,
+                        background: g.status === 'pago' ? 'var(--cor-sucesso)' : 'var(--cor-fundo-hover)',
+                        color: g.status === 'pago' ? '#fff' : 'var(--cor-texto)',
+                      }}
+                    >
+                      {g.status === 'pago' ? 'Pago' : 'Confirmar'}
                     </button>
                     <div className="flex gap-1.5">
                       <button className="btn btn-secundario px-2 py-1 text-xs" onClick={() => { setGastoEditando(g); setModalAberto(true) }}>Editar</button>

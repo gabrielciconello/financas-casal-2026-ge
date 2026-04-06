@@ -10,7 +10,7 @@ export const esquemaCriarCartao = z.object({
 
   limite: z.coerce
     .number({ required_error: 'Limite é obrigatório' })
-    .positive('Limite deve ser maior que zero'),
+    .min(0, 'Limite não pode ser negativo'),
 
   dia_fechamento: z.coerce
     .number({ required_error: 'Dia de fechamento é obrigatório' })
