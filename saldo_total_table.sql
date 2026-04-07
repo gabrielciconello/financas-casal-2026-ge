@@ -16,3 +16,10 @@ CREATE TABLE IF NOT EXISTS saldo_total (
 CREATE INDEX idx_saldo_total_usuario ON saldo_total(usuario_id);
 -- Index para ordenar por data
 CREATE INDEX idx_saldo_total_data ON saldo_total(data);
+
+-- Row Level Security
+ALTER TABLE saldo_total ENABLE ROW LEVEL SECURITY;
+
+-- Cada usuario ve apenas seus proprios registros
+CREATE POLICY "Usuarios veem proprio saldo" ON saldo_total
+  FOR ALL USING (usuario_id = auth.uid());
