@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, Edit2 } from 'lucide-react'
+import { Plus, Trash2, TrendingUp, TrendingDown, Edit2 } from 'lucide-react'
 import { useApi } from '../../hooks/useApi'
 import { formatarMoeda } from '../../utils'
 import Carregando from '../../components/ui/Carregando'
@@ -8,9 +8,11 @@ import Modal from '../../components/ui/Modal'
 import { useAuth } from '../../hooks/useContexto'
 
 export default function SaldoTotal() {
-  const { usuario } = useAuth()
+  const { usuario, carregando: carregandoAuth } = useAuth()
   const { dados, erro, carregando, requisitar } = useApi<any>()
   const { dados: movs, carregando: carregandoMovs, requisitar: buscarMovs } = useApi<any>()
+  const apiCrud = useApi()
+  const apiDelete = useApi()
   const [modalAberto, setModalAberto] = useState(false)
   const [editando, setEditando] = useState<any>(null)
   const [form, setForm] = useState({ descricao: '', valor: '', tipo: 'aporte' as 'aporte' | 'retirada' })
@@ -20,7 +22,7 @@ export default function SaldoTotal() {
     buscarMovs('/api/saldo-total?limite=50')
   }, [requisitar, buscarMovs])
 
-  useEffect(() => { buscarTudo() }, [buscarTudo])
+  useEffect(() => { if (usuario) buscarTudo() }, [buscarTudo, usuario])
 
   function abrirModal(mov?: any) {
     if (mov) {
@@ -35,42 +37,30 @@ export default function SaldoTotal() {
 
   async function salvarMov() {
     if (!form.descricao || !form.valor) return
-    const metodo = editando ? 'PUT' : 'POST'
-    const url = editando ? `/api/saldo-total/${editando.id}` : '/api/saldo-total'
-    try {
-      const token = localStorage.getItem('supabase_auth_token')
-      const parsed = token ? JSON.parse(token)?.access_token : null
-      const res = await fetch(url, {
-        method: metodo,
-        headers: { 'Content-Type': 'application/json', ...(parsed ? { Authorization: `Bearer ${parsed}` } : {}) },
-        body: JSON.stringify(form),
+    if (editando) {
+      await apiCrud.requisitar(`/api/saldo-total/${editando.id}`, {
+        method: 'PUT',
+        body: form,
       })
-      if (!res.ok) return
-      setModalAberto(false)
-      buscarTudo()
-    } catch { /* ignore */ }
+    } else {
+      await apiCrud.requisitar('/api/saldo-total', {
+        method: 'POST',
+        body: form,
+      })
+    }
+    setModalAberto(false)
+    buscarTudo()
   }
 
   async function deletarMov(id: string) {
     if (!confirm('Deseja excluir este registro?')) return
-    try {
-      const token = localStorage.getItem('supabase_auth_token')
-      const parsed = token ? JSON.parse(token)?.access_token : null
-      const res = await fetch(`/api/saldo-total/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: parsed ? `Bearer ${parsed}` : '' },
-      })
-      if (!res.ok) return
-      buscarTudo()
-    } catch { /* ignore */ }
+    await apiDelete.requisitar(`/api/saldo-total/${id}`, { method: 'DELETE' })
+    buscarTudo()
   }
 
-  if (carregando) return <Carregando texto="Carregando saldo total..." />
+  if (carregandoAuth || carregando) return <Carregando texto="Carregando saldo total..." />
   if (erro) return <MensagemErro mensagem={erro} onTentar={buscarTudo} />
   if (!dados) return null
-
-  const entradas = dados.saldo_atual >= 0 ? dados.saldo_atual : 0
-  const saidas = dados.saldo_atual < 0 ? Math.abs(dados.saldo_atual) : 0
 
   return (
     <div className="flex flex-col gap-5">
@@ -217,8 +207,8 @@ export default function SaldoTotal() {
             <button type="button" onClick={() => setModalAberto(false)} className="btn btn-secundario flex-1 text-sm">
               Cancelar
             </button>
-            <button type="submit" className="btn btn-primario flex-1 text-sm">
-              {editando ? 'Salvar' : 'Adicionar'}
+            <button type="submit" className="btn btn-primario flex-1 text-sm" disabled={apiCrud.carregando}>
+              {apiCrud.carregando ? 'Salvando...' : editando ? 'Salvar' : 'Adicionar'}
             </button>
           </div>
         </form>
