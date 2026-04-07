@@ -67,40 +67,40 @@ export default function Metas() {
   const metasConcluidas = metas.filter((m) => m.concluida).length
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }} className="w-full max-w-full">
 
       {/* Cabeçalho */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 style={{ fontFamily: 'var(--fonte-display)', fontSize: '1.625rem', fontWeight: 700, color: 'var(--cor-texto)' }}>
+          <h1 className="font-display font-bold text-xl sm:text-2xl" style={{ color: 'var(--cor-texto)' }}>
             Metas Financeiras
           </h1>
           <p style={{ fontSize: '0.875rem', color: 'var(--cor-texto-suave)', marginTop: '0.25rem' }}>
             Objetivos e progresso financeiro
           </p>
         </div>
-        <button className="btn btn-primario" onClick={() => { setMetaEditando(null); setModalAberto(true) }}>
+        <button className="btn btn-primario flex-shrink-0" onClick={() => { setMetaEditando(null); setModalAberto(true) }}>
           <Plus size={16} /> Nova Meta
         </button>
       </div>
 
       {/* Cards de resumo */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(180px, 100%), 1fr))', gap: '1rem' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="card">
           <div style={{ fontSize: '0.8125rem', color: 'var(--cor-texto-suave)', marginBottom: '0.5rem' }}>Total Alvo</div>
-          <div style={{ fontFamily: 'var(--fonte-display)', fontSize: '1.5rem', fontWeight: 700, color: 'var(--cor-texto)' }}>
+          <div className="truncate" style={{ fontFamily: 'var(--fonte-display)', fontSize: '1.25rem', fontWeight: 700, color: 'var(--cor-texto)' }}>
             {formatarMoeda(totalAlvo)}
           </div>
         </div>
         <div className="card">
           <div style={{ fontSize: '0.8125rem', color: 'var(--cor-texto-suave)', marginBottom: '0.5rem' }}>Acumulado</div>
-          <div style={{ fontFamily: 'var(--fonte-display)', fontSize: '1.5rem', fontWeight: 700, color: 'var(--cor-sucesso)' }}>
+          <div className="truncate" style={{ fontFamily: 'var(--fonte-display)', fontSize: '1.25rem', fontWeight: 700, color: 'var(--cor-sucesso)' }}>
             {formatarMoeda(totalAtual)}
           </div>
         </div>
         <div className="card">
           <div style={{ fontSize: '0.8125rem', color: 'var(--cor-texto-suave)', marginBottom: '0.5rem' }}>Concluídas</div>
-          <div style={{ fontFamily: 'var(--fonte-display)', fontSize: '1.5rem', fontWeight: 700, color: metasConcluidas > 0 ? 'var(--cor-sucesso)' : 'var(--cor-texto-suave)' }}>
+          <div style={{ fontFamily: 'var(--fonte-display)', fontSize: '1.25rem', fontWeight: 700, color: metasConcluidas > 0 ? 'var(--cor-sucesso)' : 'var(--cor-texto-suave)' }}>
             {metasConcluidas}
           </div>
         </div>
@@ -285,7 +285,7 @@ function FormularioMeta({ meta, onSalvar, onCancelar, carregando }: FormMetaProp
           placeholder="Ex: Viagem, Reserva de emergência..." required />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--cor-texto)', marginBottom: '0.375rem' }}>
             Valor Alvo (R$)
@@ -325,9 +325,9 @@ function FormularioMeta({ meta, onSalvar, onCancelar, carregando }: FormMetaProp
           placeholder="Opcional" />
       </div>
 
-      <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-        <button type="button" className="btn btn-secundario" onClick={onCancelar}>Cancelar</button>
-        <button type="submit" className="btn btn-primario" disabled={carregando}>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <button type="button" className="btn btn-secundario flex-1" onClick={onCancelar}>Cancelar</button>
+        <button type="submit" className="btn btn-primario flex-1" disabled={carregando}>
           {carregando ? 'Salvando...' : meta ? 'Salvar Alterações' : 'Criar Meta'}
         </button>
       </div>
@@ -410,9 +410,9 @@ function FormularioContribuicao({ meta, onSalvar, onCancelar, carregando }: Form
           style={{ resize: 'vertical' }} />
       </div>
 
-      <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-        <button type="button" className="btn btn-secundario" onClick={onCancelar}>Cancelar</button>
-        <button type="submit" className="btn btn-primario" disabled={carregando}>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <button type="button" className="btn btn-secundario flex-1" onClick={onCancelar}>Cancelar</button>
+        <button type="submit" className="btn btn-primario flex-1" disabled={carregando}>
           {carregando ? 'Salvando...' : 'Registrar Contribuição'}
         </button>
       </div>

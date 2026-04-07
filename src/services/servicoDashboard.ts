@@ -480,11 +480,14 @@ export async function buscarDadosDashboard(
       percentualGasto <= 70 ? 'boa' :
       percentualGasto <= 90 ? 'atencao' : 'critica'
 
+    // O saldo_atual é o cumulativo do saldo_total + o saldo residual do mês
+    const saldoFinal = saldoCumulativo + saldoAtual
+
     const dados: DadosDashboard = {
       resumo: {
         total_entradas: totalEntradas,
         total_saidas: totalSaidas,
-        saldo_atual: saldoCumulativo,
+        saldo_atual: saldoFinal,
         saldo_mensal: saldoAtual,
       },
       itens_detalhados: itensDetalhados,

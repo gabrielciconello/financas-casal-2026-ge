@@ -21,7 +21,7 @@ function CardResumo({ titulo, valor, icone: Icone, corIcon }: {
         <Icone size={16} style={{ color: corIcon }} />
       </div>
       <span className="text-xs font-medium" style={{ color: 'var(--cor-texto-suave)' }}>{titulo}</span>
-      <span className="texto-card" style={{ fontFamily: 'var(--fonte-display)', fontWeight: 700, fontSize: '1.5rem', lineHeight: 1.2 }}>{valor}</span>
+      <span className="texto-card" style={{ fontFamily: 'var(--fonte-display)', fontWeight: 700, fontSize: '1.25rem', lineHeight: 1.2 }}>{valor}</span>
     </div>
   )
 }
@@ -75,6 +75,28 @@ export default function Dashboard() {
     [dados?.historico_mensal]
   )
 
+  async function commitSaldoMes() {
+    const saldoMensal = dados?.saldo_mensal ?? 0
+    if (saldoMensal === 0) return
+    const descricao = confirm(saldoMensal >= 0
+      ? `Adicionar ${formatarMoeda(saldoMensal)} ao saldo total?`
+      : `Remover ${formatarMoeda(saldoMensal)} do saldo total?`
+    )
+    if (!descricao) return
+    try {
+      await fetch('/api/saldo-total', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          descricao: `Saldo residual ${MESES[mes - 1]}/${ano}`,
+          valor: Math.abs(saldoMensal),
+          tipo: saldoMensal >= 0 ? 'aporte' : 'retirada',
+        }),
+      })
+      buscar()
+    } catch { /* ignore */ }
+  }
+
   if (carregando) return <Carregando texto="Carregando dashboard..." />
   if (erro) return <MensagemErro mensagem={erro} onTentar={buscar} />
   if (!dados) return null
@@ -88,6 +110,9 @@ export default function Dashboard() {
     gasto_variavel: 'Gasto Variavel',
     salario: 'Salario',
   }
+
+  const saldoMensal = resumo.saldo_mensal ?? dados.saldo_mensal ?? 0
+  const saldoTotal = resumo.saldo_atual ?? 0
 
   return (
     <div className="flex flex-col gap-5 w-full max-w-full">
@@ -110,7 +135,7 @@ export default function Dashboard() {
           <select
             value={mes}
             onChange={(e) => setMes(Number(e.target.value))}
-            className="px-2 py-2 rounded-lg text-sm font-medium"
+            className="px-2 py-2 rounded-lg text-sm font-medium max-w-[70px]"
             style={{ background: 'var(--cor-fundo-card)', border: '1px solid var(--cor-borda)', color: 'var(--cor-texto)' }}
           >
             {MESES.map((m, i) => (
@@ -120,7 +145,7 @@ export default function Dashboard() {
           <select
             value={ano}
             onChange={(e) => setAno(Number(e.target.value))}
-            className="px-2 py-2 rounded-lg text-sm font-medium"
+            className="px-2 py-2 rounded-lg text-sm font-medium max-w-[70px]"
             style={{ background: 'var(--cor-fundo-card)', border: '1px solid var(--cor-borda)', color: 'var(--cor-texto)' }}
           >
             {[2024, 2025, 2026, 2027, 2028].map(a => (
@@ -138,11 +163,38 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* Grid de cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <CardResumo titulo="Entradas" valor={formatarMoeda(resumo.total_entradas)} icone={Wallet} corIcon={corSaude} />
         <CardResumo titulo="Saidas" valor={formatarMoeda(resumo.total_saidas)} icone={TrendingDown} corIcon="var(--cor-perigo)" />
-        <CardResumo titulo="Saldo" valor={formatarMoeda(resumo.saldo_atual)} icone={resumo.saldo_atual >= 0 ? TrendingUp : TrendingDown} corIcon={resumo.saldo_atual >= 0 ? 'var(--cor-sucesso)' : 'var(--cor-perigo)'} />
+        <CardResumo
+          titulo="Diff. Mes"
+          valor={formatarMoeda(saldoMensal)}
+          icone={saldoMensal >= 0 ? TrendingUp : TrendingDown}
+          corIcon={saldoMensal >= 0 ? 'var(--cor-sucesso)' : 'var(--cor-perigo)'}
+        />
+        <CardResumo
+          titulo="Saldo Total"
+          valor={formatarMoeda(saldoTotal)}
+          icone={saldoTotal >= 0 ? TrendingUp : TrendingDown}
+          corIcon={saldoTotal >= 0 ? 'var(--cor-info)' : 'var(--cor-perigo)'}
+        />
       </div>
+
+      {/* Saldo residual do mes */}
+      {saldoMensal !== 0 && (
+        <div className="flex items-center justify-between p-3 rounded-xl border" style={{ background: saldoMensal >= 0 ? 'var(--cor-sucesso-suave)' : 'var(--cor-perigo-suave)', borderColor: saldoMensal >= 0 ? 'var(--cor-sucesso-borda)' : 'var(--cor-perigo-borda)' }}>
+          <div>
+            <span className="text-xs font-medium" style={{ color: 'var(--cor-texto-suave)' }}>Saldo residual do mes</span>
+            <span className="font-bold ml-2 text-sm" style={{ color: saldoMensal >= 0 ? 'var(--cor-sucesso)' : 'var(--cor-perigo)' }}>
+              {saldoMensal >= 0 ? '+' : ''}{formatarMoeda(saldoMensal)}
+            </span>
+          </div>
+          <button onClick={commitSaldoMes} className="btn btn-primario text-xs whitespace-nowrap" style={{ padding: '0.375rem 0.75rem' }}>
+            Commit saldo
+          </button>
+        </div>
+      )}
 
       <div className="card">
         <div className="flex items-center justify-between mb-3">
@@ -176,8 +228,8 @@ export default function Dashboard() {
                   alignItems: 'center',
                   gap: '0.5rem',
                 }} className="transition-colors hover:bg-opacity-50">
-                  <div>
-                    <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--cor-texto)' }}>{item.descricao}</div>
+                  <div className="min-w-0">
+                    <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--cor-texto)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.descricao}</div>
                     <div style={{ fontSize: '0.7rem', color: 'var(--cor-texto-suave)' }}>{fonteLabels[item.fonte] || item.fonte}</div>
                   </div>
                   <span className="badge" style={{
@@ -286,16 +338,16 @@ export default function Dashboard() {
         <div className="card">
           <div className="flex items-center gap-2 mb-3">
             <AlertTriangle size={18} style={{ color: 'var(--cor-aviso)' }} />
-            <h3 className="font-display font-bold text-base" style={{ color: 'var(--cor-texto)' }}>Vencimentos nos proximos 7 dias</h3>
+            <h3 className="font-display font-bold text-sm" style={{ color: 'var(--cor-texto)' }}>Vencimentos nos proximos 7 dias</h3>
           </div>
           <div className="flex flex-col gap-2">
             {proximos_vencimentos.map((v: any) => (
               <div key={v.id} className="flex items-center justify-between p-3 rounded-xl border" style={{ background: 'var(--cor-aviso-suave)', borderColor: 'var(--cor-aviso-borda)' }}>
-                <div className="flex items-center gap-2">
-                  <Calendar size={14} style={{ color: 'var(--cor-aviso)' }} />
-                  <span className="text-sm" style={{ color: 'var(--cor-texto)' }}>{v.descricao}</span>
+                <div className="flex items-center gap-2 min-w-0">
+                  <Calendar size={14} style={{ color: 'var(--cor-aviso)', flexShrink: 0 }} />
+                  <span className="text-sm truncate" style={{ color: 'var(--cor-texto)' }}>{v.descricao}</span>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-shrink-0">
                   <span className="text-xs" style={{ color: 'var(--cor-texto-suave)' }}>Dia {v.dia_vencimento}</span>
                   <span className="text-sm font-bold" style={{ color: 'var(--cor-perigo)' }}>{formatarMoeda(v.valor)}</span>
                 </div>
