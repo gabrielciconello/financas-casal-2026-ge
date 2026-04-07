@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { useAuth } from './useContexto'
+import { supabase } from '../services/supabase.browser'
 
 interface OpcoesRequisicao {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
@@ -17,10 +17,18 @@ interface ResultadoApi<T> {
 const BASE_URL = ''
 
 export function useApi<T = any>(): ResultadoApi<T> {
-  const { token } = useAuth()
   const [dados, setDados] = useState<T | null>(null)
   const [erro, setErro] = useState<string | null>(null)
   const [carregando, setCarregando] = useState(false)
+
+  async function obterToken(): Promise<string | null> {
+    try {
+      const { data } = await supabase.auth.getSession()
+      return data.session?.access_token ?? null
+    } catch {
+      return null
+    }
+  }
 
   const requisitar = useCallback(async (
     url: string,
@@ -28,6 +36,14 @@ export function useApi<T = any>(): ResultadoApi<T> {
   ): Promise<T | null> => {
     setCarregando(true)
     setErro(null)
+
+    const token = await obterToken()
+
+    if (!token) {
+      setErro('Token de autenticação não fornecido')
+      setCarregando(false)
+      return null
+    }
 
     try {
       const resposta = await fetch(`${BASE_URL}${url}`, {
@@ -54,7 +70,7 @@ export function useApi<T = any>(): ResultadoApi<T> {
     } finally {
       setCarregando(false)
     }
-  }, [token])
+  }, [])
 
   return { dados, erro, carregando, requisitar }
 }
