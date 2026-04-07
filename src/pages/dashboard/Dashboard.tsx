@@ -1,9 +1,9 @@
-import React, { useEffect, useCallback, useMemo } from 'react'
+import React, { useEffect, useCallback, useState } from 'react'
 import {
   AreaChart, Area, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts'
-import { TrendingUp, TrendingDown, Wallet, AlertTriangle, Calendar } from 'lucide-react'
+import { TrendingUp, TrendingDown, Wallet, AlertTriangle, Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useApi } from '../../hooks/useApi'
 import { formatarMoeda, mesAnoAtual } from '../../utils'
 import Carregando from '../../components/ui/Carregando'
@@ -36,7 +36,9 @@ if (import.meta.env.DEV) {
 }
 
 export default function Dashboard() {
-  const { mes, ano } = mesAnoAtual()
+  const inicial = mesAnoAtual()
+  const [mes, setMes] = useState(inicial.mes)
+  const [ano, setAno] = useState(inicial.ano)
   const { dados, erro, carregando, requisitar } = useApi<any>()
 
   const buscar = useCallback(() => {
@@ -45,7 +47,17 @@ export default function Dashboard() {
 
   useEffect(() => { buscar() }, [buscar])
 
-  const corSaude = useMemo(
+  const mesAnterior = () => {
+    if (mes === 1) { setMes(12); setAno(a => a - 1) }
+    else setMes(m => m - 1)
+  }
+
+  const proximoMes = () => {
+    if (mes === 12) { setMes(1); setAno(a => a + 1) }
+    else setMes(m => m + 1)
+  }
+
+  const corSaude = React.useMemo(
     () => {
       const cls = dados?.saude_financeira?.classificacao
       if (!cls) return '#16a34a'
@@ -54,7 +66,7 @@ export default function Dashboard() {
     [dados?.saude_financeira?.classificacao]
   )
 
-  const dadosHistorico = useMemo(() =>
+  const dadosHistorico = React.useMemo(() =>
     dados?.historico_mensal?.map((h: any) => ({
       nome: MESES[h.mes - 1],
       entradas: h.total_entradas,
@@ -79,11 +91,51 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div>
-        <h1 className="font-display font-bold text-2xl" style={{ color: 'var(--cor-texto)' }}>Dashboard</h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--cor-texto-suave)' }}>
-          Visao geral de {MESES[mes - 1]} de {ano}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-display font-bold text-2xl" style={{ color: 'var(--cor-texto)' }}>Dashboard</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--cor-texto-suave)' }}>
+            Visao geral de {MESES[mes - 1]} de {ano}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={mesAnterior}
+            className="p-2 rounded-lg transition-colors hover:bg-opacity-10 hover:bg-current"
+            style={{ color: 'var(--cor-texto)' }}
+            title="Mes anterior"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <select
+            value={mes}
+            onChange={(e) => setMes(Number(e.target.value))}
+            className="px-3 py-2 rounded-lg text-sm font-medium"
+            style={{ background: 'var(--cor-fundo-card)', border: '1px solid var(--cor-borda)', color: 'var(--cor-texto)' }}
+          >
+            {MESES.map((m, i) => (
+              <option key={i} value={i + 1}>{m}</option>
+            ))}
+          </select>
+          <select
+            value={ano}
+            onChange={(e) => setAno(Number(e.target.value))}
+            className="px-3 py-2 rounded-lg text-sm font-medium"
+            style={{ background: 'var(--cor-fundo-card)', border: '1px solid var(--cor-borda)', color: 'var(--cor-texto)' }}
+          >
+            {[2024, 2025, 2026, 2027, 2028].map(a => (
+              <option key={a} value={a}>{a}</option>
+            ))}
+          </select>
+          <button
+            onClick={proximoMes}
+            className="p-2 rounded-lg transition-colors hover:bg-opacity-10 hover:bg-current"
+            style={{ color: 'var(--cor-texto)' }}
+            title="Proximo mes"
+          >
+            <ChevronRight size={20} />
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -169,7 +221,7 @@ export default function Dashboard() {
               <CartesianGrid strokeDasharray="3 3" stroke="var(--cor-borda)" />
               <XAxis dataKey="nome" tick={{ fontSize: 11, fill: 'var(--cor-texto-suave)' }} />
               <YAxis tick={{ fontSize: 11, fill: 'var(--cor-texto-suave)' }} width={70} />
-              <Tooltip formatter={(v) => typeof v === 'number' ? formatarMoeda(v) : v} contentStyle={{ fontSize: '0.8rem', borderRadius: '8px', background: 'var(--cor-fundo-card)', border: '1px solid var(--cor-borda)', color: 'var(--cor-texto)' }} />
+              <Tooltip formatter={(v: any) => typeof v === 'number' ? formatarMoeda(v) : v} contentStyle={{ fontSize: '0.8rem', borderRadius: '8px', background: 'var(--cor-fundo-card)', border: '1px solid var(--cor-borda)', color: 'var(--cor-texto)' }} />
               <Legend wrapperStyle={{ fontSize: '0.8rem' }} />
               <Area type="monotone" dataKey="entradas" name="Entradas" stroke="#16a34a" fill="url(#gE)" strokeWidth={2} />
               <Area type="monotone" dataKey="saidas" name="Saidas" stroke="#dc2626" fill="url(#gS)" strokeWidth={2} />
@@ -185,9 +237,9 @@ export default function Dashboard() {
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie data={gastos_por_categoria} dataKey="total" nameKey="categoria" cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={3}>
-                  {gastos_por_categoria.map((_: any, i: number) => (<Cell key={i} fill={CORES[i % CORES.length]} />))}
+                  {gastos_por_categoria.map((_e: any, i: number) => (<Cell key={i} fill={CORES[i % CORES.length]} />))}
                 </Pie>
-                <Tooltip formatter={(v) => typeof v === 'number' ? formatarMoeda(v) : v} contentStyle={{ fontSize: '0.8rem', borderRadius: '8px', background: 'var(--cor-fundo-card)', border: '1px solid var(--cor-borda)', color: 'var(--cor-texto)' }} />
+                <Tooltip formatter={(v: any) => typeof v === 'number' ? formatarMoeda(v) : v} contentStyle={{ fontSize: '0.8rem', borderRadius: '8px', background: 'var(--cor-fundo-card)', border: '1px solid var(--cor-borda)', color: 'var(--cor-texto)' }} />
                 <Legend wrapperStyle={{ fontSize: '0.8rem' }} />
               </PieChart>
             </ResponsiveContainer>

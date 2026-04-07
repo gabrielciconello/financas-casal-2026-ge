@@ -26,7 +26,8 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(find /c/Users/AlphaSoftware/Desktop/financas-casal-2026-ge -name *.sql -o -name schema*)",
-      "Bash(find /c/Users/AlphaSoftware/Desktop/financas-casal-2026-ge -path */supabase/migrations* -type d00)"
+      "Bash(find /c/Users/AlphaSoftware/Desktop/financas-casal-2026-ge -path */supabase/migrations* -type d00)",
+      "Bash(cd:*)"
     ]
   }
 }

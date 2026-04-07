@@ -299,6 +299,32 @@ export interface CriarOrcamentoDTO {
 export interface AtualizarOrcamentoDTO extends Partial<CriarOrcamentoDTO> {}
 
 // ============================================
+// SALDO TOTAL
+// ============================================
+export type TipoSaldoTotal = 'aporte' | 'retirada'
+
+export interface SaldoTotal {
+  id: string
+  usuario_id: string
+  usuario_nome: string
+  descricao: string
+  valor: number
+  tipo: TipoSaldoTotal
+  data: string
+  criado_em: string
+  atualizado_em: string
+}
+
+export interface CriarSaldoTotalDTO {
+  descricao: string
+  valor: number
+  tipo: TipoSaldoTotal
+  data?: string
+}
+
+export interface AtualizarSaldoTotalDTO extends Partial<CriarSaldoTotalDTO> {}
+
+// ============================================
 // RESPOSTAS DA API
 // ============================================
 export interface RespostaApi<T> {

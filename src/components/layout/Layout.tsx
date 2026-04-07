@@ -4,7 +4,7 @@ import { useAuth, useTema } from '../../hooks/useContexto'
 import {
   LayoutDashboard, ArrowLeftRight, Wallet, CreditCard,
   Receipt, Target, LogOut, Sun, Moon, Menu, X,
-  TrendingUp, ShoppingBag,
+  TrendingUp, TrendingDown, ShoppingBag,
 } from 'lucide-react'
 
 const itensMenu = [
@@ -15,6 +15,7 @@ const itensMenu = [
   { caminho: '/gastos/fixos', icone: Receipt, rotulo: 'Gastos Fixos' },
   { caminho: '/gastos/variaveis', icone: ShoppingBag, rotulo: 'Gastos Variáveis' },
   { caminho: '/metas', icone: Target, rotulo: 'Metas' },
+  { caminho: '/saldo-total', icone: TrendingDown, rotulo: 'Saldo Total' },
 ]
 
 function SidebarConteudo({ fechar, mostrarFechar, onPreload }: { fechar: () => void, mostrarFechar: boolean, onPreload?: (path: string) => void }) {
@@ -95,6 +96,7 @@ const lazyModules: Record<string, (() => Promise<any>)[]> = {
   '/gastos/fixos': [() => import('../../pages/gastos/GastosFixos')],
   '/gastos/variaveis': [() => import('../../pages/gastos/GastosVariaveis')],
   '/metas': [() => import('../../pages/metas/Metas')],
+  '/saldo-total': [() => import('../../pages/saldo-total/SaldoTotal')],
 }
 
 export default function Layout() {

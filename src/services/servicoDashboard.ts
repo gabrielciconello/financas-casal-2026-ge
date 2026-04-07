@@ -182,8 +182,16 @@ export async function buscarDadosDashboard(
       ?.filter((t) => t.tipo === 'saida')
       .reduce((acc, t) => acc + Number(t.valor), 0) ?? 0
 
+    const totalEntradasSalarios = salarios
+      ?.reduce((acc: number, s: any) => {
+        const valor = s.status === 'recebido'
+          ? Number(s.valor_recebido ?? s.valor_esperado)
+          : Number(s.valor_esperado)
+        return acc + valor
+      }, 0) ?? 0
+
     const totalSaidas = totalSaidasTransacoes + totalGastosFixos + totalGastosVariaveis + totalComprasCartao
-    const totalEntradas = totalEntradasTransacoes
+    const totalEntradas = totalEntradasTransacoes + totalEntradasSalarios
 
     const saldoAtual = totalEntradas - totalSaidas
 
@@ -333,8 +341,22 @@ export async function buscarDadosDashboard(
         .gte('data', inicioMes)
         .lte('data', fimMes)
 
-      const entradas = transMes?.filter((t) => t.tipo === 'entrada').reduce((acc, t) => acc + Number(t.valor), 0) ?? 0
+      const entradasTrans = transMes?.filter((t) => t.tipo === 'entrada').reduce((acc, t) => acc + Number(t.valor), 0) ?? 0
       const saidasTransacoes = transMes?.filter((t) => t.tipo === 'saida').reduce((acc, t) => acc + Number(t.valor), 0) ?? 0
+
+      // Salários do mês
+      const { data: salMes } = await supabaseAdmin
+        .from('salarios')
+        .select('valor_esperado, valor_recebido, status')
+        .eq('usuario_id', usuarioId)
+        .eq('mes', mesBusca)
+        .eq('ano', anoBusca)
+      const entradasSalarios = salMes?.reduce((acc: number, s: any) => {
+        const v = s.status === 'recebido'
+          ? Number(s.valor_recebido ?? s.valor_esperado)
+          : Number(s.valor_esperado)
+        return acc + v
+      }, 0) ?? 0
 
       // Gastos fixos do mês
       const { data: gfMes } = await supabaseAdmin
@@ -357,7 +379,7 @@ export async function buscarDadosDashboard(
       historico.push({
         mes: mesBusca,
         ano: anoBusca,
-        total_entradas: entradas,
+        total_entradas: entradasTrans + entradasSalarios,
         total_saidas: saidasTransacoes + totalGF + totalGV,
       })
     }
@@ -398,11 +420,35 @@ export async function buscarDadosDashboard(
     const { data: transAnterior } = await supabaseAdmin
       .from('transacoes')
       .select('tipo, valor')
+      .eq('usuario_id', usuarioId)
       .gte('data', inicioAnterior)
       .lte('data', fimAnterior)
 
     const entradasAnterior = transAnterior?.filter((t) => t.tipo === 'entrada').reduce((acc, t) => acc + Number(t.valor), 0) ?? 0
     const saidasAnterior = transAnterior?.filter((t) => t.tipo === 'saida').reduce((acc, t) => acc + Number(t.valor), 0) ?? 0
+
+    // Salários mês anterior
+    const { data: salAnterior } = await supabaseAdmin
+      .from('salarios')
+      .select('valor_esperado, valor_recebido, status')
+      .eq('usuario_id', usuarioId)
+      .eq('mes', mesAnterior)
+      .eq('ano', anoAnterior)
+    const entradasSalariosAnterior = salAnterior?.reduce((acc: number, s: any) => {
+      const v = s.status === 'recebido'
+        ? Number(s.valor_recebido ?? s.valor_esperado)
+        : Number(s.valor_esperado)
+      return acc + v
+    }, 0) ?? 0
+
+    // Gastos fixos mês anterior
+    const { data: gfAnterior } = await supabaseAdmin
+      .from('gastos_fixos')
+      .select('valor')
+      .eq('usuario_id', usuarioId)
+      .eq('mes', mesAnterior)
+      .eq('ano', anoAnterior)
+    const totalGFAnterior = gfAnterior?.reduce((acc, g) => acc + Number(g.valor), 0) ?? 0
 
     // ==========================================
     // SAÚDE FINANCEIRA
@@ -425,10 +471,10 @@ export async function buscarDadosDashboard(
       historico_mensal: historico,
       proximos_vencimentos: proximosVencimentos,
       comparativo: {
-        entradas_mes_atual: entradasAnterior,
-        entradas_mes_anterior: entradasAnterior,
+        entradas_mes_atual: totalEntradas,
+        entradas_mes_anterior: entradasAnterior + entradasSalariosAnterior,
         saidas_mes_atual: totalSaidas,
-        saidas_mes_anterior: saidasAnterior + (await supabaseAdmin.from('gastos_fixos').select('valor').eq('mes', mesAnterior).eq('ano', anoAnterior).then(r => r.data?.reduce((a, g) => a + Number(g.valor), 0) ?? 0)),
+        saidas_mes_anterior: saidasAnterior + totalGFAnterior,
       },
       saude_financeira: {
         percentual_gasto: percentualGasto,
