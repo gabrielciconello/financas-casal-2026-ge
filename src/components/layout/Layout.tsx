@@ -120,7 +120,7 @@ export default function Layout() {
   }, [])
 
   return (
-    <div className="flex min-h-screen bg-pagina" style={{ backgroundColor: 'var(--cor-fundo-pagina)' }}>
+    <div className="flex min-h-screen bg-pagina" style={{ backgroundColor: 'var(--cor-fundo-pagina)', minHeight: '100dvh' }}>
 
       {/* SIDEBAR DESKTOP */}
       <aside className="hidden md:flex fixed top-0 left-0 h-screen w-56 flex-col bg-lateral border-r z-50" style={{ background: 'var(--cor-fundo-card)', borderRight: '1px solid var(--cor-borda)' }}>
@@ -155,7 +155,7 @@ export default function Layout() {
         </header>
 
         {/* CONTEÚDO DA PÁGINA */}
-        <main className="flex-1 p-4 md:p-6 w-full max-w-full overflow-x-hidden">
+        <main className="flex-1 p-4 md:p-6 w-full max-w-full overflow-x-hidden box-border">
           <Outlet />
         </main>
       </div>

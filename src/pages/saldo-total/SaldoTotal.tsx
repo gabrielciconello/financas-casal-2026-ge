@@ -63,22 +63,22 @@ export default function SaldoTotal() {
   if (!dados) return null
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-5 w-full max-w-full">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="font-display font-bold text-2xl" style={{ color: 'var(--cor-texto)' }}>Saldo Total</h1>
+          <h1 className="font-display font-bold text-2xl md:text-2xl" style={{ color: 'var(--cor-texto)' }}>Saldo Total</h1>
           <p className="text-sm mt-1" style={{ color: 'var(--cor-texto-suave)' }}>
             Dinheiro disponivel do casal — acompanhe e registre movimentacoes
           </p>
         </div>
-        <button onClick={() => abrirModal()} className="btn btn-primario text-sm flex items-center gap-2">
+        <button onClick={() => abrirModal()} className="btn btn-primario text-sm flex items-center gap-2 whitespace-nowrap flex-shrink-0">
           <Plus size={16} />
-          Nova Movimentacao
+          Nova
         </button>
       </div>
 
       {/* Cards resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="card flex flex-col gap-2">
           <span className="text-xs font-medium" style={{ color: 'var(--cor-texto-suave)' }}>Saldo Atual</span>
           <span className="texto-card font-bold text-2xl" style={{ color: dados.saldo_atual >= 0 ? 'var(--cor-sucesso)' : 'var(--cor-perigo)' }}>
@@ -117,50 +117,99 @@ export default function SaldoTotal() {
             Nenhuma movimentacao registrada
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {movs.dados.map((item: any) => (
-              <div key={item.id} style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 100px 100px 120px',
-                padding: '0.75rem 1.25rem',
-                borderBottom: '1px solid var(--cor-borda)',
-                alignItems: 'center',
-                gap: '0.5rem',
-              }}>
-                <div className="flex items-center gap-2">
-                  {item.tipo === 'aporte'
-                    ? <TrendingUp size={16} style={{ color: 'var(--cor-sucesso)' }} />
-                    : <TrendingDown size={16} style={{ color: 'var(--cor-perigo)' }} />
-                  }
-                  <div>
-                    <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--cor-texto)' }}>{item.descricao}</div>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--cor-texto-suave)' }}>{item.data}</div>
+          <>
+            {/* Desktop table */}
+            <div className="hidden md:block">
+              {movs.dados.map((item: any) => (
+                <div key={item.id} style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 100px 110px 120px',
+                  padding: '0.75rem 1.25rem',
+                  borderBottom: '1px solid var(--cor-borda)',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                }}>
+                  <div className="flex items-center gap-2">
+                    {item.tipo === 'aporte'
+                      ? <TrendingUp size={16} style={{ color: 'var(--cor-sucesso)' }} />
+                      : <TrendingDown size={16} style={{ color: 'var(--cor-perigo)' }} />
+                    }
+                    <div>
+                      <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--cor-texto)' }}>{item.descricao}</div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--cor-texto-suave)' }}>{item.data}</div>
+                    </div>
+                  </div>
+                  <span className="badge" style={{
+                    background: item.tipo === 'aporte' ? 'rgba(22, 163, 74, 0.1)' : 'rgba(220, 38, 38, 0.1)',
+                    color: item.tipo === 'aporte' ? 'var(--cor-sucesso)' : 'var(--cor-perigo)',
+                    fontSize: '0.7rem', fontWeight: 600, textAlign: 'center',
+                  }}>
+                    {item.tipo === 'aporte' ? 'Aporte' : 'Retirada'}
+                  </span>
+                  <span style={{
+                    fontSize: '0.875rem', fontWeight: 700, textAlign: 'right',
+                    color: item.tipo === 'aporte' ? 'var(--cor-sucesso)' : 'var(--cor-perigo)',
+                  }}>
+                    {item.tipo === 'aporte' ? '+' : '-'}{formatarMoeda(item.valor)}
+                  </span>
+                  <div className="flex items-center justify-end gap-2">
+                    <button onClick={() => abrirModal(item)} className="p-1.5 rounded-lg transition-colors hover:bg-opacity-10 hover:bg-current" style={{ color: 'var(--cor-texto-suave)' }} title="Editar">
+                      <Edit2 size={14} />
+                    </button>
+                    <button onClick={() => deletarMov(item.id)} className="p-1.5 rounded-lg transition-colors hover:bg-opacity-10 hover:bg-current" style={{ color: 'var(--cor-perigo)' }} title="Excluir">
+                      <Trash2 size={14} />
+                    </button>
                   </div>
                 </div>
-                <span className="badge" style={{
-                  background: item.tipo === 'aporte' ? 'rgba(22, 163, 74, 0.1)' : 'rgba(220, 38, 38, 0.1)',
-                  color: item.tipo === 'aporte' ? 'var(--cor-sucesso)' : 'var(--cor-perigo)',
-                  fontSize: '0.7rem', fontWeight: 600, textAlign: 'center',
+              ))}
+            </div>
+
+            {/* Mobile cards */}
+            <div className="md:hidden flex flex-col">
+              {movs.dados.map((item: any) => (
+                <div key={item.id} style={{
+                  padding: '0.875rem 1.25rem',
+                  borderBottom: '1px solid var(--cor-borda)',
                 }}>
-                  {item.tipo === 'aporte' ? 'Aporte' : 'Retirada'}
-                </span>
-                <span style={{
-                  fontSize: '0.875rem', fontWeight: 700, textAlign: 'right',
-                  color: item.tipo === 'aporte' ? 'var(--cor-sucesso)' : 'var(--cor-perigo)',
-                }}>
-                  {item.tipo === 'aporte' ? '+' : '-'}{formatarMoeda(item.valor)}
-                </span>
-                <div className="flex items-center justify-end gap-2">
-                  <button onClick={() => abrirModal(item)} className="p-1.5 rounded-lg transition-colors hover:bg-opacity-10 hover:bg-current" style={{ color: 'var(--cor-texto-suave)' }} title="Editar">
-                    <Edit2 size={14} />
-                  </button>
-                  <button onClick={() => deletarMov(item.id)} className="p-1.5 rounded-lg transition-colors hover:bg-opacity-10 hover:bg-current" style={{ color: 'var(--cor-perigo)' }} title="Excluir">
-                    <Trash2 size={14} />
-                  </button>
+                  <div className="flex items-start justify-between mb-2 gap-2">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      {item.tipo === 'aporte'
+                        ? <TrendingUp size={16} style={{ color: 'var(--cor-sucesso)', flexShrink: 0 }} />
+                        : <TrendingDown size={16} style={{ color: 'var(--cor-perigo)', flexShrink: 0 }} />
+                      }
+                      <div className="min-w-0">
+                        <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--cor-texto)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '180px' }}>{item.descricao}</div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--cor-texto-suave)' }}>{item.data}</div>
+                      </div>
+                    </div>
+                    <span style={{
+                      fontSize: '0.875rem', fontWeight: 700, flexShrink: 0,
+                      color: item.tipo === 'aporte' ? 'var(--cor-sucesso)' : 'var(--cor-perigo)',
+                    }}>
+                      {item.tipo === 'aporte' ? '+' : '-'}{formatarMoeda(item.valor)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="badge" style={{
+                      background: item.tipo === 'aporte' ? 'rgba(22, 163, 74, 0.1)' : 'rgba(220, 38, 38, 0.1)',
+                      color: item.tipo === 'aporte' ? 'var(--cor-sucesso)' : 'var(--cor-perigo)',
+                      fontSize: '0.7rem', fontWeight: 600,
+                    }}>
+                      {item.tipo === 'aporte' ? 'Aporte' : 'Retirada'}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => abrirModal(item)} className="p-1.5 rounded-lg transition-colors hover:bg-opacity-10 hover:bg-current" style={{ color: 'var(--cor-texto-suave)' }} title="Editar">
+                        <Edit2 size={14} />
+                      </button>
+                      <button onClick={() => deletarMov(item.id)} className="p-1.5 rounded-lg transition-colors hover:bg-opacity-10 hover:bg-current" style={{ color: 'var(--cor-perigo)' }} title="Excluir">
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 

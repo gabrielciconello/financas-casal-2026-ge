@@ -90,15 +90,15 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-5 w-full max-w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="font-display font-bold text-2xl" style={{ color: 'var(--cor-texto)' }}>Dashboard</h1>
           <p className="text-sm mt-1" style={{ color: 'var(--cor-texto-suave)' }}>
             Visao geral de {MESES[mes - 1]} de {ano}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <button
             onClick={mesAnterior}
             className="p-2 rounded-lg transition-colors hover:bg-opacity-10 hover:bg-current"
@@ -110,7 +110,7 @@ export default function Dashboard() {
           <select
             value={mes}
             onChange={(e) => setMes(Number(e.target.value))}
-            className="px-3 py-2 rounded-lg text-sm font-medium"
+            className="px-2 py-2 rounded-lg text-sm font-medium"
             style={{ background: 'var(--cor-fundo-card)', border: '1px solid var(--cor-borda)', color: 'var(--cor-texto)' }}
           >
             {MESES.map((m, i) => (
@@ -120,7 +120,7 @@ export default function Dashboard() {
           <select
             value={ano}
             onChange={(e) => setAno(Number(e.target.value))}
-            className="px-3 py-2 rounded-lg text-sm font-medium"
+            className="px-2 py-2 rounded-lg text-sm font-medium"
             style={{ background: 'var(--cor-fundo-card)', border: '1px solid var(--cor-borda)', color: 'var(--cor-texto)' }}
           >
             {[2024, 2025, 2026, 2027, 2028].map(a => (
@@ -138,7 +138,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <CardResumo titulo="Entradas" valor={formatarMoeda(resumo.total_entradas)} icone={Wallet} corIcon={corSaude} />
         <CardResumo titulo="Saidas" valor={formatarMoeda(resumo.total_saidas)} icone={TrendingDown} corIcon="var(--cor-perigo)" />
         <CardResumo titulo="Saldo" valor={formatarMoeda(resumo.saldo_atual)} icone={resumo.saldo_atual >= 0 ? TrendingUp : TrendingDown} corIcon={resumo.saldo_atual >= 0 ? 'var(--cor-sucesso)' : 'var(--cor-perigo)'} />
@@ -164,41 +164,76 @@ export default function Dashboard() {
         {!itens_detalhados || itens_detalhados.length === 0 ? (
           <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--cor-texto-suave)', fontSize: '0.875rem' }}>Nenhuma movimentacao registrada</div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {itens_detalhados.map((item: any) => (
-              <div key={item.id} style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 80px 100px 80px',
-                padding: '0.75rem 1.25rem',
-                borderBottom: '1px solid var(--cor-borda)',
-                alignItems: 'center',
-                gap: '0.5rem',
-              }} className="transition-colors hover:bg-opacity-50">
-                <div>
-                  <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--cor-texto)' }}>{item.descricao}</div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--cor-texto-suave)' }}>{fonteLabels[item.fonte] || item.fonte}</div>
+          <>
+            {/* Desktop */}
+            <div className="hidden md:block">
+              {itens_detalhados.map((item: any) => (
+                <div key={item.id} style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 80px 100px 80px',
+                  padding: '0.75rem 1.25rem',
+                  borderBottom: '1px solid var(--cor-borda)',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                }} className="transition-colors hover:bg-opacity-50">
+                  <div>
+                    <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--cor-texto)' }}>{item.descricao}</div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--cor-texto-suave)' }}>{fonteLabels[item.fonte] || item.fonte}</div>
+                  </div>
+                  <span className="badge" style={{
+                    background: item.tipo === 'entrada' ? 'rgba(22, 163, 74, 0.1)' : 'rgba(220, 38, 38, 0.1)',
+                    color: item.tipo === 'entrada' ? 'var(--cor-sucesso)' : 'var(--cor-perigo)',
+                    fontSize: '0.7rem', fontWeight: 600, textAlign: 'center',
+                  }}>
+                    {item.tipo === 'entrada' ? 'Entrada' : 'Saida'}
+                  </span>
+                  <span style={{
+                    fontSize: '0.875rem', fontWeight: 700, textAlign: 'right',
+                    color: item.tipo === 'entrada' ? 'var(--cor-sucesso)' : 'var(--cor-perigo)',
+                  }}>
+                    {item.tipo === 'entrada' ? '+' : '-'}{formatarMoeda(item.valor)}
+                  </span>
+                  <span className={`badge ${
+                    item.status === 'pago' || item.status === 'efetivado' || item.status === 'recebido' ? 'badge-sucesso' : 'badge-aviso'
+                  }`} style={{ fontSize: '0.7rem', textAlign: 'center' }}>
+                    {item.status}
+                  </span>
                 </div>
-                <span className="badge" style={{
-                  background: item.tipo === 'entrada' ? 'rgba(22, 163, 74, 0.1)' : 'rgba(220, 38, 38, 0.1)',
-                  color: item.tipo === 'entrada' ? 'var(--cor-sucesso)' : 'var(--cor-perigo)',
-                  fontSize: '0.7rem', fontWeight: 600, textAlign: 'center',
+              ))}
+            </div>
+
+            {/* Mobile cards */}
+            <div className="md:hidden flex flex-col">
+              {itens_detalhados.map((item: any) => (
+                <div key={item.id} style={{
+                  padding: '0.875rem 1.25rem',
+                  borderBottom: '1px solid var(--cor-borda)',
                 }}>
-                  {item.tipo === 'entrada' ? 'Entrada' : 'Saida'}
-                </span>
-                <span style={{
-                  fontSize: '0.875rem', fontWeight: 700, textAlign: 'right',
-                  color: item.tipo === 'entrada' ? 'var(--cor-sucesso)' : 'var(--cor-perigo)',
-                }}>
-                  {item.tipo === 'entrada' ? '+' : '-'}{formatarMoeda(item.valor)}
-                </span>
-                <span className={`badge ${
-                  item.status === 'pago' || item.status === 'efetivado' || item.status === 'recebido' ? 'badge-sucesso' : 'badge-aviso'
-                }`} style={{ fontSize: '0.7rem', textAlign: 'center' }}>
-                  {item.status}
-                </span>
-              </div>
-            ))}
-          </div>
+                  <div className="flex items-start justify-between mb-2 gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--cor-texto)' }}>{item.descricao}</div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--cor-texto-suave)' }}>{fonteLabels[item.fonte] || item.fonte}</div>
+                    </div>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 700, flexShrink: 0 }} className={item.tipo === 'entrada' ? '!text-green-600' : '!text-red-600'}>
+                      {item.tipo === 'entrada' ? '+' : '-'}{formatarMoeda(item.valor)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`badge ${
+                      item.tipo === 'entrada' ? 'badge-sucesso' : 'badge-perigo'
+                    }`} style={{ fontSize: '0.7rem' }}>
+                      {item.tipo === 'entrada' ? 'Entrada' : 'Saida'}
+                    </span>
+                    <span className={`badge ${
+                      item.status === 'pago' || item.status === 'efetivado' || item.status === 'recebido' ? 'badge-sucesso' : 'badge-aviso'
+                    }`} style={{ fontSize: '0.7rem' }}>
+                      {item.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 

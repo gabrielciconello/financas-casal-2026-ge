@@ -23,7 +23,7 @@ function RotaProtegida({ children }: { children: React.ReactNode }) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        height: '100vh',
+        height: '100dvh',
         fontFamily: 'var(--fonte-corpo)',
         color: 'var(--cor-texto-suave)',
       }}>
@@ -41,7 +41,7 @@ export default function App() {
     <Suspense fallback={
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        height: '100vh', fontFamily: 'var(--fonte-corpo)',
+        height: '100dvh', fontFamily: 'var(--fonte-corpo)',
         color: 'var(--cor-texto-suave)', backgroundColor: 'var(--cor-fundo-pagina)',
       }}>
         Carregando...

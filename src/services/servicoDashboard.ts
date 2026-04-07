@@ -6,6 +6,7 @@ interface ResumoFinanceiro {
   total_entradas: number
   total_saidas: number
   saldo_atual: number
+  saldo_mensal: number
 }
 
 interface ItemDetalhado {
@@ -194,6 +195,25 @@ export async function buscarDadosDashboard(
     const totalEntradas = totalEntradasTransacoes + totalEntradasSalarios
 
     const saldoAtual = totalEntradas - totalSaidas
+
+    // ==========================================
+    // CALCULAR SALDO CUMULATIVO (aportes - retiradas do saldo_total)
+    // ==========================================
+    const { data: saldoTotalData, error: erroSaldoTotal } = await supabaseAdmin
+      .from('saldo_total')
+      .select('valor, tipo')
+      .eq('usuario_id', usuarioId)
+
+    let saldoCumulativo = 0
+    if (!erroSaldoTotal) {
+      let totalAportes = 0
+      let totalRetiradas = 0
+      for (const m of saldoTotalData ?? []) {
+        if (m.tipo === 'aporte') totalAportes += Number(m.valor)
+        else totalRetiradas += Number(m.valor)
+      }
+      saldoCumulativo = totalAportes - totalRetiradas
+    }
 
     // ==========================================
     // ITENS DETALHADOS (para mostrar no dashboard)
@@ -464,7 +484,8 @@ export async function buscarDadosDashboard(
       resumo: {
         total_entradas: totalEntradas,
         total_saidas: totalSaidas,
-        saldo_atual: saldoAtual,
+        saldo_atual: saldoCumulativo,
+        saldo_mensal: saldoAtual,
       },
       itens_detalhados: itensDetalhados,
       gastos_por_categoria: gastosPorCategoria,
