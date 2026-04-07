@@ -26,6 +26,7 @@
     { "src": "/api/cartoes/compras-cartao(.*)", "dest": "src/api/cartoes.ts" },
     { "src": "/api/cartoes(.*)", "dest": "src/api/cartoes.ts" },
     { "src": "/api/salarios(.*)", "dest": "src/api/salarios.ts" },
+    { "src": "/api/saldo-total(.*)", "dest": "src/api/saldo-total.ts" },
     { "src": "/api/metas(.*)", "dest": "src/api/metas.ts" },
     { "src": "/api/transacoes(.*)", "dest": "src/api/transacoes.ts" },
     { "src": "/api/dashboard(.*)", "dest": "src/api/dashboard.ts" },
