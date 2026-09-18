@@ -1,7 +1,7 @@
 import { IncomingMessage, ServerResponse } from 'http'
 import { supabase } from '../services/supabase.node.js'
 import type { Usuario } from '../types/index.js'
-import { obterNomeUsuario } from '../config/usuarios.js'
+import { NOMES_USUARIOS, obterNomeUsuario } from '../config/usuarios.js'
 
 // Extende o IncomingMessage para carregar o usuário autenticado
 export interface RequisicaoAutenticada extends IncomingMessage {
@@ -15,7 +15,11 @@ export async function verificarAutenticacao(
 ): Promise<boolean> {
   const authHeader = req.headers['authorization']
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  const correspondencia = typeof authHeader === 'string'
+    ? authHeader.match(/^Bearer\s+(\S+)$/i)
+    : null
+
+  if (!correspondencia) {
     res.writeHead(401, { 'Content-Type': 'application/json' })
     res.end(JSON.stringify({
       dados: null,
@@ -24,9 +28,21 @@ export async function verificarAutenticacao(
     return false
   }
 
-  const token = authHeader.split(' ')[1]
-
-  const { data, error } = await supabase.auth.getUser(token)
+  const token = correspondencia[1]
+  let data
+  let error
+  try {
+    const resposta = await supabase.auth.getUser(token)
+    data = resposta.data
+    error = resposta.error
+  } catch {
+    res.writeHead(503, { 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({
+      dados: null,
+      erro: 'Serviço de autenticação temporariamente indisponível',
+    }))
+    return false
+  }
 
   if (error || !data.user) {
     res.writeHead(401, { 'Content-Type': 'application/json' })
@@ -37,11 +53,22 @@ export async function verificarAutenticacao(
     return false
   }
 
-  // Injeta o usuário autenticado na requisição
+  const email = data.user.email?.trim().toLowerCase()
+  if (!email || !NOMES_USUARIOS[email]) {
+    res.writeHead(403, { 'Content-Type': 'application/json' })
+    res.end(JSON.stringify({
+      dados: null,
+      erro: 'Usuário não autorizado para este sistema',
+    }))
+    return false
+  }
+
+  // O backend usa service role e, portanto, ignora RLS. A allowlist é essencial
+  // para impedir que outro usuário do projeto Supabase enxergue os dados do casal.
   req.usuario = {
     id: data.user.id,
-    email: data.user.email ?? '',
-    nome: data.user.email ? obterNomeUsuario(data.user.email) : '',
+    email,
+    nome: obterNomeUsuario(email),
   }
 
   return true

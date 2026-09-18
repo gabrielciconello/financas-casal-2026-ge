@@ -1,4 +1,5 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "builds": [
     {
@@ -21,6 +22,24 @@
     }
   ],
   "routes": [
+    {
+      "src": "/(.*)",
+      "headers": {
+        "Content-Security-Policy": "frame-ancestors 'none'",
+        "Permissions-Policy": "camera=(), geolocation=(), microphone=()",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY"
+      },
+      "continue": true
+    },
+    {
+      "src": "/assets/(.*)",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      },
+      "continue": true
+    },
     { "src": "/api/gastos/fixos(.*)", "dest": "src/api/gastos-fixos.ts" },
     { "src": "/api/gastos/variaveis(.*)", "dest": "src/api/gastos-variaveis.ts" },
     { "src": "/api/cartoes/compras-cartao(.*)", "dest": "src/api/cartoes.ts" },
@@ -31,7 +50,6 @@
     { "src": "/api/transacoes(.*)", "dest": "src/api/transacoes.ts" },
     { "src": "/api/dashboard(.*)", "dest": "src/api/dashboard.ts" },
     { "src": "/api/(.*)", "dest": "src/api/$1.ts" },
-    { "src": "/assets/(.*)", "dest": "/assets/$1" },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]

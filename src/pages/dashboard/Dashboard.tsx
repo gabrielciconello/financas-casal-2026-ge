@@ -40,6 +40,7 @@ export default function Dashboard() {
   const [mes, setMes] = useState(inicial.mes)
   const [ano, setAno] = useState(inicial.ano)
   const { dados, erro, carregando, requisitar } = useApi<any>()
+  const apiSaldo = useApi<any>()
 
   const buscar = useCallback(() => {
     requisitar(`/api/dashboard?mes=${mes}&ano=${ano}`)
@@ -83,18 +84,15 @@ export default function Dashboard() {
       : `Remover ${formatarMoeda(saldoMensal)} do saldo total?`
     )
     if (!descricao) return
-    try {
-      await fetch('/api/saldo-total', {
+    const resultado = await apiSaldo.requisitar('/api/saldo-total', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: {
           descricao: `Saldo residual ${MESES[mes - 1]}/${ano}`,
           valor: Math.abs(saldoMensal),
           tipo: saldoMensal >= 0 ? 'aporte' : 'retirada',
-        }),
+        },
       })
-      buscar()
-    } catch { /* ignore */ }
+    if (resultado) buscar()
   }
 
   if (carregando) return <Carregando texto="Carregando dashboard..." />
@@ -190,9 +188,15 @@ export default function Dashboard() {
               {saldoMensal >= 0 ? '+' : ''}{formatarMoeda(saldoMensal)}
             </span>
           </div>
-          <button onClick={commitSaldoMes} className="btn btn-primario text-xs whitespace-nowrap" style={{ padding: '0.375rem 0.75rem' }}>
-            Commit saldo
+          <button onClick={commitSaldoMes} disabled={apiSaldo.carregando} className="btn btn-primario text-xs whitespace-nowrap" style={{ padding: '0.375rem 0.75rem' }}>
+            {apiSaldo.carregando ? 'Salvando...' : 'Commit saldo'}
           </button>
+        </div>
+      )}
+
+      {apiSaldo.erro && (
+        <div role="alert" className="rounded-lg border px-3 py-2 text-sm" style={{ background: 'var(--cor-perigo-suave)', borderColor: 'var(--cor-perigo-borda)', color: 'var(--cor-perigo)' }}>
+          {apiSaldo.erro}
         </div>
       )}
 

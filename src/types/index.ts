@@ -20,6 +20,7 @@ export type ModuloAuditoria =
   | 'gastos_variaveis'
   | 'metas'
   | 'contribuicoes_metas'
+  | 'saldo_total'
   | 'orcamentos'
 
 export interface LogAuditoria {

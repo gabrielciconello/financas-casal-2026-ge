@@ -28,7 +28,9 @@ export default function Cartoes() {
 
   const { carregando, erro, requisitar } = useApi()
   const apiForm = useApi()
-  const { carregando: carregandoCompras, requisitar: buscarComprasReq } = useApi()
+  const apiDelete = useApi()
+  const { carregando: carregandoCompras, erro: erroCompras, requisitar: buscarComprasReq } = useApi()
+  const { requisitar: buscarTodasComprasReq } = useApi()
 
   const [todasCompras, setTodasCompras] = useState<CompraCartao[]>([])
   const [refreshKey, setRefreshKey] = useState(0)
@@ -39,11 +41,11 @@ export default function Cartoes() {
   }, [requisitar])
 
   const buscarTodasCompras = useCallback(async () => {
-    const resultadoCompras = await buscarComprasReq('/api/cartoes/compras-cartao?pagina=1&limite=1000')
+    const resultadoCompras = await buscarTodasComprasReq('/api/cartoes/compras-cartao?pagina=1&limite=1000')
     if (resultadoCompras) {
       setTodasCompras(resultadoCompras.dados ?? [])
     }
-  }, [buscarComprasReq])
+  }, [buscarTodasComprasReq])
 
   useEffect(() => { buscarCartoes() }, [buscarCartoes])
   useEffect(() => { buscarTodasCompras() }, [buscarTodasCompras])
@@ -66,20 +68,20 @@ export default function Cartoes() {
   }, [cartaoSelecionado, pagina, buscarComprasReq, refreshKey])
 
   async function handleSalvarCartao(dados: CriarCartaoDTO) {
-    if (cartaoEditando) {
-      await apiForm.requisitar(`/api/cartoes/${cartaoEditando.id}`, {
+    const resultado = cartaoEditando
+      ? await apiForm.requisitar(`/api/cartoes/${cartaoEditando.id}`, {
         method: 'PUT', body: dados,
       })
-    } else {
-      await apiForm.requisitar('/api/cartoes', { method: 'POST', body: dados })
-    }
+      : await apiForm.requisitar('/api/cartoes', { method: 'POST', body: dados })
+    if (!resultado) return
     setModalCartao(false)
     setCartaoEditando(null)
     buscarCartoes()
   }
 
   async function handleSalvarCompra(dados: CriarCompraCartaoDTO) {
-    await apiForm.requisitar('/api/cartoes/compras-cartao', { method: 'POST', body: dados })
+    const resultado = await apiForm.requisitar('/api/cartoes/compras-cartao', { method: 'POST', body: dados })
+    if (!resultado) return
     setModalCompra(false)
     setCompraEditando(null)
     setPagina(1)
@@ -90,14 +92,16 @@ export default function Cartoes() {
 
   async function handleDeletarCartao(id: string) {
     if (!confirm('Deseja desativar este cartão?')) return
-    await requisitar(`/api/cartoes/${id}`, { method: 'DELETE' })
+    const resultado = await apiDelete.requisitar(`/api/cartoes/${id}`, { method: 'DELETE' })
+    if (!resultado) return
     buscarCartoes()
     if (cartaoSelecionado?.id === id) setCartaoSelecionado(null)
   }
 
   async function handleDeletarCompra(id: string) {
     if (!confirm('Deseja deletar esta compra?')) return
-    await requisitar(`/api/cartoes/compras-cartao/${id}`, { method: 'DELETE' })
+    const resultado = await apiDelete.requisitar(`/api/cartoes/compras-cartao/${id}`, { method: 'DELETE' })
+    if (!resultado) return
     setPagina(1)
     buscarCartoes()
     buscarTodasCompras()
@@ -105,7 +109,8 @@ export default function Cartoes() {
   }
 
   async function handleAtualizarCompra(id: string, dados: CriarCompraCartaoDTO) {
-    await apiForm.requisitar(`/api/cartoes/compras-cartao/${id}`, { method: 'PUT', body: dados })
+    const resultado = await apiForm.requisitar(`/api/cartoes/compras-cartao/${id}`, { method: 'PUT', body: dados })
+    if (!resultado) return
     setModalCompra(false)
     setCompraEditando(null)
     setPagina(1)
@@ -121,8 +126,8 @@ export default function Cartoes() {
       const parcelasRestantes = c.parcelas - c.parcela_atual + 1
       usado += parcelasRestantes * Number(c.valor_parcela)
     }
-    const percentual = (usado / cartao.limite) * 100
-    return { usado, percentual: Math.min(percentual, 100) }
+    const percentual = cartao.limite > 0 ? (usado / cartao.limite) * 100 : 0
+    return { usado, percentual: Math.max(0, Math.min(percentual, 100)) }
   }
 
   return (
@@ -137,6 +142,8 @@ export default function Cartoes() {
         </button>
       </div>
 
+      {apiDelete.erro && <div role="alert" className="rounded-lg border px-3 py-2 text-sm" style={{ background: 'var(--cor-perigo-suave)', borderColor: 'var(--cor-perigo-borda)', color: 'var(--cor-perigo)' }}>{apiDelete.erro}</div>}
+
       {carregando && cartoes.length === 0 ? (
         <Carregando texto="Buscando cartões..." />
       ) : erro ? (
@@ -149,7 +156,22 @@ export default function Cartoes() {
             const selecionado = cartaoSelecionado?.id === cartao.id
 
             return (
-              <div key={cartao.id} className="card" onClick={() => setCartaoSelecionado(selecionado ? null : cartao)} style={{ cursor: 'pointer', border: selecionado ? '2px solid var(--cor-primaria)' : '1px solid var(--cor-borda)', transition: 'var(--transicao)' }}>
+              <div
+                key={cartao.id}
+                className="card"
+                role="button"
+                tabIndex={0}
+                aria-pressed={selecionado}
+                aria-label={`${selecionado ? 'Ocultar' : 'Exibir'} compras do cartão ${cartao.nome}`}
+                onClick={() => { setPagina(1); setCartaoSelecionado(selecionado ? null : cartao) }}
+                onKeyDown={(evento) => {
+                  if (evento.target !== evento.currentTarget || (evento.key !== 'Enter' && evento.key !== ' ')) return
+                  evento.preventDefault()
+                  setPagina(1)
+                  setCartaoSelecionado(selecionado ? null : cartao)
+                }}
+                style={{ cursor: 'pointer', border: selecionado ? '2px solid var(--cor-primaria)' : '1px solid var(--cor-borda)', transition: 'var(--transicao)' }}
+              >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
                     <div style={{ width: '38px', height: '38px', background: 'var(--cor-primaria-suave)', borderRadius: 'var(--raio-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -214,6 +236,8 @@ export default function Cartoes() {
           <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
             {carregandoCompras ? (
               <Carregando texto="Buscando compras..." />
+            ) : erroCompras ? (
+              <MensagemErro mensagem={erroCompras} />
             ) : compras.length === 0 ? (
               <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--cor-texto-suave)', fontSize: '0.875rem' }}>Nenhuma compra registrada neste cartão</div>
             ) : (
@@ -283,10 +307,12 @@ export default function Cartoes() {
       )}
 
       <Modal aberto={modalCartao} titulo={cartaoEditando ? 'Editar Cartão' : 'Novo Cartão'} onFechar={() => { setModalCartao(false); setCartaoEditando(null) }}>
+        {apiForm.erro && <div role="alert" className="mb-4 rounded-lg border px-3 py-2 text-sm" style={{ background: 'var(--cor-perigo-suave)', borderColor: 'var(--cor-perigo-borda)', color: 'var(--cor-perigo)' }}>{apiForm.erro}</div>}
         <FormularioCartao cartao={cartaoEditando} onSalvar={handleSalvarCartao} onCancelar={() => { setModalCartao(false); setCartaoEditando(null) }} carregando={apiForm.carregando} />
       </Modal>
 
       <Modal aberto={modalCompra} titulo={compraEditando ? 'Editar Compra' : 'Nova Compra'} onFechar={() => { setModalCompra(false); setCompraEditando(null) }}>
+        {apiForm.erro && <div role="alert" className="mb-4 rounded-lg border px-3 py-2 text-sm" style={{ background: 'var(--cor-perigo-suave)', borderColor: 'var(--cor-perigo-borda)', color: 'var(--cor-perigo)' }}>{apiForm.erro}</div>}
         <FormularioCompra cartaoId={cartaoSelecionado?.id ?? ''} compraEditando={compraEditando} onNovo={handleSalvarCompra} onAtualizar={handleAtualizarCompra} onCancelar={() => { setModalCompra(false); setCompraEditando(null) }} carregando={apiForm.carregando} />
       </Modal>
     </div>

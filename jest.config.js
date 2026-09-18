@@ -6,11 +6,10 @@ const config = {
   testMatch: ['**/__tests__/**/*.test.ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^(\\.{1,2}/.*)\\.js$': '$1',
   },
-  globals: {
-    'ts-jest': {
-      tsconfig: 'tsconfig.json',
-    },
+  transform: {
+    '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.test.json' }],
   },
   collectCoverageFrom: [
     'src/**/*.ts',
@@ -18,7 +17,8 @@ const config = {
     '!src/**/*.tsx',
   ],
   coverageDirectory: 'coverage',
+  clearMocks: true,
   verbose: true,
 }
 
-module.exports = config
+export default config

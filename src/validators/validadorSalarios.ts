@@ -8,18 +8,19 @@ export const esquemaCriarSalario = z.object({
 
   descricao: z
     .string({ required_error: 'Descrição é obrigatória' })
+    .trim()
     .min(3, 'Descrição deve ter no mínimo 3 caracteres')
     .max(255, 'Descrição deve ter no máximo 255 caracteres'),
 
   valor_esperado: z.coerce
     .number({ required_error: 'Valor esperado é obrigatório' })
+    .finite('Valor esperado inválido')
     .positive('Valor esperado deve ser maior que zero'),
 
-  valor_recebido: z.coerce
-    .number()
-    .min(0, 'Valor recebido não pode ser negativo')
-    .optional()
-    .or(z.literal('')),
+  valor_recebido: z.union([
+    z.coerce.number().min(0, 'Valor recebido não pode ser negativo'),
+    z.literal(''),
+  ]).optional().transform((valor) => valor === '' ? undefined : valor),
 
   status: z.enum(['pendente', 'recebido', 'parcial']).default('pendente'),
 
@@ -47,7 +48,10 @@ export const esquemaCriarSalario = z.object({
   observacoes: z.string().max(500).optional(),
 })
 
-export const esquemaAtualizarSalario = esquemaCriarSalario.partial()
+export const esquemaAtualizarSalario = esquemaCriarSalario.partial().refine(
+  (dados) => Object.keys(dados).length > 0,
+  'Informe ao menos um campo para atualizar'
+)
 
 export type CriarSalarioInput = z.infer<typeof esquemaCriarSalario>
 export type AtualizarSalarioInput = z.infer<typeof esquemaAtualizarSalario>

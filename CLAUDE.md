@@ -15,10 +15,11 @@ Casual finance management app for a couple (Gabriel & Emely), built with **React
 | Task | Command |
 |------|---------|
 | Dev server | `npm run dev` (port 3000, API proxied to Vercel) |
-| Production build | `npm run build` |
+| Production build | `npm run build` (includes all type checks) |
 | Preview build | `npm run preview` |
-| Type check | `npx tsc --noEmit` |
+| Type check | `npm run typecheck` |
 | Tests | `npm test` / `npm run test:watch` / `npm run test:coverage` |
+| Full validation | `npm run check` |
 
 ### Environment Variables
 
@@ -26,8 +27,9 @@ The project uses Supabase. Both browser and Node clients expect:
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY` (serverless functions only)
+- `DEV_API_PROXY_TARGET` (optional local `/api` proxy target)
 
-> **Note**: `src/services/supabase.browser.ts` uses `import.meta.env.*` while `src/services/supabase.node.ts` uses `process.env.*`. The filenames are counterintuitive — `.browser.ts` is for the frontend, `.node.ts` is for API handlers.
+> **Note**: `src/services/supabase.browser.ts` uses `import.meta.env.*` and is for the frontend; `src/services/supabase.node.ts` uses `process.env.*` and is for API handlers. Never prefix the service-role key with `VITE_`.
 
 ---
 
@@ -93,10 +95,11 @@ All endpoints require Supabase auth Bearer token (validated in `src/middleware/a
 
 ### Database
 
-New tables require a SQL migration. See `add_usuario_nome.sql` as a reference migration. The `saldo_total_table.sql` file was created for the new Saldo Total feature and still needs to be run in Supabase's SQL Editor.
+New tables require a reviewed SQL migration. `add_usuario_nome.sql` and `saldo_total_table.sql` are idempotent migration scripts, but their application status must be checked in the target Supabase project before execution.
 
 ### Build / Vite Config
 
 - `@tailwindcss/vite` plugin for Tailwind v4
 - Production build splits chunks: `react-vendor`, `charts` (recharts), `icons` (lucide-react)
-- Dev server proxies all `/api/*` to the Vercel deployment (avoids running API locally during dev)
+- Dev server proxies all `/api/*` to `DEV_API_PROXY_TARGET` or the default Vercel deployment (so local handler edits are not picked up until deployed)
+- Hashed `/assets/*` responses receive one-year immutable caching in Vercel

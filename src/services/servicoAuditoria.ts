@@ -3,7 +3,7 @@ import { AcaoAuditoria, ModuloAuditoria } from '../types/index.js'
 
 interface RegistrarAuditoriaParams {
   usuarioId: string
-  usuarioEmail: string
+  usuarioEmail?: string
   acao: AcaoAuditoria
   modulo: ModuloAuditoria
   registroId: string
@@ -19,13 +19,13 @@ export async function registrarAuditoria({
   descricao,
 }: RegistrarAuditoriaParams): Promise<void> {
   const { obterNomeUsuario } = await import('../config/usuarios.js')
-  const usuarioNome = obterNomeUsuario(usuarioEmail)
+  const usuarioNome = usuarioEmail ? obterNomeUsuario(usuarioEmail) : undefined
 
   const { error } = await supabaseAdmin
     .from('logs_auditoria')
     .insert({
       usuario_id: usuarioId,
-      usuario_nome: usuarioNome,
+      ...(usuarioNome ? { usuario_nome: usuarioNome } : {}),
       acao,
       modulo,
       registro_id: registroId,

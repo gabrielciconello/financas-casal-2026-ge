@@ -26,6 +26,7 @@ export default function GastosFixos() {
 
   const { carregando, erro, requisitar } = useApi()
   const apiForm = useApi()
+  const apiMutacao = useApi()
 
   const buscar = useCallback(async () => {
     const params = new URLSearchParams({
@@ -46,15 +47,14 @@ export default function GastosFixos() {
   useEffect(() => { buscar() }, [buscar])
 
   async function handleSalvar(dados: CriarGastoFixoDTO) {
-    if (gastoEditando) {
-      await apiForm.requisitar(`/api/gastos/fixos/${gastoEditando.id}`, {
+    const resultado = gastoEditando
+      ? await apiForm.requisitar(`/api/gastos/fixos/${gastoEditando.id}`, {
         method: 'PUT', body: dados,
       })
-    } else {
-      await apiForm.requisitar('/api/gastos/fixos', {
+      : await apiForm.requisitar('/api/gastos/fixos', {
         method: 'POST', body: dados,
       })
-    }
+    if (!resultado) return
     setModalAberto(false)
     setGastoEditando(null)
     buscar()
@@ -62,15 +62,17 @@ export default function GastosFixos() {
 
   async function handleDeletar(id: string) {
     if (!confirm('Deseja deletar este gasto fixo?')) return
-    await requisitar(`/api/gastos/fixos/${id}`, { method: 'DELETE' })
+    const resultado = await apiMutacao.requisitar(`/api/gastos/fixos/${id}`, { method: 'DELETE' })
+    if (!resultado) return
     buscar()
   }
 
   async function handleMarcarPago(gasto: GastoFixo) {
-    await requisitar(`/api/gastos/fixos/${gasto.id}`, {
+    const resultado = await apiMutacao.requisitar(`/api/gastos/fixos/${gasto.id}`, {
       method: 'PUT',
       body: { status: gasto.status === 'pago' ? 'pendente' : 'pago' },
     })
+    if (!resultado) return
     buscar()
   }
 
@@ -92,6 +94,8 @@ export default function GastosFixos() {
           <Plus size={16} /> Novo Gasto Fixo
         </button>
       </div>
+
+      {apiMutacao.erro && <div role="alert" className="rounded-lg border px-3 py-2 text-sm" style={{ background: 'var(--cor-perigo-suave)', borderColor: 'var(--cor-perigo-borda)', color: 'var(--cor-perigo)' }}>{apiMutacao.erro}</div>}
 
       {/* Cards de resumo */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(180px, 100%), 1fr))', gap: '1rem' }}>
@@ -142,7 +146,7 @@ export default function GastosFixos() {
       <div className="card" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end' }}>
         <div style={{ flex: '1', minWidth: '160px' }}>
           <label style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--cor-texto-suave)', display: 'block', marginBottom: '0.375rem' }}>Mês</label>
-          <select className="input" value={filtroMes} onChange={(e) => setFiltroMes(Number(e.target.value))}>
+          <select className="input" value={filtroMes} onChange={(e) => { setPagina(1); setFiltroMes(Number(e.target.value)) }}>
             {Array.from({ length: 12 }, (_, i) => (
               <option key={i + 1} value={i + 1}>
                 {new Date(2026, i, 1).toLocaleString('pt-BR', { month: 'long' })}
@@ -152,13 +156,13 @@ export default function GastosFixos() {
         </div>
         <div style={{ flex: '1', minWidth: '100px' }}>
           <label style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--cor-texto-suave)', display: 'block', marginBottom: '0.375rem' }}>Ano</label>
-          <select className="input" value={filtroAno} onChange={(e) => setFiltroAno(Number(e.target.value))}>
+          <select className="input" value={filtroAno} onChange={(e) => { setPagina(1); setFiltroAno(Number(e.target.value)) }}>
             {[2024, 2025, 2026, 2027].map((a) => <option key={a} value={a}>{a}</option>)}
           </select>
         </div>
         <div style={{ flex: '1', minWidth: '140px' }}>
           <label style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--cor-texto-suave)', display: 'block', marginBottom: '0.375rem' }}>Status</label>
-          <select className="input" value={filtroStatus} onChange={(e) => setFiltroStatus(e.target.value)}>
+          <select className="input" value={filtroStatus} onChange={(e) => { setPagina(1); setFiltroStatus(e.target.value) }}>
             <option value="">Todos</option>
             <option value="pendente">Pendente</option>
             <option value="pago">Pago</option>
@@ -268,6 +272,7 @@ export default function GastosFixos() {
         titulo={gastoEditando ? 'Editar Gasto Fixo' : 'Novo Gasto Fixo'}
         onFechar={() => { setModalAberto(false); setGastoEditando(null) }}
       >
+        {apiForm.erro && <div role="alert" className="mb-4 rounded-lg border px-3 py-2 text-sm" style={{ background: 'var(--cor-perigo-suave)', borderColor: 'var(--cor-perigo-borda)', color: 'var(--cor-perigo)' }}>{apiForm.erro}</div>}
         <FormularioGastoFixo
           gasto={gastoEditando}
           mesAtual={filtroMes}

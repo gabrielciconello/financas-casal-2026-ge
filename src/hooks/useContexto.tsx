@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import React, { createContext, useCallback, useContext, useMemo, useState, useEffect, ReactNode } from 'react'
 import { supabase } from '../services/supabase.browser'
 import { Usuario } from '../types'
+import { obterNomeUsuario } from '../config/usuarios'
 
 // ============================================
 // CONTEXTO DE AUTENTICAÇÃO
@@ -32,22 +33,26 @@ export function ProvedorContexto({ children }: { children: ReactNode }) {
   const [usuario, setUsuario] = useState<Usuario | null>(null)
   const [token, setToken] = useState<string | null>(null)
   const [carregando, setCarregando] = useState(true)
-  const [tema, setTema] = useState<'claro' | 'escuro'>('claro')
+  const [tema, setTema] = useState<'claro' | 'escuro'>(() => {
+    const temaSalvo = localStorage.getItem('tema')
+    if (temaSalvo === 'claro' || temaSalvo === 'escuro') return temaSalvo
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'escuro' : 'claro'
+  })
 
   // Inicializa tema salvo
   useEffect(() => {
-    const temaSalvo = localStorage.getItem('tema') as 'claro' | 'escuro' | null
-    if (temaSalvo) {
-      setTema(temaSalvo)
-      document.documentElement.setAttribute('data-tema', temaSalvo === 'escuro' ? 'escuro' : '')
-    }
-  }, [])
+    document.documentElement.setAttribute('data-tema', tema === 'escuro' ? 'escuro' : '')
+  }, [tema])
 
   // Inicializa sessão do Supabase
   useEffect(() => {
+    let ativo = true
+
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!ativo) return
       if (session?.user) {
-        setUsuario({ id: session.user.id, email: session.user.email ?? '' })
+        const email = session.user.email ?? ''
+        setUsuario({ id: session.user.id, email, nome: obterNomeUsuario(email) })
         setToken(session.access_token)
       }
       setCarregando(false)
@@ -55,7 +60,8 @@ export function ProvedorContexto({ children }: { children: ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_evento, session) => {
       if (session?.user) {
-        setUsuario({ id: session.user.id, email: session.user.email ?? '' })
+        const email = session.user.email ?? ''
+        setUsuario({ id: session.user.id, email, nome: obterNomeUsuario(email) })
         setToken(session.access_token)
       } else {
         setUsuario(null)
@@ -63,29 +69,39 @@ export function ProvedorContexto({ children }: { children: ReactNode }) {
       }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      ativo = false
+      subscription.unsubscribe()
+    }
   }, [])
 
-  async function entrar(email: string, senha: string): Promise<string | null> {
+  const entrar = useCallback(async (email: string, senha: string): Promise<string | null> => {
     const { error } = await supabase.auth.signInWithPassword({ email, password: senha })
     if (error) return error.message
     return null
-  }
+  }, [])
 
-  async function sair(): Promise<void> {
+  const sair = useCallback(async (): Promise<void> => {
     await supabase.auth.signOut()
-  }
+  }, [])
 
-  function alternarTema() {
-    const novoTema = tema === 'claro' ? 'escuro' : 'claro'
-    setTema(novoTema)
-    localStorage.setItem('tema', novoTema)
-    document.documentElement.setAttribute('data-tema', novoTema === 'escuro' ? 'escuro' : '')
-  }
+  const alternarTema = useCallback(() => {
+    setTema(temaAtual => {
+      const novoTema = temaAtual === 'claro' ? 'escuro' : 'claro'
+      localStorage.setItem('tema', novoTema)
+      return novoTema
+    })
+  }, [])
+
+  const valorAuth = useMemo(
+    () => ({ usuario, token, carregando, entrar, sair }),
+    [usuario, token, carregando, entrar, sair]
+  )
+  const valorTema = useMemo(() => ({ tema, alternarTema }), [tema, alternarTema])
 
   return (
-    <ContextoAuth.Provider value={{ usuario, token, carregando, entrar, sair }}>
-      <ContextoTema.Provider value={{ tema, alternarTema }}>
+    <ContextoAuth.Provider value={valorAuth}>
+      <ContextoTema.Provider value={valorTema}>
         {children}
       </ContextoTema.Provider>
     </ContextoAuth.Provider>

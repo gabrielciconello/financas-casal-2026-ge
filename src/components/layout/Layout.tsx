@@ -41,7 +41,7 @@ function SidebarConteudo({ fechar, mostrarFechar, onPreload }: { fechar: () => v
           </span>
         </div>
         {mostrarFechar && (
-          <button onClick={fechar} className="btn btn-secundario p-1.5">
+          <button onClick={fechar} className="btn btn-secundario p-1.5" aria-label="Fechar menu">
             <X size={18} />
           </button>
         )}
@@ -110,14 +110,20 @@ export default function Layout() {
   }
 
   useEffect(() => {
-    // Preload all routes on idle so first navigation is instant
-    const requestCallback = (window as any).requestIdleCallback || setTimeout
-    const cancelCallback = (window as any).cancelIdleCallback || clearTimeout
-    const timer = requestCallback(() => {
-      Object.values(lazyModules).forEach(fns => fns.forEach(fn => fn()))
-    })
-    return () => cancelCallback(timer)
-  }, [])
+    if (!menuAberto) return
+    const overflowAnterior = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    function fecharComEscape(evento: KeyboardEvent) {
+      if (evento.key === 'Escape') setMenuAberto(false)
+    }
+
+    document.addEventListener('keydown', fecharComEscape)
+    return () => {
+      document.removeEventListener('keydown', fecharComEscape)
+      document.body.style.overflow = overflowAnterior
+    }
+  }, [menuAberto])
 
   return (
     <div className="flex min-h-screen bg-pagina" style={{ backgroundColor: 'var(--cor-fundo-pagina)', minHeight: '100dvh' }}>
@@ -133,8 +139,9 @@ export default function Layout() {
           <div
             className="fixed inset-0 bg-black/50 z-40 md:hidden"
             onClick={() => setMenuAberto(false)}
+            aria-hidden="true"
           />
-          <aside className="fixed top-0 left-0 h-screen w-64 bg-lateral border-r z-50 md:hidden shadow-xl" style={{ background: 'var(--cor-fundo-card)', borderRight: '1px solid var(--cor-borda)' }}>
+          <aside aria-label="Menu principal" className="fixed top-0 left-0 h-screen w-64 bg-lateral border-r z-50 md:hidden shadow-xl" style={{ background: 'var(--cor-fundo-card)', borderRight: '1px solid var(--cor-borda)' }}>
             <SidebarConteudo fechar={() => setMenuAberto(false)} mostrarFechar={true} onPreload={preloadModule} />
           </aside>
         </>
@@ -145,7 +152,7 @@ export default function Layout() {
 
         {/* HEADER MOBILE */}
         <header className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3" style={{ background: 'var(--cor-fundo-card)', borderBottom: '1px solid var(--cor-borda)' }}>
-          <button onClick={() => setMenuAberto(true)} className="btn btn-secundario p-2">
+          <button onClick={() => setMenuAberto(true)} className="btn btn-secundario p-2" aria-label="Abrir menu" aria-expanded={menuAberto}>
             <Menu size={20} />
           </button>
           <span className="font-display font-bold text-base" style={{ color: 'var(--cor-texto)' }}>Finanças Casal</span>

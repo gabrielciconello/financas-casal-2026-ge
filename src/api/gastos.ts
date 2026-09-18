@@ -6,6 +6,7 @@ import {
   responderErro,
   responderNaoEncontrado,
   responderMetodoNaoPermitido,
+  tratarErrosHttp,
 } from '../utils/responderHttp.js'
 import { validar } from '../validators/index.js'
 import {
@@ -27,12 +28,21 @@ import {
   deletarGastoVariavel,
 } from '../services/servicoGastos.js'
 import { supabaseAdmin } from '../services/supabase.node.js'
+import { aplicarCors } from '../utils/cors.js'
+import { normalizarPaginacao } from '../utils/index.js'
 
 
-export default async function handlerGastos(
+async function handlerGastos(
   req: IncomingMessage,
   res: ServerResponse
 ): Promise<void> {
+  aplicarCors(res)
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204)
+    res.end()
+    return
+  }
+
   const autenticado = await verificarAutenticacao(req as RequisicaoAutenticada, res)
   if (!autenticado) return
 
@@ -53,8 +63,9 @@ export default async function handlerGastos(
   // ==========================================
   if (tipoGasto === 'fixos') {
     if (req.method === 'GET' && !id) {
-      const pagina = Number(url.searchParams.get('pagina')) || 1
-      const limite = Number(url.searchParams.get('limite')) || 10
+      const { pagina, limite } = normalizarPaginacao(
+        url.searchParams.get('pagina'), url.searchParams.get('limite')
+      )
       const mes = url.searchParams.get('mes') ? Number(url.searchParams.get('mes')) : undefined
       const ano = url.searchParams.get('ano') ? Number(url.searchParams.get('ano')) : undefined
       const status = url.searchParams.get('status') ?? undefined
@@ -107,8 +118,9 @@ export default async function handlerGastos(
   // ==========================================
   if (tipoGasto === 'variaveis') {
     if (req.method === 'GET' && !id) {
-      const pagina = Number(url.searchParams.get('pagina')) || 1
-      const limite = Number(url.searchParams.get('limite')) || 10
+      const { pagina, limite } = normalizarPaginacao(
+        url.searchParams.get('pagina'), url.searchParams.get('limite')
+      )
       const mes = url.searchParams.get('mes') ? Number(url.searchParams.get('mes')) : undefined
       const ano = url.searchParams.get('ano') ? Number(url.searchParams.get('ano')) : undefined
       const categoria = url.searchParams.get('categoria') ?? undefined
@@ -157,3 +169,5 @@ export default async function handlerGastos(
 
   return responderMetodoNaoPermitido(res)
 }
+
+export default tratarErrosHttp(handlerGastos)

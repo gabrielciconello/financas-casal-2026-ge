@@ -1,13 +1,6 @@
 import { supabaseAdmin } from './supabase.node.js'
-import { respostaSucesso, respostaErro } from '../utils/index.js'
-import { RespostaApi } from '../types/index.js'
-
-interface ResumoFinanceiro {
-  total_entradas: number
-  total_saidas: number
-  saldo_atual: number
-  saldo_mensal: number
-}
+import { respostaErro, respostaSucesso } from '../utils/index.js'
+import type { RespostaApi } from '../types/index.js'
 
 interface ItemDetalhado {
   id: string
@@ -20,38 +13,17 @@ interface ItemDetalhado {
   status: string
 }
 
-interface ResumoCategoria {
-  categoria: string
-  total: number
-  percentual: number
-}
-
-interface ResumoMensal {
-  mes: number
-  ano: number
-  total_entradas: number
-  total_saidas: number
-}
-
-interface AlertaVencimento {
-  id: string
-  descricao: string
-  valor: number
-  dia_vencimento: number
-  tipo: 'gasto_fixo' | 'cartao'
-}
-
 interface DadosDashboard {
-  resumo: ResumoFinanceiro
+  resumo: { total_entradas: number; total_saidas: number; saldo_atual: number; saldo_mensal: number }
   itens_detalhados: ItemDetalhado[]
-  gastos_por_categoria: ResumoCategoria[]
-  historico_mensal: ResumoMensal[]
-  proximos_vencimentos: AlertaVencimento[]
+  gastos_por_categoria: Array<{ categoria: string; total: number; percentual: number }>
+  historico_mensal: Array<{ mes: number; ano: number; total_entradas: number; total_saidas: number }>
+  proximos_vencimentos: Array<{
+    id: string; descricao: string; valor: number; dia_vencimento: number; tipo: 'gasto_fixo' | 'cartao'
+  }>
   comparativo: {
-    entradas_mes_atual: number
-    entradas_mes_anterior: number
-    saidas_mes_atual: number
-    saidas_mes_anterior: number
+    entradas_mes_atual: number; entradas_mes_anterior: number
+    saidas_mes_atual: number; saidas_mes_anterior: number
   }
   saude_financeira: {
     percentual_gasto: number
@@ -59,455 +31,217 @@ interface DadosDashboard {
   }
 }
 
-// Returns first and last day of month in YYYY-MM-DD
+type LinhaTransacao = {
+  id: string; tipo: 'entrada' | 'saida'; valor: number | string; categoria: string
+  descricao: string; data: string; status: string
+}
+type LinhaSalario = {
+  id: string; valor_esperado: number | string; valor_recebido?: number | string | null
+  status: string; descricao: string; data_esperada: string; mes: number; ano: number
+}
+type LinhaGastoFixo = {
+  id: string; valor: number | string; status: string; dia_vencimento: number
+  descricao: string; categoria: string; mes: number; ano: number
+}
+type LinhaGastoVariavel = {
+  id: string; descricao: string; valor_real?: number | string | null
+  categoria: string; mes: number; ano: number
+}
+type LinhaCompra = {
+  id: string; descricao: string; categoria: string; valor_parcela: number | string
+  data_compra: string; parcela_atual?: number | string | null; parcelas?: number | string | null
+}
+
 function intervaloMes(mes: number, ano: number): { inicio: string; fim: string } {
   const inicio = `${ano}-${String(mes).padStart(2, '0')}-01`
   const ultimoDia = new Date(ano, mes, 0).getDate()
-  const fim = `${ano}-${String(mes).padStart(2, '0')}-${String(ultimoDia).padStart(2, '0')}`
-  return { inicio, fim }
+  return { inicio, fim: `${ano}-${String(mes).padStart(2, '0')}-${String(ultimoDia).padStart(2, '0')}` }
 }
 
+function deslocarMes(mes: number, ano: number, deslocamento: number): { mes: number; ano: number } {
+  const data = new Date(Date.UTC(ano, mes - 1 + deslocamento, 1))
+  return { mes: data.getUTCMonth() + 1, ano: data.getUTCFullYear() }
+}
+
+function pertenceAoMes(data: string, mes: number, ano: number): boolean {
+  return data.slice(0, 7) === `${ano}-${String(mes).padStart(2, '0')}`
+}
+
+function valorSalario(salario: LinhaSalario): number {
+  if (salario.status === 'recebido' || salario.status === 'parcial') {
+    return Number(salario.valor_recebido ?? salario.valor_esperado)
+  }
+  return Number(salario.valor_esperado)
+}
+
+function parcelaNoMes(compra: LinhaCompra, mes: number, ano: number): number | null {
+  const [anoCompra, mesCompra] = compra.data_compra.split('-').map(Number)
+  if (!anoCompra || !mesCompra) return null
+  const diferenca = (ano - anoCompra) * 12 + (mes - mesCompra)
+  const parcela = Number(compra.parcela_atual ?? 1) + diferenca
+  const totalParcelas = Number(compra.parcelas ?? 1)
+  return diferenca >= 0 && parcela >= 1 && parcela <= totalParcelas ? parcela : null
+}
+
+function somar<T>(itens: T[], obterValor: (item: T) => number): number {
+  return itens.reduce((total, item) => total + obterValor(item), 0)
+}
+
+/** Consolida os dados dos dois integrantes; `usuarioId` existe apenas por compatibilidade. */
 export async function buscarDadosDashboard(
   mes: number,
   ano: number,
-  usuarioId: string
+  _usuarioId?: string
 ): Promise<RespostaApi<DadosDashboard>> {
   try {
-    const { inicio, fim } = intervaloMes(mes, ano)
+    const primeiroMes = deslocarMes(mes, ano, -5)
+    const { inicio: inicioHistorico } = intervaloMes(primeiroMes.mes, primeiroMes.ano)
+    const { fim: fimAtual } = intervaloMes(mes, ano)
 
-    // ==========================================
-    // 1. TRANSAÇÕES DO MÊS ATUAL (filtrar por usuário)
-    // ==========================================
-    const { data: transacoes, error: erroTransacoes } = await supabaseAdmin
-      .from('transacoes')
-      .select('id, tipo, valor, categoria, descricao, data, status')
-      .eq('usuario_id', usuarioId)
-      .gte('data', inicio)
-      .lte('data', fim)
+    // Antes eram mais de 30 round-trips sequenciais; agora são seis consultas paralelas.
+    const respostas = await Promise.all([
+      supabaseAdmin.from('transacoes')
+        .select('id, tipo, valor, categoria, descricao, data, status')
+        .gte('data', inicioHistorico).lte('data', fimAtual),
+      supabaseAdmin.from('salarios')
+        .select('id, valor_esperado, valor_recebido, status, descricao, data_esperada, mes, ano')
+        .gte('ano', primeiroMes.ano).lte('ano', ano),
+      supabaseAdmin.from('gastos_fixos')
+        .select('id, valor, status, dia_vencimento, descricao, categoria, mes, ano')
+        .gte('ano', primeiroMes.ano).lte('ano', ano),
+      supabaseAdmin.from('gastos_variaveis')
+        .select('id, descricao, valor_real, categoria, mes, ano')
+        .gte('ano', primeiroMes.ano).lte('ano', ano),
+      supabaseAdmin.from('compras_cartao')
+        .select('id, descricao, categoria, valor_parcela, data_compra, parcela_atual, parcelas')
+        .lte('data_compra', fimAtual),
+      supabaseAdmin.from('saldo_total').select('valor, tipo'),
+    ])
 
-    if (erroTransacoes) return respostaErro(erroTransacoes.message)
+    const falha = respostas.find((resposta) => resposta.error)
+    if (falha?.error) return respostaErro(falha.error.message)
 
-    // ==========================================
-    // 2. GASTOS FIXOS DO MÊS (filtrar por usuário)
-    // ==========================================
-    const { data: gastosFixos, error: erroGastosFixos } = await supabaseAdmin
-      .from('gastos_fixos')
-      .select('id, valor, status, dia_vencimento, descricao, categoria')
-      .eq('usuario_id', usuarioId)
-      .eq('mes', mes)
-      .eq('ano', ano)
+    const transacoes = (respostas[0].data ?? []) as LinhaTransacao[]
+    const salarios = (respostas[1].data ?? []) as LinhaSalario[]
+    const gastosFixos = (respostas[2].data ?? []) as LinhaGastoFixo[]
+    const gastosVariaveis = (respostas[3].data ?? []) as LinhaGastoVariavel[]
+    const compras = (respostas[4].data ?? []) as LinhaCompra[]
 
-    if (erroGastosFixos) return respostaErro(erroGastosFixos.message)
-
-    // ==========================================
-    // 3. SALÁRIOS DO MÊS (filtrar por usuário)
-    // ==========================================
-    const { data: salarios } = await supabaseAdmin
-      .from('salarios')
-      .select('id, valor_esperado, valor_recebido, status, descricao, data_esperada, mes',)
-      .eq('usuario_id', usuarioId)
-      .eq('mes', mes)
-      .eq('ano', ano)
-
-    // ==========================================
-    // 3a. GASTOS VARIÁVEIS DO MÊS (filtrar por usuário)
-    // ==========================================
-    const { data: gastosVariaveis } = await supabaseAdmin
-      .from('gastos_variaveis')
-      .select('id, descricao, valor_real, categoria')
-      .eq('usuario_id', usuarioId)
-      .eq('mes', mes)
-      .eq('ano', ano)
-
-    // ==========================================
-    // 4. COMPRAS CARTÃO ATIVAS DO MÊS (parcelas que ainda não foram concluídas)
-    // Uma compra do mês X aparece se o mês/ano alvo está dentro do range de parcelas
-    // parcelaAtual indica qual parcela caiu no mês da data_compra + (mesAlvo - mesCompra)
-    // Buscamos todas as compras do usuário e filtramos quais têm parcela ativa no mês alvo
-    // ==========================================
-    const { data: todasComprasCartao } = await supabaseAdmin
-      .from('compras_cartao')
-      .select('id, descricao, categoria, valor_parcela, valor_total, data_compra, parcela_atual, parcelas, status')
-      .eq('usuario_id', usuarioId)
-
-    // Filtrar compras cuja parcela correspondente ao mês/ano consultado está ativa
-    const comprasMesAlvo = (todasComprasCartao ?? []).filter((c: any) => {
-      // Data da compra define o mês inicial
-      const dataCompra = new Date(c.data_compra + 'T00:00:00')
-      const mesCompra = dataCompra.getMonth() + 1
-      const anoCompra = dataCompra.getFullYear()
-
-      // Total de parcelas da compra
-      const totalParcelas = Number(c.parcelas || 1)
-      // Parcela que já havia passado quando o registro foi criado
-      const parcelaBase = Number(c.parcela_atual || 1)
-
-      // Diferença de meses entre a compra e o mês alvo
-      let diffMes = (ano - anoCompra) * 12 + (mes - mesCompra)
-
-      // Se diffMes < 0, o mês alvo é anterior à compra -> não aparece
-      if (diffMes < 0) return false
-
-      // A parcela que cai no mês alvo é: parcelaInicial + diffMes
-      const parcelaAlvo = parcelaBase + diffMes
-
-      // Se a parcela alvo está dentro do range total -> aparece
-      return parcelaAlvo >= 1 && parcelaAlvo <= totalParcelas
-    }).map((c: any) => {
-      const dataCompra = new Date(c.data_compra + 'T00:00:00')
-      const mesCompra = dataCompra.getMonth() + 1
-      const anoCompra = dataCompra.getFullYear()
-      let diffMes = (ano - anoCompra) * 12 + (mes - mesCompra)
-      const parcelaBase = Number(c.parcela_atual || 1)
-      const parcelaAlvo = parcelaBase + diffMes
-      return { ...c, parcela_alvo_no_mes: parcelaAlvo }
-    })
-
-    // ==========================================
-    // CALCULAR TOTAIS
-    // ==========================================
-    const totalEntradasTransacoes = transacoes
-      ?.filter((t) => t.tipo === 'entrada')
-      .reduce((acc, t) => acc + Number(t.valor), 0) ?? 0
-
-    const totalGastosFixos = gastosFixos
-      ?.reduce((acc, g) => acc + Number(g.valor), 0) ?? 0
-
-    const totalGastosVariaveis = gastosVariaveis
-      ?.reduce((acc: number, g: any) => acc + Number(g.valor_real ?? 0), 0) ?? 0
-
-    const totalComprasCartao = comprasMesAlvo
-      ?.reduce((acc: number, c: any) => acc + Number(c.valor_parcela ?? 0), 0) ?? 0
-
-    const totalSaidasTransacoes = transacoes
-      ?.filter((t) => t.tipo === 'saida')
-      .reduce((acc, t) => acc + Number(t.valor), 0) ?? 0
-
-    const totalEntradasSalarios = salarios
-      ?.reduce((acc: number, s: any) => {
-        const valor = s.status === 'recebido'
-          ? Number(s.valor_recebido ?? s.valor_esperado)
-          : Number(s.valor_esperado)
-        return acc + valor
-      }, 0) ?? 0
-
-    const totalSaidas = totalSaidasTransacoes + totalGastosFixos + totalGastosVariaveis + totalComprasCartao
-    const totalEntradas = totalEntradasTransacoes + totalEntradasSalarios
-
-    const saldoAtual = totalEntradas - totalSaidas
-
-    // ==========================================
-    // CALCULAR SALDO CUMULATIVO (aportes - retiradas do saldo_total)
-    // ==========================================
-    const { data: saldoTotalData, error: erroSaldoTotal } = await supabaseAdmin
-      .from('saldo_total')
-      .select('valor, tipo')
-      .eq('usuario_id', usuarioId)
-
-    let saldoCumulativo = 0
-    if (!erroSaldoTotal) {
-      let totalAportes = 0
-      let totalRetiradas = 0
-      for (const m of saldoTotalData ?? []) {
-        if (m.tipo === 'aporte') totalAportes += Number(m.valor)
-        else totalRetiradas += Number(m.valor)
-      }
-      saldoCumulativo = totalAportes - totalRetiradas
+    const obterDadosMes = (mesAlvo: number, anoAlvo: number) => {
+      const transacoesMes = transacoes.filter((item) => pertenceAoMes(item.data, mesAlvo, anoAlvo))
+      const salariosMes = salarios.filter((item) => item.mes === mesAlvo && item.ano === anoAlvo)
+      const fixosMes = gastosFixos.filter((item) => item.mes === mesAlvo && item.ano === anoAlvo)
+      const variaveisMes = gastosVariaveis.filter((item) => item.mes === mesAlvo && item.ano === anoAlvo)
+      const comprasMes = compras
+        .map((compra) => ({ compra, parcela: parcelaNoMes(compra, mesAlvo, anoAlvo) }))
+        .filter((item): item is { compra: LinhaCompra; parcela: number } => item.parcela !== null)
+      const entradas =
+        somar(transacoesMes.filter((item) => item.tipo === 'entrada'), (item) => Number(item.valor)) +
+        somar(salariosMes, valorSalario)
+      const saidas =
+        somar(transacoesMes.filter((item) => item.tipo === 'saida'), (item) => Number(item.valor)) +
+        somar(fixosMes, (item) => Number(item.valor)) +
+        somar(variaveisMes, (item) => Number(item.valor_real ?? 0)) +
+        somar(comprasMes, (item) => Number(item.compra.valor_parcela ?? 0))
+      return { transacoesMes, salariosMes, fixosMes, variaveisMes, comprasMes, entradas, saidas }
     }
 
-    // ==========================================
-    // ITENS DETALHADOS (para mostrar no dashboard)
-    // ==========================================
-    const itensDetalhados: ItemDetalhado[] = []
+    const atual = obterDadosMes(mes, ano)
+    const anteriorRef = deslocarMes(mes, ano, -1)
+    const anterior = obterDadosMes(anteriorRef.mes, anteriorRef.ano)
+    const saldoMensal = atual.entradas - atual.saidas
+    const saldoCumulativo = somar(respostas[5].data ?? [], (movimento: any) =>
+      movimento.tipo === 'aporte' ? Number(movimento.valor) : -Number(movimento.valor)
+    )
 
-    // Transações de saída
-    for (const t of transacoes ?? []) {
-      itensDetalhados.push({
-        id: t.id,
-        tipo: t.tipo,
-        descricao: t.descricao,
-        valor: Number(t.valor),
-        data: t.data,
-        fonte: 'transacao',
-        categoria: t.categoria,
-        status: t.status,
-      })
-    }
+    const itensDetalhados: ItemDetalhado[] = [
+      ...atual.transacoesMes.map((item) => ({
+        id: item.id, tipo: item.tipo, descricao: item.descricao, valor: Number(item.valor),
+        data: item.data, fonte: 'transacao' as const, categoria: item.categoria, status: item.status,
+      })),
+      ...atual.fixosMes.map((item) => ({
+        id: item.id, tipo: 'saida' as const, descricao: item.descricao, valor: Number(item.valor),
+        data: `${ano}-${String(mes).padStart(2, '0')}-${String(item.dia_vencimento).padStart(2, '0')}`,
+        fonte: 'gasto_fixo' as const, categoria: item.categoria, status: item.status,
+      })),
+      ...atual.salariosMes.map((item) => ({
+        id: item.id, tipo: 'entrada' as const, descricao: item.descricao, valor: valorSalario(item),
+        data: item.data_esperada, fonte: 'salario' as const, categoria: 'Salário', status: item.status,
+      })),
+      ...atual.variaveisMes.filter((item) => Number(item.valor_real ?? 0) > 0).map((item) => ({
+        id: item.id, tipo: 'saida' as const, descricao: item.descricao, valor: Number(item.valor_real),
+        data: `${ano}-${String(mes).padStart(2, '0')}-15`, fonte: 'gasto_variavel' as const,
+        categoria: item.categoria, status: 'pago',
+      })),
+      ...atual.comprasMes.map(({ compra, parcela }) => ({
+        id: compra.id, tipo: 'saida' as const,
+        descricao: `${compra.descricao} (${parcela}/${Number(compra.parcelas ?? 1)})`,
+        valor: Number(compra.valor_parcela), data: compra.data_compra, fonte: 'compra_cartao' as const,
+        categoria: compra.categoria, status: 'pendente',
+      })),
+    ].sort((a, b) => b.data.localeCompare(a.data))
 
-    // Gastos fixos (todos, como saída)
-    for (const g of gastosFixos ?? []) {
-      itensDetalhados.push({
-        id: g.id,
-        tipo: 'saida',
-        descricao: g.descricao,
-        valor: Number(g.valor),
-        data: `${ano}-${String(mes).padStart(2, '0')}-${String(g.dia_vencimento).padStart(2, '0')}`,
-        fonte: 'gasto_fixo',
-        categoria: g.categoria,
-        status: g.status,
-      })
-    }
-
-    // Salários como entrada
-    for (const s of salarios ?? []) {
-      const valorBase = s.status === 'recebido'
-        ? Number(s.valor_recebido ?? s.valor_esperado)
-        : Number(s.valor_esperado)
-      itensDetalhados.push({
-        id: s.id,
-        tipo: 'entrada',
-        descricao: s.descricao || `Salário - mês ${mes}/${ano}`,
-        valor: valorBase,
-        data: s.data_esperada,
-        fonte: 'salario',
-        categoria: 'Salário',
-        status: s.status,
-      })
-    }
-
-    // Gastos variáveis como saída
-    for (const gv of gastosVariaveis ?? []) {
-      const val = Number(gv.valor_real ?? 0)
-      if (val > 0) {
-        itensDetalhados.push({
-          id: gv.id,
-          tipo: 'saida',
-          descricao: gv.descricao || `Gasto Variável - ${gv.categoria}`,
-          valor: val,
-          data: `${ano}-${String(mes).padStart(2, '0')}-15`,
-          fonte: 'gasto_variavel',
-          categoria: gv.categoria,
-          status: 'pago',
-        })
-      }
-    }
-
-    // Compras cartão como saída (parcelas)
-    for (const c of comprasMesAlvo ?? []) {
-      itensDetalhados.push({
-        id: c.id,
-        tipo: 'saida',
-        descricao: `${c.descricao} (${c.parcela_alvo_no_mes}/${c.parcelas})`,
-        valor: Number(c.valor_parcela ?? 0),
-        data: c.data_compra,
-        fonte: 'compra_cartao' as const,
-        categoria: c.categoria,
-        status: c.status ?? 'pendente',
-      })
-    }
-
-    // Ordenar por data (mais recente primeiro)
-    itensDetalhados.sort((a, b) => (b.data > a.data ? 1 : a.data > b.data ? -1 : 0))
-
-    // ==========================================
-    // GASTOS POR CATEGORIA (inclui tudo)
-    // ==========================================
     const totalPorCategoria: Record<string, number> = {}
-
-    // Transações de saída
-    for (const t of transacoes ?? []) {
-      if (t.tipo === 'saida') {
-        totalPorCategoria[t.categoria] =
-          (totalPorCategoria[t.categoria] ?? 0) + Number(t.valor)
-      }
+    const adicionarCategoria = (categoria: string, valor: number) => {
+      totalPorCategoria[categoria] = (totalPorCategoria[categoria] ?? 0) + valor
     }
+    atual.transacoesMes.filter((item) => item.tipo === 'saida')
+      .forEach((item) => adicionarCategoria(item.categoria, Number(item.valor)))
+    atual.fixosMes.forEach((item) => adicionarCategoria(item.categoria, Number(item.valor)))
+    atual.variaveisMes.forEach((item) => adicionarCategoria(item.categoria, Number(item.valor_real ?? 0)))
+    atual.comprasMes.forEach(({ compra }) => adicionarCategoria(compra.categoria, Number(compra.valor_parcela)))
 
-    // Gastos fixos
-    for (const g of gastosFixos ?? []) {
-      totalPorCategoria[g.categoria] =
-        (totalPorCategoria[g.categoria] ?? 0) + Number(g.valor)
-    }
-
-    // Gastos variáveis (já carregados acima)
-    for (const gv of gastosVariaveis ?? []) {
-      const val = Number(gv.valor_real ?? 0)
-      if (val > 0) {
-        totalPorCategoria[gv.categoria] = (totalPorCategoria[gv.categoria] ?? 0) + val
-      }
-    }
-
-    // Compras cartão
-    for (const c of comprasMesAlvo ?? []) {
-      const val = Number(c.valor_parcela ?? 0)
-      if (val > 0) {
-        totalPorCategoria[c.categoria] = (totalPorCategoria[c.categoria] ?? 0) + val
-      }
-    }
-
-    const gastosPorCategoria: ResumoCategoria[] = Object.entries(totalPorCategoria)
+    const gastosPorCategoria = Object.entries(totalPorCategoria)
+      .filter(([, total]) => total > 0)
       .map(([categoria, total]) => ({
-        categoria,
-        total,
-        percentual: totalSaidas > 0 ? Number(((total / totalSaidas) * 100).toFixed(1)) : 0,
+        categoria, total,
+        percentual: atual.saidas > 0 ? Number(((total / atual.saidas) * 100).toFixed(1)) : 0,
       }))
       .sort((a, b) => b.total - a.total)
 
-    // ==========================================
-    // HISTÓRICO DOS ÚLTIMOS 6 MESES
-    // ==========================================
-    const historico: ResumoMensal[] = []
-    for (let i = 5; i >= 0; i--) {
-      let mesBusca = mes - i
-      let anoBusca = ano
-      if (mesBusca <= 0) { mesBusca += 12; anoBusca -= 1 }
+    const historico = Array.from({ length: 6 }, (_, indice) => {
+      const referencia = deslocarMes(mes, ano, indice - 5)
+      const dados = obterDadosMes(referencia.mes, referencia.ano)
+      return { mes: referencia.mes, ano: referencia.ano, total_entradas: dados.entradas, total_saidas: dados.saidas }
+    })
 
-      const { inicio: inicioMes, fim: fimMes } = intervaloMes(mesBusca, anoBusca)
+    const agora = new Date()
+    const ehMesAtual = agora.getMonth() + 1 === mes && agora.getFullYear() === ano
+    const diaAtual = agora.getDate()
+    const ultimoDia = new Date(ano, mes, 0).getDate()
+    const proximosVencimentos = ehMesAtual
+      ? atual.fixosMes.filter((item) =>
+          item.status === 'pendente' && item.dia_vencimento >= diaAtual &&
+          item.dia_vencimento <= Math.min(ultimoDia, diaAtual + 7)
+        ).sort((a, b) => a.dia_vencimento - b.dia_vencimento).map((item) => ({
+          id: item.id, descricao: item.descricao, valor: Number(item.valor),
+          dia_vencimento: item.dia_vencimento, tipo: 'gasto_fixo' as const,
+        }))
+      : []
 
-      // Transações
-      const { data: transMes } = await supabaseAdmin
-        .from('transacoes')
-        .select('tipo, valor')
-        .eq('usuario_id', usuarioId)
-        .gte('data', inicioMes)
-        .lte('data', fimMes)
-
-      const entradasTrans = transMes?.filter((t) => t.tipo === 'entrada').reduce((acc, t) => acc + Number(t.valor), 0) ?? 0
-      const saidasTransacoes = transMes?.filter((t) => t.tipo === 'saida').reduce((acc, t) => acc + Number(t.valor), 0) ?? 0
-
-      // Salários do mês
-      const { data: salMes } = await supabaseAdmin
-        .from('salarios')
-        .select('valor_esperado, valor_recebido, status')
-        .eq('usuario_id', usuarioId)
-        .eq('mes', mesBusca)
-        .eq('ano', anoBusca)
-      const entradasSalarios = salMes?.reduce((acc: number, s: any) => {
-        const v = s.status === 'recebido'
-          ? Number(s.valor_recebido ?? s.valor_esperado)
-          : Number(s.valor_esperado)
-        return acc + v
-      }, 0) ?? 0
-
-      // Gastos fixos do mês
-      const { data: gfMes } = await supabaseAdmin
-        .from('gastos_fixos')
-        .select('valor')
-        .eq('usuario_id', usuarioId)
-        .eq('mes', mesBusca)
-        .eq('ano', anoBusca)
-      const totalGF = gfMes?.reduce((acc, g) => acc + Number(g.valor), 0) ?? 0
-
-      // Gastos variáveis
-      const { data: gvMes } = await supabaseAdmin
-        .from('gastos_variaveis')
-        .select('valor_real')
-        .eq('usuario_id', usuarioId)
-        .eq('mes', mesBusca)
-        .eq('ano', anoBusca)
-      const totalGV = gvMes?.reduce((acc, g) => acc + Number(g.valor_real ?? 0), 0) ?? 0
-
-      historico.push({
-        mes: mesBusca,
-        ano: anoBusca,
-        total_entradas: entradasTrans + entradasSalarios,
-        total_saidas: saidasTransacoes + totalGF + totalGV,
-      })
-    }
-
-    // ==========================================
-    // PRÓXIMOS VENCIMENTOS (7 DIAS)
-    // ==========================================
-    const diaAtual = new Date().getDate()
-    const diaLimite = diaAtual + 7
-
-    const { data: gastosVencendo } = await supabaseAdmin
-      .from('gastos_fixos')
-      .select('id, descricao, valor, dia_vencimento')
-      .eq('mes', mes)
-      .eq('ano', ano)
-      .eq('status', 'pendente')
-      .gte('dia_vencimento', diaAtual)
-      .lte('dia_vencimento', diaLimite)
-      .order('dia_vencimento', { ascending: true })
-
-    const proximosVencimentos: AlertaVencimento[] = (gastosVencendo ?? []).map((g) => ({
-      id: g.id,
-      descricao: g.descricao,
-      valor: Number(g.valor),
-      dia_vencimento: g.dia_vencimento,
-      tipo: 'gasto_fixo' as const,
-    }))
-
-    // ==========================================
-    // COMPARATIVO MÊS ANTERIOR
-    // ==========================================
-    let mesAnterior = mes - 1
-    let anoAnterior = ano
-    if (mesAnterior <= 0) { mesAnterior = 12; anoAnterior -= 1 }
-
-    const { inicio: inicioAnterior, fim: fimAnterior } = intervaloMes(mesAnterior, anoAnterior)
-
-    const { data: transAnterior } = await supabaseAdmin
-      .from('transacoes')
-      .select('tipo, valor')
-      .eq('usuario_id', usuarioId)
-      .gte('data', inicioAnterior)
-      .lte('data', fimAnterior)
-
-    const entradasAnterior = transAnterior?.filter((t) => t.tipo === 'entrada').reduce((acc, t) => acc + Number(t.valor), 0) ?? 0
-    const saidasAnterior = transAnterior?.filter((t) => t.tipo === 'saida').reduce((acc, t) => acc + Number(t.valor), 0) ?? 0
-
-    // Salários mês anterior
-    const { data: salAnterior } = await supabaseAdmin
-      .from('salarios')
-      .select('valor_esperado, valor_recebido, status')
-      .eq('usuario_id', usuarioId)
-      .eq('mes', mesAnterior)
-      .eq('ano', anoAnterior)
-    const entradasSalariosAnterior = salAnterior?.reduce((acc: number, s: any) => {
-      const v = s.status === 'recebido'
-        ? Number(s.valor_recebido ?? s.valor_esperado)
-        : Number(s.valor_esperado)
-      return acc + v
-    }, 0) ?? 0
-
-    // Gastos fixos mês anterior
-    const { data: gfAnterior } = await supabaseAdmin
-      .from('gastos_fixos')
-      .select('valor')
-      .eq('usuario_id', usuarioId)
-      .eq('mes', mesAnterior)
-      .eq('ano', anoAnterior)
-    const totalGFAnterior = gfAnterior?.reduce((acc, g) => acc + Number(g.valor), 0) ?? 0
-
-    // ==========================================
-    // SAÚDE FINANCEIRA
-    // ==========================================
-    const percentualGasto = totalEntradas > 0 ? Number(((totalSaidas / totalEntradas) * 100).toFixed(1)) : 0
-
-    const classificacao =
-      percentualGasto <= 50 ? 'otima' :
-      percentualGasto <= 70 ? 'boa' :
+    const percentualGasto = atual.entradas > 0
+      ? Number(((atual.saidas / atual.entradas) * 100).toFixed(1))
+      : atual.saidas > 0 ? 100 : 0
+    const classificacao: DadosDashboard['saude_financeira']['classificacao'] =
+      percentualGasto <= 50 ? 'otima' : percentualGasto <= 70 ? 'boa' :
       percentualGasto <= 90 ? 'atencao' : 'critica'
 
-    // O saldo_atual é o cumulativo do saldo_total + o saldo residual do mês
-    const saldoFinal = saldoCumulativo + saldoAtual
-
-    const dados: DadosDashboard = {
+    return respostaSucesso({
       resumo: {
-        total_entradas: totalEntradas,
-        total_saidas: totalSaidas,
-        saldo_atual: saldoFinal,
-        saldo_mensal: saldoAtual,
+        total_entradas: atual.entradas, total_saidas: atual.saidas,
+        saldo_atual: saldoCumulativo + saldoMensal, saldo_mensal: saldoMensal,
       },
       itens_detalhados: itensDetalhados,
       gastos_por_categoria: gastosPorCategoria,
       historico_mensal: historico,
       proximos_vencimentos: proximosVencimentos,
       comparativo: {
-        entradas_mes_atual: totalEntradas,
-        entradas_mes_anterior: entradasAnterior + entradasSalariosAnterior,
-        saidas_mes_atual: totalSaidas,
-        saidas_mes_anterior: saidasAnterior + totalGFAnterior,
+        entradas_mes_atual: atual.entradas, entradas_mes_anterior: anterior.entradas,
+        saidas_mes_atual: atual.saidas, saidas_mes_anterior: anterior.saidas,
       },
-      saude_financeira: {
-        percentual_gasto: percentualGasto,
-        classificacao,
-      },
-    }
-
-    return respostaSucesso(dados)
-  } catch (erro) {
+      saude_financeira: { percentual_gasto: percentualGasto, classificacao },
+    })
+  } catch {
     return respostaErro('Erro ao buscar dados do dashboard')
   }
 }

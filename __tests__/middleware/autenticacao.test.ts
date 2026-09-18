@@ -2,7 +2,7 @@ import { EventEmitter } from 'events'
 import { verificarAutenticacao } from '../../src/middleware/autenticacao'
 
 // Mock do Supabase
-jest.mock('../../src/services/supabase', () => ({
+jest.mock('../../src/services/supabase.node', () => ({
   supabase: {
     auth: {
       getUser: jest.fn(),
@@ -11,7 +11,7 @@ jest.mock('../../src/services/supabase', () => ({
   supabaseAdmin: {},
 }))
 
-import { supabase } from '../../src/services/supabase'
+import { supabase } from '../../src/services/supabase.node'
 
 function criarRequisicaoFake(headers: Record<string, string> = {}) {
   const emitter = new EventEmitter() as any
@@ -82,7 +82,7 @@ describe('middleware - verificarAutenticacao', () => {
       data: {
         user: {
           id: 'usuario-123',
-          email: 'usuario@email.com',
+          email: 'gabrielghnc@gmail.com',
         },
       },
       error: null,
@@ -93,7 +93,8 @@ describe('middleware - verificarAutenticacao', () => {
     expect(resultado).toBe(true)
     expect(req.usuario).toEqual({
       id: 'usuario-123',
-      email: 'usuario@email.com',
+      email: 'gabrielghnc@gmail.com',
+      nome: 'Gabriel',
     })
   })
 

@@ -6,6 +6,7 @@ import {
   responderErro,
   responderNaoEncontrado,
   responderMetodoNaoPermitido,
+  tratarErrosHttp,
 } from '../utils/responderHttp.js'
 import { validar } from '../validators/index.js'
 import {
@@ -26,11 +27,20 @@ import {
   deletarCompraCartao,
 } from '../services/servicoCartoes.js'
 import { supabaseAdmin } from '../services/supabase.node.js'
+import { aplicarCors } from '../utils/cors.js'
+import { normalizarPaginacao } from '../utils/index.js'
 
-export default async function handlerCartoes(
+async function handlerCartoes(
   req: IncomingMessage,
   res: ServerResponse
 ): Promise<void> {
+  aplicarCors(res)
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204)
+    res.end()
+    return
+  }
+
   const autenticado = await verificarAutenticacao(req as RequisicaoAutenticada, res)
   if (!autenticado) return
 
@@ -53,8 +63,9 @@ export default async function handlerCartoes(
     const cartaoId = partes[2] ?? null
 
     if (req.method === 'GET' && !cartaoId) {
-      const pagina = Number(url.searchParams.get('pagina')) || 1
-      const limite = Number(url.searchParams.get('limite')) || 10
+      const { pagina, limite } = normalizarPaginacao(
+        url.searchParams.get('pagina'), url.searchParams.get('limite')
+      )
 
       const resultado = await buscarCartoes({ pagina, limite })
       if (resultado.erro) return responderErro(res, resultado.erro)
@@ -103,8 +114,9 @@ export default async function handlerCartoes(
   // ==========================================
   if (ehCompra) {
     if (req.method === 'GET' && !id) {
-      const pagina = Number(url.searchParams.get('pagina')) || 1
-      const limite = Number(url.searchParams.get('limite')) || 10
+      const { pagina, limite } = normalizarPaginacao(
+        url.searchParams.get('pagina'), url.searchParams.get('limite')
+      )
       const cartaoId = url.searchParams.get('cartaoId') ?? undefined
       const mes = url.searchParams.get('mes') ? Number(url.searchParams.get('mes')) : undefined
       const ano = url.searchParams.get('ano') ? Number(url.searchParams.get('ano')) : undefined
@@ -146,3 +158,5 @@ export default async function handlerCartoes(
 
   return responderMetodoNaoPermitido(res)
 }
+
+export default tratarErrosHttp(handlerCartoes)

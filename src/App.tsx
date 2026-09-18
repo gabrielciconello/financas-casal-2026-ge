@@ -1,9 +1,10 @@
 import React, { Suspense, lazy } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './hooks/useContexto'
+import Login from './pages/auth/Login'
+import Layout from './components/layout/Layout'
+import Carregando from './components/ui/Carregando'
 
-const Login = lazy(() => import('./pages/auth/Login'))
-const Layout = lazy(() => import('./components/layout/Layout'))
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'))
 const Transacoes = lazy(() => import('./pages/transacoes/Transacoes'))
 const Salarios = lazy(() => import('./pages/salarios/Salarios'))
@@ -19,15 +20,8 @@ function RotaProtegida({ children }: { children: React.ReactNode }) {
 
   if (carregando) {
     return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100dvh',
-        fontFamily: 'var(--fonte-corpo)',
-        color: 'var(--cor-texto-suave)',
-      }}>
-        Carregando...
+      <div className="min-h-[100dvh] flex items-center justify-center" style={{ backgroundColor: 'var(--cor-fundo-pagina)' }}>
+        <Carregando texto="Restaurando sessão..." />
       </div>
     )
   }
@@ -39,12 +33,8 @@ function RotaProtegida({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <Suspense fallback={
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        height: '100dvh', fontFamily: 'var(--fonte-corpo)',
-        color: 'var(--cor-texto-suave)', backgroundColor: 'var(--cor-fundo-pagina)',
-      }}>
-        Carregando...
+      <div className="min-h-[50dvh] flex items-center justify-center" style={{ backgroundColor: 'var(--cor-fundo-pagina)' }}>
+        <Carregando texto="Abrindo página..." />
       </div>
     }>
       <Routes>

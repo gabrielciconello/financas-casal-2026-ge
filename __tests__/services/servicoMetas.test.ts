@@ -1,4 +1,4 @@
-jest.mock('../../src/services/supabase', () => ({
+jest.mock('../../src/services/supabase.node', () => ({
   supabaseAdmin: {
     from: jest.fn(),
   },
@@ -8,7 +8,7 @@ jest.mock('../../src/services/servicoAuditoria', () => ({
   registrarAuditoria: jest.fn().mockResolvedValue(undefined),
 }))
 
-import { supabaseAdmin } from '../../src/services/supabase'
+import { supabaseAdmin } from '../../src/services/supabase.node'
 import {
   buscarMetas,
   buscarMetaPorId,

@@ -3,6 +3,7 @@ import { z } from 'zod'
 export const esquemaCriarMeta = z.object({
   titulo: z
     .string({ required_error: 'Título é obrigatório' })
+    .trim()
     .min(3, 'Título deve ter no mínimo 3 caracteres')
     .max(255, 'Título deve ter no máximo 255 caracteres'),
 
@@ -10,11 +11,10 @@ export const esquemaCriarMeta = z.object({
     .number({ required_error: 'Valor alvo é obrigatório' })
     .positive('Valor alvo deve ser maior que zero'),
 
-  aporte_mensal: z.coerce
-    .number()
-    .min(0, 'Aporte mensal não pode ser negativo')
-    .optional()
-    .or(z.literal('')),
+  aporte_mensal: z.union([
+    z.coerce.number().min(0, 'Aporte mensal não pode ser negativo'),
+    z.literal(''),
+  ]).optional().transform((valor) => valor === '' ? undefined : valor),
 
   prazo: z
     .string()
@@ -22,7 +22,10 @@ export const esquemaCriarMeta = z.object({
     .optional(),
 })
 
-export const esquemaAtualizarMeta = esquemaCriarMeta.partial()
+export const esquemaAtualizarMeta = esquemaCriarMeta.partial().refine(
+  (dados) => Object.keys(dados).length > 0,
+  'Informe ao menos um campo para atualizar'
+)
 
 export const esquemaCriarContribuicaoMeta = z.object({
   meta_id: z

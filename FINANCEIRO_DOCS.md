@@ -2,9 +2,22 @@
 
 ```
 
-# 💰 FinançasCasal — Documentação do Projeto
+# 💰 FinançasCasal — Regras de negócio e roadmap
 
-> Assistente financeiro pessoal para dois usuários (casal), com visualização compartilhada, controle completo de finanças e integração com IA.
+> Controle financeiro pessoal para dois usuários (casal), com visualização compartilhada. Este documento mistura regras vigentes e ideias futuras; o status abaixo é a referência para o que existe hoje.
+
+## Status de implementação
+
+| Área | Status |
+|---|---|
+| Login, dashboard, transações, salários, cartões, gastos, metas e saldo total | Implementado |
+| CSV de transações, tema e responsividade | Implementado |
+| Registro de auditoria no backend | Implementado nos módulos principais; sem tela de consulta |
+| Recorrência | Campo disponível; geração automática ainda não implementada |
+| Orçamentos e relatórios dedicados | Planejado |
+| Assistente IA/Gemini | Planejado; removido do código atual |
+
+As seções detalhadas abaixo descrevem a visão do produto. Itens além dessa matriz são requisitos de roadmap, não uma afirmação de que já estejam entregues.
 
 ---
 
@@ -21,7 +34,7 @@ Sistema web responsivo (mobile-first) para gestão financeira de um casal. Ambos
 - Sessão persistente por usuário
 - **Visualização compartilhada**: todos os dados são visíveis para ambos
 - **Log de auditoria**: cada ação (criar, editar, excluir) registra qual usuário a realizou, em qual registro e quando
-- O log é aplicado em todos os módulos do sistema
+- O log é aplicado nos módulos principais; saldo total ainda precisa ser incluído
 
 ---
 
@@ -29,17 +42,19 @@ Sistema web responsivo (mobile-first) para gestão financeira de um casal. Ambos
 
 | Camada                   | Tecnologia                   |
 | ------------------------ | ---------------------------- |
-| Frontend                 | HTML, CSS, TypeScript        |
+| Frontend                 | React 18, Vite, Tailwind CSS, TypeScript |
 | Backend / API            | Vercel API Routes (Node.js)  |
 | Banco de Dados           | Supabase (PostgreSQL)        |
 | Autenticação           | Supabase Auth                |
-| Inteligência Artificial | Google Gemini API (gratuito) |
+| Inteligência Artificial | Google Gemini (planejado)    |
 | Deploy                   | Vercel (gratuito)            |
 | Versionamento            | GitHub                       |
 
 ---
 
-## ☁️ Infraestrutura Gratuita
+## ☁️ Infraestrutura
+
+Os limites e preços dos planos externos mudam. Consulte os painéis/documentação da Vercel, Supabase e do provedor de IA antes de tomar decisões de capacidade; os números abaixo são apenas a referência original do projeto.
 
 ### Vercel (Free Tier)
 
@@ -79,10 +94,10 @@ Sistema web responsivo (mobile-first) para gestão financeira de um casal. Ambos
 
 ### 2. 📋 Log Global de Auditoria
 
-- Tabela dedicada no banco: `audit_logs`
+- Tabela dedicada no banco: `logs_auditoria`
 - Registra: usuário, ação (criar/editar/excluir), módulo, ID do registro e timestamp
-- Aplicado em: movimentações, cartões, gastos fixos, salários e metas
-- Interface de visualização com filtros por usuário, módulo e período
+- Aplicado em: movimentações, cartões, gastos fixos/variáveis, salários e metas
+- Interface de visualização com filtros por usuário, módulo e período (planejada)
 
 ---
 
@@ -165,7 +180,7 @@ Sistema web responsivo (mobile-first) para gestão financeira de um casal. Ambos
 
 ---
 
-### 9. 📊 Relatórios
+### 9. 📊 Relatórios (planejado)
 
 - Relatório mensal e anual por categoria, tipo e usuário
 - Comparativo entre períodos
@@ -174,7 +189,7 @@ Sistema web responsivo (mobile-first) para gestão financeira de um casal. Ambos
 
 ---
 
-### 10. 🤖 Assistente IA (Gemini)
+### 10. 🤖 Assistente IA (planejado)
 
 - Chat em linguagem natural: *"quanto gastamos esse mês?"*, *"qual nossa maior despesa?"*
 - Resumo mensal automático gerado por IA
@@ -234,16 +249,17 @@ Sistema web responsivo (mobile-first) para gestão financeira de um casal. Ambos
 
 | Tabela                 | Descrição                                            |
 | ---------------------- | ------------------------------------------------------ |
-| `users`              | Usuários autenticados (gerenciado pelo Supabase Auth) |
-| `transactions`       | Movimentações de entradas e saídas                  |
-| `salaries`           | Salários fixos e variáveis por usuário              |
-| `credit_cards`       | Cartões de crédito cadastrados                       |
-| `card_purchases`     | Compras e parcelas de cartão                          |
-| `fixed_expenses`     | Gastos fixos mensais                                   |
-| `variable_expenses`  | Gastos variáveis com estimado vs real                 |
-| `goals`              | Metas financeiras                                      |
-| `goal_contributions` | Aportes realizados por meta                            |
-| `audit_logs`         | Log global de todas as ações do sistema              |
+| `auth.users`            | Usuários autenticados (gerenciado pelo Supabase Auth) |
+| `transacoes`            | Movimentações de entradas e saídas                    |
+| `salarios`              | Salários fixos e variáveis por usuário                |
+| `cartoes`               | Cartões de crédito cadastrados                         |
+| `compras_cartao`        | Compras e parcelas de cartão                           |
+| `gastos_fixos`          | Gastos fixos mensais                                   |
+| `gastos_variaveis`      | Gastos variáveis com estimado vs real                 |
+| `metas`                 | Metas financeiras                                      |
+| `contribuicoes_metas`   | Aportes realizados por meta                            |
+| `saldo_total`           | Aportes e retiradas do saldo acompanhado               |
+| `logs_auditoria`        | Log global de ações                                    |
 
 ---
 

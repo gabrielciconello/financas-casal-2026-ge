@@ -3,6 +3,7 @@ import { z } from 'zod'
 export const esquemaCriarCartao = z.object({
   nome: z
     .string({ required_error: 'Nome é obrigatório' })
+    .trim()
     .min(2, 'Nome deve ter no mínimo 2 caracteres')
     .max(100, 'Nome deve ter no máximo 100 caracteres'),
 
@@ -10,7 +11,8 @@ export const esquemaCriarCartao = z.object({
 
   limite: z.coerce
     .number({ required_error: 'Limite é obrigatório' })
-    .min(0, 'Limite não pode ser negativo'),
+    .finite('Limite inválido')
+    .positive('Limite deve ser maior que zero'),
 
   dia_fechamento: z.coerce
     .number({ required_error: 'Dia de fechamento é obrigatório' })
@@ -25,7 +27,10 @@ export const esquemaCriarCartao = z.object({
     .max(31, 'Dia deve ser entre 1 e 31'),
 })
 
-export const esquemaAtualizarCartao = esquemaCriarCartao.partial()
+export const esquemaAtualizarCartao = esquemaCriarCartao.partial().refine(
+  (dados) => Object.keys(dados).length > 0,
+  'Informe ao menos um campo para atualizar'
+)
 
 export const esquemaCriarCompraCartao = z.object({
   cartao_id: z
@@ -34,15 +39,18 @@ export const esquemaCriarCompraCartao = z.object({
 
   descricao: z
     .string({ required_error: 'Descrição é obrigatória' })
+    .trim()
     .min(3, 'Descrição deve ter no mínimo 3 caracteres')
     .max(255, 'Descrição deve ter no máximo 255 caracteres'),
 
   categoria: z
     .string({ required_error: 'Categoria é obrigatória' })
+    .trim()
     .min(2, 'Categoria deve ter no mínimo 2 caracteres'),
 
   valor_total: z.coerce
     .number({ required_error: 'Valor total é obrigatório' })
+    .finite('Valor total inválido')
     .positive('Valor total deve ser maior que zero'),
 
   parcelas: z.coerce
@@ -65,7 +73,10 @@ export const esquemaCriarCompraCartao = z.object({
 
 export const esquemaAtualizarCompraCartao = esquemaCriarCompraCartao.omit({ data_compra: true }).extend({
   data_compra: z.string().optional(),
-}).partial()
+}).partial().refine(
+  (dados) => Object.keys(dados).length > 0,
+  'Informe ao menos um campo para atualizar'
+)
 
 export type CriarCartaoInput = z.infer<typeof esquemaCriarCartao>
 export type AtualizarCartaoInput = z.infer<typeof esquemaAtualizarCartao>

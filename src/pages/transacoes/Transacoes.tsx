@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Plus, Filter, Download } from 'lucide-react'
+import { Plus, Download } from 'lucide-react'
 import { useApi } from '../../hooks/useApi'
 import { Transacao, CriarTransacaoDTO } from '../../types'
 import { formatarMoeda, mesAnoAtual } from '../../utils'
@@ -43,6 +43,7 @@ export default function Transacoes() {
 
   const { carregando, erro, requisitar } = useApi()
   const apiForm = useApi()
+  const apiDelete = useApi()
 
   const buscar = useCallback(async () => {
     const params = new URLSearchParams({
@@ -65,17 +66,16 @@ export default function Transacoes() {
   useEffect(() => { buscar() }, [buscar])
 
   async function handleSalvar(dados: CriarTransacaoDTO) {
-    if (transacaoEditando) {
-      await apiForm.requisitar(`/api/transacoes/${transacaoEditando.id}`, {
+    const resultado = transacaoEditando
+      ? await apiForm.requisitar(`/api/transacoes/${transacaoEditando.id}`, {
         method: 'PUT',
         body: dados,
       })
-    } else {
-      await apiForm.requisitar('/api/transacoes', {
+      : await apiForm.requisitar('/api/transacoes', {
         method: 'POST',
         body: dados,
       })
-    }
+    if (!resultado) return
     setModalAberto(false)
     setTransacaoEditando(null)
     buscar()
@@ -83,7 +83,8 @@ export default function Transacoes() {
 
   async function handleDeletar(id: string) {
     if (!confirm('Deseja deletar esta transação?')) return
-    await requisitar(`/api/transacoes/${id}`, { method: 'DELETE' })
+    const resultado = await apiDelete.requisitar(`/api/transacoes/${id}`, { method: 'DELETE' })
+    if (!resultado) return
     buscar()
   }
 
@@ -97,6 +98,11 @@ export default function Transacoes() {
     setModalAberto(true)
   }
 
+  function atualizarFiltros(parcial: Partial<FiltrosState>) {
+    setPagina(1)
+    setFiltros(atuais => ({ ...atuais, ...parcial }))
+  }
+
   // Exportar CSV
   function exportarCSV() {
     const cabecalho = ['Descrição', 'Categoria', 'Tipo', 'Valor', 'Data', 'Status', 'Método']
@@ -105,13 +111,15 @@ export default function Transacoes() {
       t.valor, t.data, t.status,
       t.metodo_pagamento ?? '',
     ])
-    const csv = [cabecalho, ...linhas].map((l) => l.join(',')).join('\n')
-    const blob = new Blob([csv], { type: 'text/csv' })
+    const escaparCampo = (valor: unknown) => `"${String(valor ?? '').replace(/"/g, '""')}"`
+    const csv = [cabecalho, ...linhas].map((l) => l.map(escaparCampo).join(',')).join('\n')
+    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
     a.download = `transacoes-${filtros.mes}-${filtros.ano}.csv`
     a.click()
+    URL.revokeObjectURL(url)
   }
 
   return (
@@ -137,6 +145,8 @@ export default function Transacoes() {
         </div>
       </div>
 
+      {apiDelete.erro && <div role="alert" className="rounded-lg border px-3 py-2 text-sm" style={{ background: 'var(--cor-perigo-suave)', borderColor: 'var(--cor-perigo-borda)', color: 'var(--cor-perigo)' }}>{apiDelete.erro}</div>}
+
       {/* Filtros */}
       <div className="card flex flex-wrap items-end gap-3">
         <div className="flex-1 min-w-[140px]">
@@ -146,7 +156,7 @@ export default function Transacoes() {
           <select
             className="input"
             value={filtros.mes}
-            onChange={(e) => setFiltros({ ...filtros, mes: Number(e.target.value) })}
+            onChange={(e) => atualizarFiltros({ mes: Number(e.target.value) })}
           >
             {Array.from({ length: 12 }, (_, i) => (
               <option key={i + 1} value={i + 1}>
@@ -163,7 +173,7 @@ export default function Transacoes() {
           <select
             className="input"
             value={filtros.ano}
-            onChange={(e) => setFiltros({ ...filtros, ano: Number(e.target.value) })}
+            onChange={(e) => atualizarFiltros({ ano: Number(e.target.value) })}
           >
             {[2024, 2025, 2026, 2027].map((a) => (
               <option key={a} value={a}>{a}</option>
@@ -178,7 +188,7 @@ export default function Transacoes() {
           <select
             className="input"
             value={filtros.tipo}
-            onChange={(e) => setFiltros({ ...filtros, tipo: e.target.value })}
+            onChange={(e) => atualizarFiltros({ tipo: e.target.value })}
           >
             <option value="">Todos</option>
             <option value="entrada">Entrada</option>
@@ -193,7 +203,7 @@ export default function Transacoes() {
           <select
             className="input"
             value={filtros.categoria}
-            onChange={(e) => setFiltros({ ...filtros, categoria: e.target.value })}
+            onChange={(e) => atualizarFiltros({ categoria: e.target.value })}
           >
             <option value="">Todas</option>
             {CATEGORIAS.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -207,7 +217,7 @@ export default function Transacoes() {
           <select
             className="input"
             value={filtros.status}
-            onChange={(e) => setFiltros({ ...filtros, status: e.target.value })}
+            onChange={(e) => atualizarFiltros({ status: e.target.value })}
           >
             <option value="">Todos</option>
             <option value="efetivado">Efetivado</option>
@@ -215,12 +225,6 @@ export default function Transacoes() {
           </select>
         </div>
 
-        <button
-          className="btn btn-secundario"
-          onClick={() => { setPagina(1); buscar() }}
-        >
-          <Filter size={16} /> Filtrar
-        </button>
       </div>
 
       {/* Lista */}
@@ -321,6 +325,11 @@ export default function Transacoes() {
         titulo={transacaoEditando ? 'Editar Transação' : 'Nova Transação'}
         onFechar={() => { setModalAberto(false); setTransacaoEditando(null) }}
       >
+        {apiForm.erro && (
+          <div role="alert" className="mb-4 rounded-lg border px-3 py-2 text-sm" style={{ background: 'var(--cor-perigo-suave)', borderColor: 'var(--cor-perigo-borda)', color: 'var(--cor-perigo)' }}>
+            {apiForm.erro}
+          </div>
+        )}
         <FormularioTransacao
           transacao={transacaoEditando}
           onSalvar={handleSalvar}

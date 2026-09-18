@@ -3,11 +3,13 @@ import { z } from 'zod'
 export const esquemaCriarTransacao = z.object({
   descricao: z
     .string({ required_error: 'Descrição é obrigatória' })
+    .trim()
     .min(3, 'Descrição deve ter no mínimo 3 caracteres')
     .max(255, 'Descrição deve ter no máximo 255 caracteres'),
 
   categoria: z
     .string({ required_error: 'Categoria é obrigatória' })
+    .trim()
     .min(2, 'Categoria deve ter no mínimo 2 caracteres'),
 
   tipo: z.enum(['entrada', 'saida'], {
@@ -16,8 +18,12 @@ export const esquemaCriarTransacao = z.object({
   }),
 
   valor: z.coerce
-    .number({ required_error: 'Valor é obrigatório' })
-    .min(0, 'Valor não pode ser negativo'),
+    .number({
+      required_error: 'Valor é obrigatório',
+      invalid_type_error: 'Valor é obrigatório',
+    })
+    .finite('Valor inválido')
+    .positive('Valor deve ser maior que zero'),
 
   metodo_pagamento: z.string().optional(),
 
@@ -35,7 +41,10 @@ export const esquemaCriarTransacao = z.object({
     .optional(),
 })
 
-export const esquemaAtualizarTransacao = esquemaCriarTransacao.partial()
+export const esquemaAtualizarTransacao = esquemaCriarTransacao.partial().refine(
+  (dados) => Object.keys(dados).length > 0,
+  'Informe ao menos um campo para atualizar'
+)
 
 export type CriarTransacaoInput = z.infer<typeof esquemaCriarTransacao>
 export type AtualizarTransacaoInput = z.infer<typeof esquemaAtualizarTransacao>

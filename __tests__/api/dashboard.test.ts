@@ -74,7 +74,7 @@ describe('controller - dashboard', () => {
 
     await handlerDashboard(req, res)
 
-    expect(buscarDadosDashboard).toHaveBeenCalledWith(1, 2026)
+    expect(buscarDadosDashboard).toHaveBeenCalledWith(1, 2026, 'usuario-123')
   })
 
   test('deve retornar 405 para método POST', async () => {

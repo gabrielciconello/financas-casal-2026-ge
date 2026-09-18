@@ -4,13 +4,13 @@ import {
   responderSucesso,
   responderErro,
   responderMetodoNaoPermitido,
+  tratarErrosHttp,
 } from '../utils/responderHttp.js'
 import { buscarDadosDashboard } from '../services/servicoDashboard.js'
-import { mesAnoAtual } from '../utils/index.js'
+import { isAnoValido, isMesValido, mesAnoAtual } from '../utils/index.js'
 import { aplicarCors } from '../utils/cors.js'
-import { supabaseAdmin } from '../services/supabase.node.js'
 
-export default async function handlerDashboard(
+async function handlerDashboard(
   req: IncomingMessage,
   res: ServerResponse
 ): Promise<void> {
@@ -42,8 +42,14 @@ export default async function handlerDashboard(
     ? Number(url.searchParams.get('ano'))
     : anoAtual
 
+  if (!isMesValido(mes) || !isAnoValido(ano)) {
+    return responderErro(res, 'Mês ou ano inválido')
+  }
+
   const resultado = await buscarDadosDashboard(mes, ano, usuarioId)
 
   if (resultado.erro) return responderErro(res, resultado.erro)
   return responderSucesso(res, resultado.dados)
 }
+
+export default tratarErrosHttp(handlerDashboard)

@@ -1,7 +1,7 @@
 import { IncomingMessage, ServerResponse } from 'http'
 import { verificarAutenticacao, RequisicaoAutenticada } from '../middleware/autenticacao.js'
 import { lerBody } from '../utils/lerBody.js'
-import { responderSucesso, responderErro, responderNaoEncontrado, responderMetodoNaoPermitido } from '../utils/responderHttp.js'
+import { responderSucesso, responderErro, responderNaoEncontrado, responderMetodoNaoPermitido, tratarErrosHttp } from '../utils/responderHttp.js'
 import { validar } from '../validators/index.js'
 import { esquemaCriarSalario, esquemaAtualizarSalario } from '../validators/validadorSalarios.js'
 import {
@@ -12,11 +12,20 @@ import {
   deletarSalario,
 } from '../services/servicoSalarios.js'
 import { supabaseAdmin } from '../services/supabase.node.js'
+import { aplicarCors } from '../utils/cors.js'
+import { normalizarPaginacao } from '../utils/index.js'
 
-export default async function handlerSalarios(
+async function handlerSalarios(
   req: IncomingMessage,
   res: ServerResponse
 ): Promise<void> {
+  aplicarCors(res)
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204)
+    res.end()
+    return
+  }
+
   const autenticado = await verificarAutenticacao(req as RequisicaoAutenticada, res)
   if (!autenticado) return
 
@@ -30,8 +39,9 @@ export default async function handlerSalarios(
   const id = segmentos.length >= 3 ? segmentos[segmentos.length - 1] : null
 
   if (req.method === 'GET' && !id) {
-    const pagina = Number(url.searchParams.get('pagina')) || 1
-    const limite = Number(url.searchParams.get('limite')) || 10
+    const { pagina, limite } = normalizarPaginacao(
+      url.searchParams.get('pagina'), url.searchParams.get('limite')
+    )
     const mes = url.searchParams.get('mes') ? Number(url.searchParams.get('mes')) : undefined
     const ano = url.searchParams.get('ano') ? Number(url.searchParams.get('ano')) : undefined
     const tipo = url.searchParams.get('tipo') ?? undefined
@@ -88,3 +98,5 @@ export default async function handlerSalarios(
 
   return responderMetodoNaoPermitido(res)
 }
+
+export default tratarErrosHttp(handlerSalarios)

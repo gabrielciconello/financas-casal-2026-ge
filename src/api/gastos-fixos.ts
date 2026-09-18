@@ -5,15 +5,17 @@ import { aplicarCors } from '../utils/cors.js'
 import {
   responderSucesso, responderErro,
   responderNaoEncontrado, responderMetodoNaoPermitido,
+  tratarErrosHttp,
 } from '../utils/responderHttp.js'
 import { validar } from '../validators/index.js'
 import { esquemaCriarGastoFixo, esquemaAtualizarGastoFixo } from '../validators/validadorGastos.js'
+import { normalizarPaginacao } from '../utils/index.js'
 import {
   buscarGastosFixos, buscarGastoFixoPorId,
   criarGastoFixo, atualizarGastoFixo, deletarGastoFixo,
 } from '../services/servicoGastos.js'
 
-export default async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
+async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
   aplicarCors(res)
   if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return }
 
@@ -28,8 +30,9 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   const id = segmentos.length >= 4 ? segmentos[segmentos.length - 1] : null
 
   if (req.method === 'GET' && !id) {
-    const pagina = Number(url.searchParams.get('pagina')) || 1
-    const limite = Number(url.searchParams.get('limite')) || 10
+    const { pagina, limite } = normalizarPaginacao(
+      url.searchParams.get('pagina'), url.searchParams.get('limite')
+    )
     const mes = url.searchParams.get('mes') ? Number(url.searchParams.get('mes')) : undefined
     const ano = url.searchParams.get('ano') ? Number(url.searchParams.get('ano')) : undefined
     const status = url.searchParams.get('status') ?? undefined
@@ -74,3 +77,5 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
 
   return responderMetodoNaoPermitido(res)
 }
+
+export default tratarErrosHttp(handler)

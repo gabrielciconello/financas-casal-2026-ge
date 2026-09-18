@@ -1,4 +1,4 @@
-jest.mock('../../src/services/supabase', () => ({
+jest.mock('../../src/services/supabase.node', () => ({
   supabaseAdmin: {
     from: jest.fn(),
   },

@@ -4,16 +4,19 @@ import { z } from 'zod'
 export const esquemaCriarGastoFixo = z.object({
   descricao: z
     .string({ required_error: 'Descrição é obrigatória' })
+    .trim()
     .min(3, 'Descrição deve ter no mínimo 3 caracteres')
     .max(255, 'Descrição deve ter no máximo 255 caracteres'),
 
   categoria: z
     .string({ required_error: 'Categoria é obrigatória' })
+    .trim()
     .min(2, 'Categoria deve ter no mínimo 2 caracteres'),
 
   valor: z.coerce
     .number({ required_error: 'Valor é obrigatório' })
-    .min(0, 'Valor não pode ser negativo'),
+    .finite('Valor inválido')
+    .positive('Valor deve ser maior que zero'),
 
   dia_vencimento: z.coerce
     .number({ required_error: 'Dia de vencimento é obrigatório' })
@@ -36,29 +39,32 @@ export const esquemaCriarGastoFixo = z.object({
     .max(2100, 'Ano inválido'),
 })
 
-export const esquemaAtualizarGastoFixo = esquemaCriarGastoFixo.partial()
+export const esquemaAtualizarGastoFixo = esquemaCriarGastoFixo.partial().refine(
+  (dados) => Object.keys(dados).length > 0,
+  'Informe ao menos um campo para atualizar'
+)
 
 export const esquemaCriarGastoVariavel = z.object({
   descricao: z
     .string({ required_error: 'Descrição é obrigatória' })
+    .trim()
     .min(3, 'Descrição deve ter no mínimo 3 caracteres')
     .max(255, 'Descrição deve ter no máximo 255 caracteres'),
 
   categoria: z
     .string({ required_error: 'Categoria é obrigatória' })
+    .trim()
     .min(2, 'Categoria deve ter no mínimo 2 caracteres'),
 
-  valor_estimado: z.coerce
-    .number()
-    .min(0, 'Valor estimado não pode ser negativo')
-    .optional()
-    .or(z.literal('')),
+  valor_estimado: z.union([
+    z.coerce.number().min(0, 'Valor estimado não pode ser negativo'),
+    z.literal(''),
+  ]).optional().transform((valor) => valor === '' ? undefined : valor),
 
-  valor_real: z.coerce
-    .number()
-    .min(0, 'Valor real não pode ser negativo')
-    .optional()
-    .or(z.literal('')),
+  valor_real: z.union([
+    z.coerce.number().min(0, 'Valor real não pode ser negativo'),
+    z.literal(''),
+  ]).optional().transform((valor) => valor === '' ? undefined : valor),
 
   mes: z.coerce
     .number({ required_error: 'Mês é obrigatório' })
@@ -73,7 +79,10 @@ export const esquemaCriarGastoVariavel = z.object({
     .max(2100, 'Ano inválido'),
 })
 
-export const esquemaAtualizarGastoVariavel = esquemaCriarGastoVariavel.partial()
+export const esquemaAtualizarGastoVariavel = esquemaCriarGastoVariavel.partial().refine(
+  (dados) => Object.keys(dados).length > 0,
+  'Informe ao menos um campo para atualizar'
+)
 
 export type CriarGastoFixoInput = z.infer<typeof esquemaCriarGastoFixo>
 export type AtualizarGastoFixoInput = z.infer<typeof esquemaAtualizarGastoFixo>

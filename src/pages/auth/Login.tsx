@@ -22,7 +22,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #f0f9ff 50%, #faf5ff 100%)' }}>
+    <main className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(135deg, var(--cor-primaria-suave) 0%, var(--cor-fundo-pagina) 55%, var(--cor-fundo-hover) 100%)' }}>
       <div className="w-full max-w-sm rounded-2xl border p-8" style={{ background: 'var(--cor-fundo-card)', borderColor: 'var(--cor-borda)', boxShadow: 'var(--sombra-card-hover)' }}>
 
         {/* Logo */}
@@ -71,6 +71,8 @@ export default function Login() {
                 type="button"
                 onClick={() => setMostrarSenha(!mostrarSenha)}
                 className="absolute right-3 top-1/2 -translate-y-1/2"
+                aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}
+                aria-pressed={mostrarSenha}
               >
                 {mostrarSenha ? <EyeOff size={16} style={{ color: 'var(--cor-texto-suave)' }} /> : <Eye size={16} style={{ color: 'var(--cor-texto-suave)' }} />}
               </button>
@@ -78,7 +80,7 @@ export default function Login() {
           </div>
 
           {erro && (
-            <div className="rounded-lg px-3 py-2.5 text-sm" style={{ background: 'var(--cor-perigo-suave)', borderColor: 'var(--cor-perigo-borda)', border: '1px solid', color: 'var(--cor-perigo)' }}>
+            <div role="alert" className="rounded-lg px-3 py-2.5 text-sm" style={{ background: 'var(--cor-perigo-suave)', borderColor: 'var(--cor-perigo-borda)', border: '1px solid', color: 'var(--cor-perigo)' }}>
               {erro}
             </div>
           )}
@@ -92,6 +94,6 @@ export default function Login() {
           </button>
         </form>
       </div>
-    </div>
+    </main>
   )
 }

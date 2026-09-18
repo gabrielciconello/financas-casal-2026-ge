@@ -1,120 +1,147 @@
 import { supabaseAdmin } from './supabase.node.js'
+import { registrarAuditoria } from './servicoAuditoria.js'
 import { obterNomeUsuario } from '../config/usuarios.js'
-import {
+import type {
   SaldoTotal,
   CriarSaldoTotalDTO,
   AtualizarSaldoTotalDTO,
   RespostaApi,
   RespostaPaginada,
 } from '../types/index.js'
-import {
-  respostaSucesso,
-  respostaErro,
-  respostaPaginada,
-  calcularOffset,
-} from '../utils/index.js'
+import { respostaSucesso, respostaErro, respostaPaginada, calcularOffset } from '../utils/index.js'
 
 export async function buscarSaldoTotal(
-  usuarioId: string,
-  pagina: number = 1,
-  limite: number = 20
+  pagina = 1,
+  limite = 20
 ): Promise<RespostaPaginada<SaldoTotal>> {
   const offset = calcularOffset(pagina, limite)
-
   const { data, error, count } = await supabaseAdmin
     .from('saldo_total')
     .select('*', { count: 'exact' })
-    .eq('usuario_id', usuarioId)
     .order('data', { ascending: false })
+    .order('criado_em', { ascending: false })
     .range(offset, offset + limite - 1)
 
-  if (error) return respostaErro(error.message)
+  if (error) return { dados: [], total: 0, pagina, limite, erro: error.message }
   return respostaPaginada(data ?? [], count ?? 0, pagina, limite)
 }
 
-export async function buscarResumoSaldoTotal(
-  usuarioId: string
-): Promise<RespostaApi<{ saldo_atual: number; total_aportes: number; total_retiradas: number; movimentacoes: number }>> {
+export async function buscarSaldoTotalPorId(id: string): Promise<RespostaApi<SaldoTotal>> {
   const { data, error } = await supabaseAdmin
     .from('saldo_total')
-    .select('valor, tipo')
-    .eq('usuario_id', usuarioId)
+    .select('*')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (error) return respostaErro(error.message)
+  return respostaSucesso(data)
+}
+
+export async function buscarResumoSaldoTotal(): Promise<RespostaApi<{
+  saldo_atual: number
+  total_aportes: number
+  total_retiradas: number
+  movimentacoes: number
+}>> {
+  const { data, error, count } = await supabaseAdmin
+    .from('saldo_total')
+    .select('valor, tipo', { count: 'exact' })
 
   if (error) return respostaErro(error.message)
 
   let totalAportes = 0
   let totalRetiradas = 0
-  for (const m of data ?? []) {
-    if (m.tipo === 'aporte') totalAportes += Number(m.valor)
-    else totalRetiradas += Number(m.valor)
+  for (const movimento of data ?? []) {
+    if (movimento.tipo === 'aporte') totalAportes += Number(movimento.valor)
+    else if (movimento.tipo === 'retirada') totalRetiradas += Number(movimento.valor)
   }
 
   return respostaSucesso({
     saldo_atual: totalAportes - totalRetiradas,
     total_aportes: totalAportes,
     total_retiradas: totalRetiradas,
-    movimentacoes: data?.length ?? 0,
+    movimentacoes: count ?? data?.length ?? 0,
   })
 }
 
 export async function criarSaldoTotal(
   usuarioId: string,
+  usuarioEmail: string,
   dto: CriarSaldoTotalDTO
 ): Promise<RespostaApi<SaldoTotal>> {
-  const nomeUsuario = obterNomeUsuario(usuarioId)
-  const hoje = new Date().toISOString().split('T')[0]
-
   const { data, error } = await supabaseAdmin
     .from('saldo_total')
     .insert({
+      ...dto,
       usuario_id: usuarioId,
-      usuario_nome: nomeUsuario,
-      descricao: dto.descricao,
-      valor: dto.valor,
-      tipo: dto.tipo,
-      data: dto.data ?? hoje,
+      usuario_nome: obterNomeUsuario(usuarioEmail),
+      data: dto.data ?? new Date().toISOString().slice(0, 10),
     })
     .select()
     .single()
 
   if (error) return respostaErro(error.message)
+
+  await registrarAuditoria({
+    usuarioId,
+    usuarioEmail,
+    acao: 'CRIAR',
+    modulo: 'saldo_total',
+    registroId: data.id,
+    descricao: `Movimentação do saldo criada: ${dto.descricao} - R$ ${dto.valor}`,
+  })
   return respostaSucesso(data)
 }
 
 export async function atualizarSaldoTotal(
-  usuarioId: string,
   id: string,
-  dto: AtualizarSaldoTotalDTO
+  dto: AtualizarSaldoTotalDTO,
+  usuarioId: string,
+  usuarioEmail: string
 ): Promise<RespostaApi<SaldoTotal>> {
-  const atualizar: Record<string, any> = {}
-  if (dto.descricao) atualizar.descricao = dto.descricao
-  if (dto.valor !== undefined) atualizar.valor = dto.valor
-  if (dto.tipo) atualizar.tipo = dto.tipo
-  if (dto.data) atualizar.data = dto.data
-  atualizar.atualizado_em = new Date().toISOString()
-
   const { data, error } = await supabaseAdmin
     .from('saldo_total')
-    .update(atualizar)
+    .update({ ...dto, atualizado_em: new Date().toISOString() })
     .eq('id', id)
-    .eq('usuario_id', usuarioId)
     .select()
-    .single()
+    .maybeSingle()
 
   if (error) return respostaErro(error.message)
+  if (!data) return { dados: null, erro: null }
+
+  await registrarAuditoria({
+    usuarioId,
+    usuarioEmail,
+    acao: 'ATUALIZAR',
+    modulo: 'saldo_total',
+    registroId: id,
+    descricao: `Movimentação do saldo atualizada: ${id}`,
+  })
   return respostaSucesso(data)
 }
 
 export async function deletarSaldoTotal(
+  id: string,
   usuarioId: string,
-  id: string
-): Promise<RespostaApi<void>> {
-  const { error } = await supabaseAdmin
+  usuarioEmail: string
+): Promise<RespostaApi<null>> {
+  const { data, error } = await supabaseAdmin
     .from('saldo_total')
     .delete()
     .eq('id', id)
-    .eq('usuario_id', usuarioId)
+    .select('id')
+    .maybeSingle()
 
   if (error) return respostaErro(error.message)
-  return respostaSucesso(undefined)
+  if (!data) return respostaErro('Registro não encontrado')
+
+  await registrarAuditoria({
+    usuarioId,
+    usuarioEmail,
+    acao: 'DELETAR',
+    modulo: 'saldo_total',
+    registroId: id,
+    descricao: `Movimentação do saldo deletada: ${id}`,
+  })
+  return respostaSucesso(null)
 }

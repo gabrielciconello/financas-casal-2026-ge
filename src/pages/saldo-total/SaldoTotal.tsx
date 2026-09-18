@@ -10,7 +10,7 @@ import { useAuth } from '../../hooks/useContexto'
 export default function SaldoTotal() {
   const { usuario, carregando: carregandoAuth } = useAuth()
   const { dados, erro, carregando, requisitar } = useApi<any>()
-  const { dados: movs, carregando: carregandoMovs, requisitar: buscarMovs } = useApi<any>()
+  const { dados: movs, erro: erroMovs, carregando: carregandoMovs, requisitar: buscarMovs } = useApi<any>()
   const apiCrud = useApi()
   const apiDelete = useApi()
   const [modalAberto, setModalAberto] = useState(false)
@@ -18,8 +18,10 @@ export default function SaldoTotal() {
   const [form, setForm] = useState({ descricao: '', valor: '', tipo: 'aporte' as 'aporte' | 'retirada' })
 
   const buscarTudo = useCallback(() => {
-    requisitar('/api/saldo-total/resumo')
-    buscarMovs('/api/saldo-total?limite=50')
+    void Promise.all([
+      requisitar('/api/saldo-total/resumo'),
+      buscarMovs('/api/saldo-total?limite=50'),
+    ])
   }, [requisitar, buscarMovs])
 
   useEffect(() => { if (usuario) buscarTudo() }, [buscarTudo, usuario])
@@ -37,24 +39,25 @@ export default function SaldoTotal() {
 
   async function salvarMov() {
     if (!form.descricao || !form.valor) return
-    if (editando) {
-      await apiCrud.requisitar(`/api/saldo-total/${editando.id}`, {
+    const resultado = editando
+      ? await apiCrud.requisitar(`/api/saldo-total/${editando.id}`, {
         method: 'PUT',
         body: form,
       })
-    } else {
-      await apiCrud.requisitar('/api/saldo-total', {
+      : await apiCrud.requisitar('/api/saldo-total', {
         method: 'POST',
         body: form,
       })
-    }
+    if (!resultado) return
     setModalAberto(false)
+    setEditando(null)
     buscarTudo()
   }
 
   async function deletarMov(id: string) {
     if (!confirm('Deseja excluir este registro?')) return
-    await apiDelete.requisitar(`/api/saldo-total/${id}`, { method: 'DELETE' })
+    const resultado = await apiDelete.requisitar(`/api/saldo-total/${id}`, { method: 'DELETE' })
+    if (!resultado) return
     buscarTudo()
   }
 
@@ -76,6 +79,12 @@ export default function SaldoTotal() {
           Nova
         </button>
       </div>
+
+      {(apiDelete.erro || erroMovs) && (
+        <div role="alert" className="rounded-lg border px-3 py-2 text-sm" style={{ background: 'var(--cor-perigo-suave)', borderColor: 'var(--cor-perigo-borda)', color: 'var(--cor-perigo)' }}>
+          {apiDelete.erro || erroMovs}
+        </div>
+      )}
 
       {/* Cards resumo */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -214,7 +223,8 @@ export default function SaldoTotal() {
       </div>
 
       {/* Modal */}
-      <Modal aberto={modalAberto} fechar={() => setModalAberto(false)} titulo={editando ? 'Editar Movimentacao' : 'Nova Movimentacao'}>
+      <Modal aberto={modalAberto} onFechar={() => { setModalAberto(false); setEditando(null) }} titulo={editando ? 'Editar Movimentação' : 'Nova Movimentação'}>
+        {apiCrud.erro && <div role="alert" className="mb-4 rounded-lg border px-3 py-2 text-sm" style={{ background: 'var(--cor-perigo-suave)', borderColor: 'var(--cor-perigo-borda)', color: 'var(--cor-perigo)' }}>{apiCrud.erro}</div>}
         <form onSubmit={(e) => { e.preventDefault(); salvarMov() }} className="flex flex-col gap-4">
           <div>
             <label className="block text-xs font-medium mb-1" style={{ color: 'var(--cor-texto-suave)' }}>Tipo</label>

@@ -21,6 +21,7 @@ export default function Salarios() {
 
   const { carregando, erro, requisitar } = useApi()
   const apiForm = useApi()
+  const apiMutacao = useApi()
 
   const buscar = useCallback(async () => {
     const params = new URLSearchParams({
@@ -41,15 +42,14 @@ export default function Salarios() {
   useEffect(() => { buscar() }, [buscar])
 
   async function handleSalvar(dados: CriarSalarioDTO) {
-    if (salarioEditando) {
-      await apiForm.requisitar(`/api/salarios/${salarioEditando.id}`, {
+    const resultado = salarioEditando
+      ? await apiForm.requisitar(`/api/salarios/${salarioEditando.id}`, {
         method: 'PUT', body: dados,
       })
-    } else {
-      await apiForm.requisitar('/api/salarios', {
+      : await apiForm.requisitar('/api/salarios', {
         method: 'POST', body: dados,
       })
-    }
+    if (!resultado) return
     setModalAberto(false)
     setSalarioEditando(null)
     buscar()
@@ -57,14 +57,15 @@ export default function Salarios() {
 
   async function handleDeletar(id: string) {
     if (!confirm('Deseja deletar este salário?')) return
-    await requisitar(`/api/salarios/${id}`, { method: 'DELETE' })
+    const resultado = await apiMutacao.requisitar(`/api/salarios/${id}`, { method: 'DELETE' })
+    if (!resultado) return
     buscar()
   }
 
   async function handleConfirmarRecebimento(id: string) {
     const salario = salarios.find((s) => s.id === id)
     if (!salario) return
-    await apiForm.requisitar(`/api/salarios/${id}`, {
+    const resultado = await apiMutacao.requisitar(`/api/salarios/${id}`, {
       method: 'PUT',
       body: {
         status: 'recebido',
@@ -72,6 +73,7 @@ export default function Salarios() {
         data_recebimento: new Date().toISOString().split('T')[0],
       },
     })
+    if (!resultado) return
     buscar()
   }
 
@@ -103,6 +105,8 @@ export default function Salarios() {
           <Plus size={16} /> Novo Salário
         </button>
       </div>
+
+      {apiMutacao.erro && <div role="alert" className="rounded-lg border px-3 py-2 text-sm" style={{ background: 'var(--cor-perigo-suave)', borderColor: 'var(--cor-perigo-borda)', color: 'var(--cor-perigo)' }}>{apiMutacao.erro}</div>}
 
       {/* Cards de resumo */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(200px, 100%), 1fr))', gap: '1rem' }}>
@@ -138,7 +142,7 @@ export default function Salarios() {
           <label style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--cor-texto-suave)', display: 'block', marginBottom: '0.375rem' }}>
             Mês
           </label>
-          <select className="input" value={filtroMes} onChange={(e) => setFiltroMes(Number(e.target.value))}>
+          <select className="input" value={filtroMes} onChange={(e) => { setPagina(1); setFiltroMes(Number(e.target.value)) }}>
             {Array.from({ length: 12 }, (_, i) => (
               <option key={i + 1} value={i + 1}>
                 {new Date(2026, i, 1).toLocaleString('pt-BR', { month: 'long' })}
@@ -150,7 +154,7 @@ export default function Salarios() {
           <label style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--cor-texto-suave)', display: 'block', marginBottom: '0.375rem' }}>
             Ano
           </label>
-          <select className="input" value={filtroAno} onChange={(e) => setFiltroAno(Number(e.target.value))}>
+          <select className="input" value={filtroAno} onChange={(e) => { setPagina(1); setFiltroAno(Number(e.target.value)) }}>
             {[2024, 2025, 2026, 2027].map((a) => <option key={a} value={a}>{a}</option>)}
           </select>
         </div>
@@ -158,7 +162,7 @@ export default function Salarios() {
           <label style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--cor-texto-suave)', display: 'block', marginBottom: '0.375rem' }}>
             Tipo
           </label>
-          <select className="input" value={filtroTipo} onChange={(e) => setFiltroTipo(e.target.value)}>
+          <select className="input" value={filtroTipo} onChange={(e) => { setPagina(1); setFiltroTipo(e.target.value) }}>
             <option value="">Todos</option>
             <option value="fixo">Fixo</option>
             <option value="variavel">Variável</option>
@@ -270,6 +274,7 @@ export default function Salarios() {
         titulo={salarioEditando ? 'Editar Salário' : 'Novo Salário'}
         onFechar={() => { setModalAberto(false); setSalarioEditando(null) }}
       >
+        {apiForm.erro && <div role="alert" className="mb-4 rounded-lg border px-3 py-2 text-sm" style={{ background: 'var(--cor-perigo-suave)', borderColor: 'var(--cor-perigo-borda)', color: 'var(--cor-perigo)' }}>{apiForm.erro}</div>}
         <FormularioSalario
           salario={salarioEditando}
           mesAtual={filtroMes}

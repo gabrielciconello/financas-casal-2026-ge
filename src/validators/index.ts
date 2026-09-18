@@ -1,4 +1,4 @@
-import { ZodSchema, ZodError } from 'zod'
+import { z, ZodError } from 'zod'
 
 interface ResultadoValidacao<T> {
   sucesso: boolean
@@ -6,10 +6,10 @@ interface ResultadoValidacao<T> {
   erros?: string[]
 }
 
-export function validar<T>(
-  esquema: ZodSchema<T>,
+export function validar<TEsquema extends z.ZodTypeAny>(
+  esquema: TEsquema,
   dados: unknown
-): ResultadoValidacao<T> {
+): ResultadoValidacao<z.output<TEsquema>> {
   try {
     const dadosValidados = esquema.parse(dados)
     return { sucesso: true, dados: dadosValidados }

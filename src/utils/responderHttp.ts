@@ -1,4 +1,7 @@
 import { ServerResponse } from 'http'
+import type { IncomingMessage } from 'http'
+
+type HandlerHttp = (req: IncomingMessage, res: ServerResponse) => Promise<void>
 
 export function responderJson(
   res: ServerResponse,
@@ -34,5 +37,25 @@ export function responderNaoEncontrado(res: ServerResponse): void {
 }
 
 export function responderMetodoNaoPermitido(res: ServerResponse): void {
+  if (typeof res.setHeader === 'function') {
+    res.setHeader('Allow', 'GET, POST, PUT, DELETE, OPTIONS')
+  }
   responderErro(res, 'Método não permitido', 405)
+}
+
+export function tratarErrosHttp(handler: HandlerHttp): HandlerHttp {
+  return async (req, res) => {
+    try {
+      await handler(req, res)
+    } catch (erro) {
+      if (res.writableEnded) return
+      const mensagem = erro instanceof Error ? erro.message : ''
+      if (mensagem.includes('JSON válido') || mensagem.includes('limite de 64 KB')) {
+        responderErro(res, mensagem, mensagem.includes('limite') ? 413 : 400)
+        return
+      }
+      console.error('Erro não tratado na API:', erro)
+      responderErro(res, 'Erro interno do servidor', 500)
+    }
+  }
 }

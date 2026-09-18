@@ -25,6 +25,22 @@ export function calcularOffset(pagina: number, limite: number): number {
   return (pagina - 1) * limite
 }
 
+// Impede ranges negativos e respostas acidentalmente enormes no Supabase/Vercel.
+export function normalizarPaginacao(
+  pagina: unknown,
+  limite: unknown,
+  limitePadrao = 10
+): { pagina: number; limite: number } {
+  const paginaNumero = Number(pagina)
+  const limiteNumero = Number(limite)
+  return {
+    pagina: Number.isInteger(paginaNumero) && paginaNumero > 0 ? paginaNumero : 1,
+    limite: Number.isInteger(limiteNumero) && limiteNumero > 0
+      ? Math.min(limiteNumero, 100)
+      : limitePadrao,
+  }
+}
+
 // Retorna mês e ano atuais
 export function mesAnoAtual(): { mes: number; ano: number } {
   const agora = new Date()

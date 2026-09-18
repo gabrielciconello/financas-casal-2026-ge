@@ -19,6 +19,7 @@ export default function Metas() {
 
   const { carregando, erro, requisitar } = useApi()
   const apiForm = useApi()
+  const apiDelete = useApi()
 
   const buscar = useCallback(async () => {
     const resultado = await requisitar(
@@ -33,15 +34,14 @@ export default function Metas() {
   useEffect(() => { buscar() }, [buscar])
 
   async function handleSalvar(dados: CriarMetaDTO) {
-    if (metaEditando) {
-      await apiForm.requisitar(`/api/metas/${metaEditando.id}`, {
+    const resultado = metaEditando
+      ? await apiForm.requisitar(`/api/metas/${metaEditando.id}`, {
         method: 'PUT', body: dados,
       })
-    } else {
-      await apiForm.requisitar('/api/metas', {
+      : await apiForm.requisitar('/api/metas', {
         method: 'POST', body: dados,
       })
-    }
+    if (!resultado) return
     setModalAberto(false)
     setMetaEditando(null)
     buscar()
@@ -49,15 +49,19 @@ export default function Metas() {
 
   async function handleDeletar(id: string) {
     if (!confirm('Deseja deletar esta meta?')) return
-    await requisitar(`/api/metas/${id}`, { method: 'DELETE' })
+    const resultado = await apiDelete.requisitar(`/api/metas/${id}`, { method: 'DELETE' })
+    if (!resultado) return
     buscar()
   }
 
   async function handleContribuir(dados: CriarContribuicaoMetaDTO) {
-    await apiForm.requisitar(`/api/metas/${metaSelecionada?.id}/contribuicoes`, {
+    if (!metaSelecionada) return
+    const resultado = await apiForm.requisitar(`/api/metas/${metaSelecionada.id}/contribuicoes`, {
       method: 'POST', body: dados,
     })
+    if (!resultado) return
     setModalContribuicao(false)
+    setMetaSelecionada(null)
     buscar()
   }
 
@@ -83,6 +87,8 @@ export default function Metas() {
           <Plus size={16} /> Nova Meta
         </button>
       </div>
+
+      {apiDelete.erro && <div role="alert" className="rounded-lg border px-3 py-2 text-sm" style={{ background: 'var(--cor-perigo-suave)', borderColor: 'var(--cor-perigo-borda)', color: 'var(--cor-perigo)' }}>{apiDelete.erro}</div>}
 
       {/* Cards de resumo */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -226,6 +232,7 @@ export default function Metas() {
         titulo={metaEditando ? 'Editar Meta' : 'Nova Meta'}
         onFechar={() => { setModalAberto(false); setMetaEditando(null) }}
       >
+        {apiForm.erro && <div role="alert" className="mb-4 rounded-lg border px-3 py-2 text-sm" style={{ background: 'var(--cor-perigo-suave)', borderColor: 'var(--cor-perigo-borda)', color: 'var(--cor-perigo)' }}>{apiForm.erro}</div>}
         <FormularioMeta
           meta={metaEditando}
           onSalvar={handleSalvar}
@@ -240,6 +247,7 @@ export default function Metas() {
         titulo={`Contribuir — ${metaSelecionada?.titulo ?? ''}`}
         onFechar={() => { setModalContribuicao(false); setMetaSelecionada(null) }}
       >
+        {apiForm.erro && <div role="alert" className="mb-4 rounded-lg border px-3 py-2 text-sm" style={{ background: 'var(--cor-perigo-suave)', borderColor: 'var(--cor-perigo-borda)', color: 'var(--cor-perigo)' }}>{apiForm.erro}</div>}
         {metaSelecionada && (
           <FormularioContribuicao
             meta={metaSelecionada}

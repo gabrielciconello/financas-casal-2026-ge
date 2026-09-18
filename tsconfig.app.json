@@ -12,6 +12,7 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "strict": true,
+    "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
@@ -27,6 +28,6 @@
     "src/utils/index.ts",
     "src/App.tsx",
     "src/index.tsx",
-    "src/vite-env.d.ts"
+    "vite-env.d.ts"
   ]
 }

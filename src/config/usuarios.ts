@@ -7,7 +7,8 @@ export const NOMES_USUARIOS: Record<string, string> = {
   // Exemplo: 'usuario2@email.com': 'Nome do Usuario 2',
 }
 
-export function obterNomeUsuario(email: string): string {
+export function obterNomeUsuario(email?: string): string {
+  if (!email) return 'Usuário'
   const nome = NOMES_USUARIOS[email]
   if (nome) return nome
   // Fallback: usa a parte antes do @ do email

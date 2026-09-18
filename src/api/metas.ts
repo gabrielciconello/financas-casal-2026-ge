@@ -6,6 +6,7 @@ import {
   responderErro,
   responderNaoEncontrado,
   responderMetodoNaoPermitido,
+  tratarErrosHttp,
 } from '../utils/responderHttp.js'
 import { validar } from '../validators/index.js'
 import {
@@ -23,12 +24,21 @@ import {
   criarContribuicao,
 } from '../services/servicoMetas.js'
 import { supabaseAdmin } from '../services/supabase.node.js'
+import { aplicarCors } from '../utils/cors.js'
+import { normalizarPaginacao } from '../utils/index.js'
 
 
-export default async function handlerMetas(
+async function handlerMetas(
   req: IncomingMessage,
   res: ServerResponse
 ): Promise<void> {
+  aplicarCors(res)
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204)
+    res.end()
+    return
+  }
+
   const autenticado = await verificarAutenticacao(req as RequisicaoAutenticada, res)
   if (!autenticado) return
 
@@ -48,8 +58,9 @@ export default async function handlerMetas(
   // ==========================================
   if (!ehContribuicao) {
     if (req.method === 'GET' && !id) {
-      const pagina = Number(url.searchParams.get('pagina')) || 1
-      const limite = Number(url.searchParams.get('limite')) || 10
+      const { pagina, limite } = normalizarPaginacao(
+        url.searchParams.get('pagina'), url.searchParams.get('limite')
+      )
 
       const resultado = await buscarMetas({ pagina, limite })
       if (resultado.erro) return responderErro(res, resultado.erro)
@@ -98,8 +109,9 @@ export default async function handlerMetas(
   // ==========================================
   if (ehContribuicao && id) {
     if (req.method === 'GET') {
-      const pagina = Number(url.searchParams.get('pagina')) || 1
-      const limite = Number(url.searchParams.get('limite')) || 10
+      const { pagina, limite } = normalizarPaginacao(
+        url.searchParams.get('pagina'), url.searchParams.get('limite')
+      )
 
       const resultado = await buscarContribuicoes(id, { pagina, limite })
       if (resultado.erro) return responderErro(res, resultado.erro)
@@ -123,3 +135,5 @@ export default async function handlerMetas(
 
   return responderMetodoNaoPermitido(res)
 }
+
+export default tratarErrosHttp(handlerMetas)

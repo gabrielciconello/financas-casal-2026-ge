@@ -26,6 +26,7 @@ export default function GastosVariaveis() {
 
   const { carregando, erro, requisitar } = useApi()
   const apiForm = useApi()
+  const apiDelete = useApi()
 
   const buscar = useCallback(async () => {
     const params = new URLSearchParams({
@@ -46,15 +47,14 @@ export default function GastosVariaveis() {
   useEffect(() => { buscar() }, [buscar])
 
   async function handleSalvar(dados: CriarGastoVariavelDTO) {
-    if (gastoEditando) {
-      await apiForm.requisitar(`/api/gastos/variaveis/${gastoEditando.id}`, {
+    const resultado = gastoEditando
+      ? await apiForm.requisitar(`/api/gastos/variaveis/${gastoEditando.id}`, {
         method: 'PUT', body: dados,
       })
-    } else {
-      await apiForm.requisitar('/api/gastos/variaveis', {
+      : await apiForm.requisitar('/api/gastos/variaveis', {
         method: 'POST', body: dados,
       })
-    }
+    if (!resultado) return
     setModalAberto(false)
     setGastoEditando(null)
     buscar()
@@ -62,7 +62,8 @@ export default function GastosVariaveis() {
 
   async function handleDeletar(id: string) {
     if (!confirm('Deseja deletar este gasto?')) return
-    await requisitar(`/api/gastos/variaveis/${id}`, { method: 'DELETE' })
+    const resultado = await apiDelete.requisitar(`/api/gastos/variaveis/${id}`, { method: 'DELETE' })
+    if (!resultado) return
     buscar()
   }
 
@@ -88,6 +89,8 @@ export default function GastosVariaveis() {
           <Plus size={16} /> Novo Gasto
         </button>
       </div>
+
+      {apiDelete.erro && <div role="alert" className="rounded-lg border px-3 py-2 text-sm" style={{ background: 'var(--cor-perigo-suave)', borderColor: 'var(--cor-perigo-borda)', color: 'var(--cor-perigo)' }}>{apiDelete.erro}</div>}
 
       {/* Cards de resumo */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(180px, 100%), 1fr))', gap: '1rem' }}>
@@ -120,7 +123,7 @@ export default function GastosVariaveis() {
       <div className="card" style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end' }}>
         <div style={{ flex: '1', minWidth: '160px' }}>
           <label style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--cor-texto-suave)', display: 'block', marginBottom: '0.375rem' }}>Mês</label>
-          <select className="input" value={filtroMes} onChange={(e) => setFiltroMes(Number(e.target.value))}>
+          <select className="input" value={filtroMes} onChange={(e) => { setPagina(1); setFiltroMes(Number(e.target.value)) }}>
             {Array.from({ length: 12 }, (_, i) => (
               <option key={i + 1} value={i + 1}>
                 {new Date(2026, i, 1).toLocaleString('pt-BR', { month: 'long' })}
@@ -130,13 +133,13 @@ export default function GastosVariaveis() {
         </div>
         <div style={{ flex: '1', minWidth: '100px' }}>
           <label style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--cor-texto-suave)', display: 'block', marginBottom: '0.375rem' }}>Ano</label>
-          <select className="input" value={filtroAno} onChange={(e) => setFiltroAno(Number(e.target.value))}>
+          <select className="input" value={filtroAno} onChange={(e) => { setPagina(1); setFiltroAno(Number(e.target.value)) }}>
             {[2024, 2025, 2026, 2027].map((a) => <option key={a} value={a}>{a}</option>)}
           </select>
         </div>
         <div style={{ flex: '1', minWidth: '160px' }}>
           <label style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--cor-texto-suave)', display: 'block', marginBottom: '0.375rem' }}>Categoria</label>
-          <select className="input" value={filtroCategoria} onChange={(e) => setFiltroCategoria(e.target.value)}>
+          <select className="input" value={filtroCategoria} onChange={(e) => { setPagina(1); setFiltroCategoria(e.target.value) }}>
             <option value="">Todas</option>
             {CATEGORIAS.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
@@ -235,6 +238,7 @@ export default function GastosVariaveis() {
         titulo={gastoEditando ? 'Editar Gasto Variável' : 'Novo Gasto Variável'}
         onFechar={() => { setModalAberto(false); setGastoEditando(null) }}
       >
+        {apiForm.erro && <div role="alert" className="mb-4 rounded-lg border px-3 py-2 text-sm" style={{ background: 'var(--cor-perigo-suave)', borderColor: 'var(--cor-perigo-borda)', color: 'var(--cor-perigo)' }}>{apiForm.erro}</div>}
         <FormularioGastoVariavel
           gasto={gastoEditando}
           mesAtual={filtroMes}

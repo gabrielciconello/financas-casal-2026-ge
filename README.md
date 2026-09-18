@@ -1,181 +1,115 @@
-# 💰 Finanças Casal
+# Finanças Casal
 
-Sistema de assistente financeiro pessoal para casais, com visualização compartilhada, controle completo de finanças e integração com inteligência artificial.
+Aplicação privada de controle financeiro compartilhado para duas pessoas. O frontend é uma SPA React/Vite, as rotas de API são funções Node.js na Vercel e os dados/autenticação ficam no Supabase (PostgreSQL + Auth).
 
----
+## Estado atual
 
-## 🚀 Tecnologias
+Implementado:
 
-- **TypeScript** — tipagem estática em todas as camadas
-- **Node.js** — ambiente de execução
-- **Vercel** — deploy e API Routes serverless
-- **Supabase** — banco de dados PostgreSQL e autenticação
-- **Zod** — validação de dados
-- **Jest** — testes automatizados
-- **Google Gemini** — assistente de IA financeira
+- login com Supabase Auth, sem cadastro público;
+- dashboard mensal com resumo, categorias, histórico e vencimentos;
+- CRUD de transações, salários, cartões/compras, gastos fixos e variáveis;
+- metas com contribuições;
+- movimentações de saldo total;
+- exportação CSV da tela de transações;
+- tema claro/escuro e layout responsivo;
+- auditoria das operações dos módulos principais no backend.
 
----
+Ainda não implementado: tela de auditoria, orçamento por categoria, relatórios dedicados e assistente de IA. Esses itens constam como ideias de evolução em `FINANCEIRO_DOCS.md`, não como funcionalidades disponíveis.
 
-## 📁 Estrutura do Projeto
+## Stack
 
-```
-financas-casal/
-├── __tests__/                  # Testes automatizados
-│   └── validators/
-├── src/
-│   ├── api/                    # Controllers — rotas HTTP (Vercel API Routes)
-│   ├── components/             # Componentes reutilizáveis de UI
-│   ├── hooks/                  # Lógica reutilizável
-│   ├── middleware/             # Autenticação e interceptadores
-│   ├── pages/                  # Páginas da aplicação
-│   ├── services/               # Regras de negócio e acesso ao banco
-│   ├── styles/                 # Estilos globais
-│   ├── types/                  # Tipagens TypeScript
-│   ├── utils/                  # Funções auxiliares
-│   └── validators/             # Validação de dados com Zod
-├── public/                     # Arquivos estáticos
-├── .env.local                  # Variáveis de ambiente (não commitar)
-├── jest.config.js              # Configuração dos testes
-├── tsconfig.json               # Configuração do TypeScript
-└── vercel.json                 # Configuração do deploy
-```
+- React 18, React Router e TypeScript
+- Vite 5 e Tailwind CSS 4
+- Supabase JS 2 (Auth + PostgreSQL)
+- funções serverless Node.js na Vercel
+- Zod para validação e Jest para testes
 
----
+## Estrutura
 
-## 🏗️ Arquitetura em Camadas
-
-```
-[ Frontend — pages/ + components/ ]
-            ↓ requisição HTTP
-[ Controllers — api/ ]
-            ↓ chama
-[ Services — services/ ]
-            ↓ acessa
-[ Supabase — PostgreSQL ]
+```text
+src/
+  api/          handlers serverless da Vercel
+  components/   componentes reutilizáveis
+  config/       configuração dos dois usuários
+  hooks/        autenticação, tema e acesso à API
+  middleware/   validação do JWT do Supabase
+  pages/        telas e rotas da SPA
+  services/     regras de negócio e acesso ao Supabase
+  styles/       estilos globais
+  types/        contratos TypeScript
+  utils/        utilitários HTTP e de domínio
+  validators/   esquemas de entrada
+__tests__/      testes unitários e de handlers
 ```
 
-Cada camada tem responsabilidade única:
+## Configuração local
 
-- **Controllers** — recebem a requisição HTTP, validam os dados e chamam o serviço correto
-- **Services** — contêm as regras de negócio e acessam o banco de dados
-- **Validators** — garantem que os dados de entrada são válidos antes de chegar nos serviços
-- **Middleware** — verifica autenticação antes de qualquer rota
-
----
-
-## ⚙️ Configuração do Ambiente
-
-### Pré-requisitos
-
-- Node.js v18 ou superior
-- Conta no [Supabase](https://supabase.com)
-- Conta no [Vercel](https://vercel.com)
-- Chave de API do [Google Gemini](https://aistudio.google.com)
-
-### Instalação
+Requisitos: Node.js 20 ou superior, npm e um projeto Supabase já criado.
 
 ```bash
-# Clone o repositório
-git clone https://github.com/seu-usuario/financas-casal.git
-
-# Entre na pasta
-cd financas-casal
-
-# Instale as dependências
-npm install
+npm ci
+copy .env.example .env.local
+npm run dev
 ```
 
-### Variáveis de Ambiente
+Preencha `.env.local`:
 
-Crie um arquivo `.env.local` na raiz do projeto:
+| Variável | Onde é usada | Sensível |
+|---|---|---|
+| `VITE_SUPABASE_URL` | navegador | não |
+| `VITE_SUPABASE_ANON_KEY` | navegador | não; ainda assim, depende de RLS correto |
+| `SUPABASE_URL` | funções serverless | não |
+| `SUPABASE_ANON_KEY` | validação de sessão no servidor | não |
+| `SUPABASE_SERVICE_ROLE_KEY` | acesso administrativo no servidor | **sim** |
+| `DEV_API_PROXY_TARGET` | proxy local opcional; usa o deploy padrão se ausente | não |
 
-```env
-# Supabase
-SUPABASE_URL=https://xxxxxxxxxxx.supabase.co
-SUPABASE_ANON_KEY=sua_chave_publica
-SUPABASE_SERVICE_ROLE_KEY=sua_chave_privada
+Nunca use o prefixo `VITE_` na service role: variáveis `VITE_*` são incorporadas ao bundle e ficam públicas. O arquivo `.env.local` está ignorado pelo Git.
 
-# Gemini IA
-GEMINI_API_KEY=sua_chave_gemini
+Durante o desenvolvimento, `/api/*` é enviado ao deploy indicado em `DEV_API_PROXY_TARGET`. Portanto, mudanças em handlers só ficam disponíveis localmente depois de um deploy/preview, a menos que se use `vercel dev` em outro fluxo.
 
-# App
-NODE_ENV=development
-```
+## Vercel
 
-> ⚠️ Nunca commite o arquivo `.env.local`. Ele já está no `.gitignore`.
+O projeto precisa estar vinculado ao repositório correto no painel da Vercel. Configure as cinco variáveis do Supabase para Production, Preview e Development. Depois de alterá-las, faça um novo deploy; deployments existentes não recebem variáveis retroativamente.
 
----
+`vercel.json` contém:
 
-## 🧪 Testes
+- build do frontend para `dist`;
+- build dos handlers em `src/api`;
+- mapeamento das rotas aninhadas;
+- fallback da SPA para `index.html`;
+- cache imutável de um ano apenas para assets versionados em `/assets/*`;
+- headers básicos contra MIME sniffing, framing e vazamento de referrer.
+
+## Supabase e banco
+
+As funções usam `SUPABASE_SERVICE_ROLE_KEY` e, por isso, podem ignorar RLS. Toda rota deve permanecer protegida pelo middleware de autenticação; a service role nunca pode ir para o frontend.
+
+Scripts SQL versionados:
+
+- `add_usuario_nome.sql`: adiciona/preenche `usuario_nome` sem armazenar e-mails pessoais na migração;
+- `saldo_total_table.sql`: cria a tabela e políticas idempotentes do módulo de saldo total.
+
+Antes de executar uma migração em produção, faça backup e revise o SQL no editor do Supabase. As demais tabelas já devem existir no projeto remoto; este repositório não contém hoje uma migração integral capaz de recriar todo o schema do zero.
+
+## Validação
 
 ```bash
-# Rodar todos os testes
-npm test
-
-# Rodar em modo watch
-npm run test:watch
-
-# Rodar com cobertura
+npm run typecheck       # frontend, API e configuração Vite
+npm test                # testes em execução serial
 npm run test:coverage
+npm run build           # typecheck + bundle de produção
+npm run check           # validação completa
 ```
 
----
+O frontend usa importação dinâmica por rota. React, gráficos e ícones são separados em chunks para que páginas sem gráficos não precisem baixar o Recharts antes de serem abertas.
 
-## 🗄️ Banco de Dados
+## Segurança e regras de acesso
 
-O projeto utiliza **PostgreSQL via Supabase** com as seguintes tabelas:
+- o sistema é privado e os dois usuários são criados manualmente no Supabase Auth;
+- os dados financeiros dos módulos principais são compartilhados pelo casal;
+- ações de criação, alteração e exclusão devem registrar o autor;
+- o JWT é validado em cada handler antes do uso da service role;
+- não commite `.env`, tokens, chaves ou dumps com dados reais.
 
-| Tabela | Descrição |
-|---|---|
-| `logs_auditoria` | Registro de todas as ações do sistema |
-| `transacoes` | Entradas e saídas financeiras |
-| `salarios` | Salários fixos e variáveis |
-| `cartoes` | Cartões de crédito cadastrados |
-| `compras_cartao` | Compras e parcelas de cartão |
-| `gastos_fixos` | Despesas fixas mensais |
-| `gastos_variaveis` | Despesas variáveis com estimado vs real |
-| `metas` | Objetivos financeiros |
-| `contribuicoes_metas` | Aportes realizados por meta |
-| `orcamentos` | Teto de gastos por categoria |
-
-Todas as tabelas possuem **Row Level Security (RLS)** ativado — apenas usuários autenticados têm acesso.
-
----
-
-## 🔒 Segurança
-
-- Autenticação via **Supabase Auth** com JWT
-- **RLS** ativo em todas as tabelas do banco
-- Dois clientes Supabase separados: público (frontend) e admin (backend)
-- Validação de todos os dados de entrada com **Zod**
-- Variáveis de ambiente protegidas e fora do repositório
-- Log de auditoria em todas as operações do sistema
-
----
-
-## 👥 Usuários
-
-O sistema é restrito a **dois usuários** (casal), cadastrados manualmente no Supabase. Não há tela de registro público.
-
-- A visualização dos dados é **compartilhada** entre os dois
-- Cada ação registra **qual usuário** a realizou via log de auditoria
-
----
-
-## 📦 Módulos
-
-- **Dashboard** — visão geral com gráficos e alertas
-- **Transações** — entradas e saídas com filtros e paginação
-- **Salários** — controle de renda fixa e variável
-- **Cartões de Crédito** — faturas, parcelas e limite
-- **Gastos Fixos** — contas mensais com calendário de vencimentos
-- **Gastos Variáveis** — estimado vs real por categoria
-- **Metas** — objetivos financeiros com progresso
-- **Relatórios** — exportação CSV por período
-- **Assistente IA** — chat financeiro com Google Gemini
-
----
-
-## 📄 Licença
-
-Projeto pessoal — uso privado.
+Projeto pessoal, sem licença para redistribuição.
